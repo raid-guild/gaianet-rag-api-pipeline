@@ -12,27 +12,6 @@ info:
 servers:
   - description: Boardroom API
     url: 'https://api.boardroom.info/v1/'
-tags:
-  - name: Stats
-  - name: Protocol
-    description: DAO Governance Data
-  - name: Proposal
-    description: Proposal Data
-  - name: Discourse
-  - name: Voter
-    description: voter data
-  - name: Vote
-    description: vote data
-  - name: Vote Power
-  - name: User
-  - name: Delegates
-  - name: Delegation
-  - name: DelegationPitch
-  - name: Transactions
-  - name: Treasury
-  - name: SIWE
-  - name: Calendar
-  - name: Images
 paths:
   /protocols:
     get:
