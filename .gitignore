@@ -163,3 +163,4 @@ cython_debug/
 
 # JSON data
 *.jsonl
+poetry.lock
