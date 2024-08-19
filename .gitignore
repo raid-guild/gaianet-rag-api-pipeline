@@ -164,3 +164,8 @@ cython_debug/
 # JSON data
 *.jsonl
 poetry.lock
+
+# DuckDB Cache
+*.duckdb
+*.wal
+*.jsonl.gz
