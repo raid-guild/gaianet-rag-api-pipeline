@@ -56,14 +56,29 @@ definitions:
       name: "proposals"
       primary_key: "nextCursor" # TODO: ?
       path: "/protocols/{{ config['cname'] }}/proposals" # TODO: cname
+  discourse_posts_stream:
+    $ref: "#/definitions/base_stream"
+    request_options_provider:
+      request_parameters:
+        protocol: "{{ config['cname'] }}"
+    schema_loader:
+      type: InlineSchemaLoader
+      schema:
+       $ref: "#/schemas/boardroom_api"
+    $parameters:
+      name: "discourse-posts"
+      primary_key: "nextCursor" # TODO: ?
+      path: "/discourseTopicPosts"
 
 streams:
   - "#/definitions/proposals_stream"
+  - "#/definitions/discourse_posts_stream"
 
 check:
   type: CheckStream
   stream_names:
     - "proposals"
+    - "discourse-posts"
 
 spec:
   type: Spec
@@ -97,6 +112,17 @@ spec:
         description: pagination limit size
 
 schemas:
+  boardroom_api:
+    type: object
+    $schema: http://json-schema.org/draft-07/schema#
+    properties:
+      data:
+        type: array
+      nextCursor:
+        type:
+          - string
+          - "null"
+
   Proposals:
     type: object
     $schema: http://json-schema.org/draft-07/schema#
