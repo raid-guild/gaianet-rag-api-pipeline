@@ -10,6 +10,7 @@ authors = ["RaidGuild <clerics@raidguild.org>"]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
+airbyte = "0.16.4"
 appnope = "0.1.4"
 asttokens = "2.4.1"
 comm = "0.2.2"

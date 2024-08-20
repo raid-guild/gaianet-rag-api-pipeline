@@ -4,6 +4,21 @@
 
 - Python 3.11.x
 
+## Dependencies
+
+- airbyte==0.16.4
+- pathway[xpack-llm]
+- pathway[xpack-llm-docs]
+
+Workaround in case of missing dependencies:
+
+- if trying to install pillow-heif missingn module
+    - export CFLAGS="-Wno-nullability-completeness"
+- libmagic -> Required for having libmagic working
+    - MacOS:
+        - brew install libmagic
+    - pip install python-magic-bin
+
 ## Local development
 
 Start with building your containers: `docker compose -f local.yml build`.
