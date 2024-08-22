@@ -1,5 +1,6 @@
 from gaianet_rag_api_pipeline.config import get_settings
 from gaianet_rag_api_pipeline.input import input
+from gaianet_rag_api_pipeline.loader import api_loader
 from gaianet_rag_api_pipeline.output import output
 from gaianet_rag_api_pipeline.pipeline import pipeline
 
@@ -34,6 +35,8 @@ def run(
         "cname": "aave", # NOTICE: CLI param
         "page_size": 1 # TODO: currently not used
     }
+
+    api_loader() # TODO:
 
     input_table = input(
         api_name="boardroom_api", # TODO: validate name only contains alphanumeric characters and underscores

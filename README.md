@@ -19,6 +19,12 @@ Workaround in case of missing dependencies:
         - brew install libmagic
     - pip install python-magic-bin
 
+## Pipeline execution
+
+```
+poetry run api-pipeline <BOARDROOM_API_KEY> --open-api-file config/openapi.yaml
+```
+
 ## Local development
 
 Start with building your containers: `docker compose -f local.yml build`.

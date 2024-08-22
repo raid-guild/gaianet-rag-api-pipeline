@@ -1,4 +1,7 @@
-from gaianet_rag_api_pipeline.udfs import to_json
+from gaianet_rag_api_pipeline.chunking import chunking
+from gaianet_rag_api_pipeline.embeddings import embeddings
+from gaianet_rag_api_pipeline.preprocessing import preprocessing
+from gaianet_rag_api_pipeline.serialize import jsonl_serialize
 
 import pathway as pw
 
@@ -6,11 +9,9 @@ import pathway as pw
 def pipeline(input_table: pw.Table) -> pw.Table:
     """Your custom logic."""
 
-    # NOTICE: With Airbyte we need to parse data to Json during pre-processing
-    input_table = input_table.with_columns(
-        data=to_json(input_table.data)
-    )
+    preprocessed_table = preprocessing(input_table)
+    jsonl_serialize("preprocessed", preprocessed_table)
+    chunked_table = chunking(preprocessed_table)
+    embeddings_table = embeddings(chunked_table)
 
-    output_table = input_table.flatten(input_table.data)
-
-    return output_table
+    return embeddings_table
