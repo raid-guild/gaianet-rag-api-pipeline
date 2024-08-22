@@ -470,6 +470,69 @@ paths:
                     "success"}]}
       security:
         - api-key: []
+  /voters/{address}/votes:
+    get:
+      summary: Get votes by voter
+      description: Get votes by voter
+      operationId: getVoterVotes
+      tags:
+        - vote
+      parameters:
+        - name: address
+          in: path
+          description: Voter address.
+          required: true
+          schema:
+            type: string
+          example: '0xd409ceA9dD8dB30504168063953cE1Fa20748cab'
+        - name: cname
+          in: query
+          description: Protocol cname.
+          required: false
+          schema:
+            type: string
+          example: aave
+        - name: cursor
+          in: query
+          description: Pagination cursor to retrieve next page
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Response size limit
+          required: false
+          schema:
+            type: number
+        - name: fromTimestamp
+          in: query
+          description: Filter by votes after
+          required: false
+          schema:
+            type: string
+        - name: untilTimestamp
+          in: query
+          description: Filter by votes before
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Vote'
+              examples:
+                default:
+                  value: '{"data":[{"refId":"dm90ZTpzdXNoaTpkZWZhdWx0OnFtczdreWM0a3I2ZTFnc3Njc2s1bXBvZWRma3R3OG9ocXJjYWgzams3bXc3NWs6MHhkNDA5Y2VhOWRkOGRiMzA1MDQxNjgwNjM5NTNjZTFmYTIwNzQ4Y2Fi","proposalRefId":"cHJvcG9zYWw6c3VzaGk6ZGVmYXVsdDpxbXM3a3ljNGtyNmUxZ3NzY3NrNW1wb2VkZmt0dzhvaHFyY2FoM2prN213NzVr","protocol":"sushi","adapter":"default","proposalId":"QmS7kYC4KR6E1gssCsK5MPoeDfktW8oHqRCaH3jK7mW75K","address":"0xd409ceA9dD8dB30504168063953cE1Fa20748cab","power":147811.42,"choice":0,"time":{"timestamp":1625066741},"timestamp":1625066741,"proposalInfo":{"title":"Buy MemePad - https://memepad.co/ - LaunchPad for Meme coins","startTime":{"timestamp":1623031200},"endTime":{"timestamp":1684980000},"startTimestamp":1623031200,"endTimestamp":1684980000,"choices":["YES","YES"],"events":[],"currentState":"active"}}]}'
+      security:
+        - api-key: []
   /discourseTopics:
     get:
       summary: Get Discourse Topics
