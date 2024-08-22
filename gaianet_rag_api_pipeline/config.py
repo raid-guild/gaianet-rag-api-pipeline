@@ -1,28 +1,35 @@
-from functools import lru_cache
+from functools import cache, lru_cache
 from typing import Literal
 
-from dotenv import load_dotenv
-from pydantic_settings import BaseSettings
+# from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ENV_FILE_PATH = "config/.env"
+SECRETS_PATH = "config/secrets"
 
 
 class Settings(BaseSettings):
-    input_connector: Literal["python", "redpanda"]
+    model_config = SettingsConfigDict(
+        case_sensitive=False,
+        env_file=ENV_FILE_PATH,
+        env_file_encoding="utf-8",
+        secrets_dir=SECRETS_PATH
+    )
+
+    #
+    # env vars
+    #
+    input_connector: Literal["python", "redpanda"] # TODO:remove
     autocommit_duration_ms: int
     pathway_threads: int
 
-    redpanda_bootstrap_servers: str
-    redpanda_group_id: str
-    redpanda_session_timeout_ms: str
-    redpanda_topic: str
-
-    class Config:
-        case_sensitive = False
-        env_file = ENV_FILE_PATH
+    api_key: str
+    openapi_spec_file: str
+    api_manifest_file: str
 
 
-@lru_cache()
-def get_settings():
-    load_dotenv(ENV_FILE_PATH)  # make sure variables in .env file are propagated to environment
-    return Settings()
+# @lru_cache()
+@cache
+def get_settings(**kwargs):
+    # load_dotenv(ENV_FILE_PATH)  # make sure variables in .env file are propagated to environment
+    return Settings(**kwargs)

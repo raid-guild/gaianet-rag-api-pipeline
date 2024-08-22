@@ -2,4 +2,4 @@ import pathway as pw
 
 
 def output(output_table):
-    pw.io.csv.write(output_table, "output.csv")
+    pw.io.jsonlines.write(output_table, "output.jsonl")

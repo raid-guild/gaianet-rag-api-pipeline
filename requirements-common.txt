@@ -1,4 +1,5 @@
 black
+click
 pathway
 python-dotenv
 pydantic
