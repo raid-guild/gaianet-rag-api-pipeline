@@ -339,6 +339,80 @@ paths:
                     coins","protocol":"sushi","adapter":"default","proposer":"0xb9d3c5bB5DE7cf779321962dC61A725e5358fF05","totalVotes":266,"blockNumber":12590827,"externalUrl":"https://snapshot.org/#/sushigov.eth/proposal/QmS7kYC4KR6E1gssCsK5MPoeDfktW8oHqRCaH3jK7mW75K","startTime":{"timestamp":1623031200},"endTime":{"timestamp":1684980000},"startTimestamp":1623031200,"endTimestamp":1684980000,"currentState":"active","choices":["YES","YES"],"results":[{"total":181771.86,"choice":0},{"total":12996.031,"choice":1}],"events":[{"time":{"blockNumber":12986707},"event":"executed","timestamp":1628455780}]}}
       security:
         - api-key: []
+
+
+  '/proposals/{refId}/votes':
+    get:
+      summary: Get votes on a proposal
+      description: Get votes on a proposal
+      operationId: getProposalVotes
+      tags:
+        - vote
+      parameters:
+        - name: refId
+          in: path
+          description: Proposal refId.
+          required: true
+          schema:
+            type: string
+          example: 'cHJvcG9zYWw6c3VzaGk6ZGVmYXVsdDpxbXM3a3ljNGtyNmUxZ3NzY3NrNW1wb2VkZmt0dzhvaHFyY2FoM2prN213NzVr'
+        - name: cursor
+          in: query
+          description: Pagination cursor to retrieve next page
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: 'Response size limit, Defaults to 20'
+          required: false
+          schema:
+            type: number
+        - name: addresses
+          in: query
+          description: Addresses to include in response of votes.
+          required: false
+          schema:
+            type: string
+        - name: pinned
+          in: query
+          description: Response is ordered with votes cast by these addresses at the start.
+          required: false
+          schema:
+            type: string
+        - name: fromTimestamp
+          in: query
+          description: Filter by votes after
+          required: false
+          schema:
+            type: string
+        - name: untilTimestamp
+          in: query
+          description: Filter by votes before
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Vote'
+                  nextCursor:
+                    type: string
+              examples:
+                default:
+                  value: '{"data":[{"refId":"dm90ZTpzdXNoaTpkZWZhdWx0OnFtczdreWM0a3I2ZTFnc3Njc2s1bXBvZWRma3R3OG9ocXJjYWgzams3bXc3NWs6MHhkNDA5Y2VhOWRkOGRiMzA1MDQxNjgwNjM5NTNjZTFmYTIwNzQ4Y2Fi","proposalRefId":"cHJvcG9zYWw6c3VzaGk6ZGVmYXVsdDpxbXM3a3ljNGtyNmUxZ3NzY3NrNW1wb2VkZmt0dzhvaHFyY2FoM2prN213NzVr","protocol":"sushi","adapter":"default","proposalId":"QmS7kYC4KR6E1gssCsK5MPoeDfktW8oHqRCaH3jK7mW75K","address":"0xd409ceA9dD8dB30504168063953cE1Fa20748cab","power":147811.42,"choice":0,"time":{"timestamp":1625066741},"timestamp":1625066741}],"nextCursor":"eyJhZGRyZXNzIjoiMHg1QTlkZDlDN2ZBRkI0OWY3NzhmQzQ1MDgyMDAwMzg1NzhFNEMxY2E2IiwicG93ZXIiOjI3MC43MjMwMn0="}'
+      security:
+        - api-key: []
+        
+                
   '/proposals/{refId}/pendingVotes':
     get:
       summary: 'Get Pending votes by address, protocol or proposal refID'
@@ -1200,6 +1274,57 @@ components:
           type: string
         status:
           type: string
+    Vote:
+      type: object
+      properties:
+        refId:
+          type: string
+        proposalRefId:
+          type: string
+        protocol:
+          type: string
+        adapter:
+          type: string
+        proposalId:
+          type: string
+        address:
+          type: string
+        power:
+          type: number
+        reason:
+          type: string
+        choice:
+          type: integer
+        time:
+          type: object
+          properties:
+            blockNumber:
+              type: integer
+        timestamp:
+          type: string
+        choices:
+          type: integer
+        privacy:
+          type: string
+        txHash:
+          type: string
+      x-examples:
+        Example 1:
+          refId: dm90ZTpjb21wb3VuZDpvbmNoYWluOjE1OToweGI0OWY4Yjg2MTNiZTI0MDIxM2MxODI3ZTJlNTc2MDQ0ZmZlYzc5NDg=
+          proposalRefId: cHJvcG9zYWw6Y29tcG91bmQ6b25jaGFpbjoxNTk=
+          protocol: compound
+          adapter: onchain
+          proposalId: '159'
+          address: '0xB49f8b8613bE240213C1827e2E576044fFEC7948'
+          power: 50003.91
+          reason: ''
+          choice: 1
+          time:
+            blockNumber: 17179938
+          timestamp: '1683113783'
+          choices: 1
+          privacy: ''
+          txHash: ''
   securitySchemes:
     api-key:
       type: apiKey
