@@ -1124,6 +1124,63 @@ paths:
                           <p><strong>Please list a critical milestone</strong>: Achievement of comprehensive bug coverage in large protocols on Optimism. We are first
       security:
           - api-key: []
+  /protocols/{cname}/voters:
+    get:
+      summary: Get all voters for a protocol
+      description: Get all voters for a protocol
+      operationId: getProtocolVoters
+      tags:
+        - voter
+      parameters:
+        - name: cname
+          in: path
+          required: true
+          description: Protocol cname.
+          schema:
+            type: string
+            example: aave
+        - name: cursor
+          in: query
+          required: false
+          description: Pagination cursor to retrieve the next page.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: Response size limit, defaults to 20.
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Voter'
+                  nextCursor:
+                    type: string
+              examples:
+                default:
+                  value:
+                    data:
+                      - address: "0xdD709cAE362972cb3B92DCeaD77127f7b8D58202"
+                        firstVoteCast: 1608813954
+                        lastVoteCast: 1629265575
+                        totalVotesCast: 20
+                        protocols:
+                          - protocol: "aave"
+                            totalVotesCast: 20
+                            lastVoteCast: 1629265575
+                            firstVoteCast: 1608813954
+                            totalPowerCast: 3873320
+                            lastCastPower: 188761.45
+                    nextCursor: "eysddfsdfsd=="
   '/delegates/getDelegatorsByProtocol/{cname}':
     get:
       summary: Get delegations by protocol
@@ -1398,6 +1455,34 @@ components:
           type: string
         status:
           type: string
+    Voter:
+      type: object
+      properties:
+        address:
+          type: string
+        firstVoteCast:
+          type: integer
+        lastVoteCast:
+          type: integer
+        totalVotesCast:
+          type: integer
+        protocols:
+          type: array
+          items:
+            type: object
+            properties:
+              lastCastPower:
+                type: integer
+              protocol:
+                type: string
+              totalVotesCast:
+                type: integer
+              lastVoteCast:
+                type: integer
+              firstVoteCast:
+                type: integer
+              totalPowerCast:
+                type: integer
     Vote:
       type: object
       properties:
