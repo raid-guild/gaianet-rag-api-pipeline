@@ -1061,6 +1061,67 @@ paths:
                           <p><strong>Please list a critical milestone</strong>: Achievement of comprehensive bug coverage in large protocols on Optimism. We are first
       security:
           - api-key: []
+  '/delegates/getDelegatorsByProtocol/{cname}':
+    get:
+      summary: Get delegations by protocol
+      description: Get delegations by protocol
+      operationId: getDelegatorsByProtocol
+      tags:
+        - delegates
+      parameters:
+        - name: cname
+          in: path
+          description: Protocol cname to query for
+          required: true
+          schema:
+            type: string
+          example: ens
+        - name: adapter
+          in: query
+          description: Whether it is snapshot or onchain instances to query for
+          required: false
+          schema:
+            type: string
+          example: onchain
+        - name: limit
+          in: query
+          description: Response size limit
+          required: false
+          schema:
+            type: number
+          example: 20
+        - name: cursor
+          in: query
+          description: Pagination cursor to retrieve next page
+          required: false
+          schema:
+            type: string
+        - name: addressDelegatedTo
+          in: query
+          description: Address delegating to
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/GetDelegations'
+                  nextCursor:
+                    type: string
+              examples:
+                default:
+                  value: '{"data":[{"protocol":"ens","adapter":"onchain","address":"0x4F54D1b054eE8377F771667C0d1734d9381E1330","addressDelegatedTo":"0x4F54D1b054eE8377F771667C0d1734d9381E1330","timestamp":"1676453367517"}]}'
+      security:
+        - api-key: []
+
 components:
   schemas:
     Protocol:
@@ -1325,6 +1386,31 @@ components:
           choices: 1
           privacy: ''
           txHash: ''
+    GetDelegations:
+      type: object
+      properties:
+        protocol:
+          type: string
+          example: "ens"
+        adapter:
+          type: string
+          example: "snapshot"
+        address:
+          type: string
+          example: "0xFeFdF8Ed3c0C997c41B7BB1BD761ED535bfdC8A7"
+        addressDelegatedTo:
+          type: string
+          example: "0x0000000000000000000000000000000000000000"
+    GetDelegationsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetDelegations'
+        nextCursor:
+          type: string
+          example: "eyJyZWZJZCI6IlpHVnNaV2RoZEdsdmJqcGxibk02YzI1aGNITm9iM1E2TUhobVpXTTRPVE5rTlRnM05URXhaVEkxWW1Nek4yRTJaVEZqWW1JNU1qSTROemM0TWpnNU5XRTQifQ=="
   securitySchemes:
     api-key:
       type: apiKey
