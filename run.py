@@ -30,6 +30,8 @@ def run(
     print("Config settings", settings.model_dump()) # TODO: use logging
     print("Full refresh?", full_refresh)
 
+    # TODO: make sure all dependencies are installed
+
     # TODO: this should come from config
     api_params = {
         "cname": "aave", # NOTICE: CLI param
