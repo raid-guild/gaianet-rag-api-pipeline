@@ -1241,6 +1241,53 @@ paths:
                   value: '{"data":[{"protocol":"ens","adapter":"onchain","address":"0x4F54D1b054eE8377F771667C0d1734d9381E1330","addressDelegatedTo":"0x4F54D1b054eE8377F771667C0d1734d9381E1330","timestamp":"1676453367517"}]}'
       security:
         - api-key: []
+  '/delegates/{address}/getDelegatorCount':
+    get:
+      summary: Gets delegator count per protocol
+      description: Gets delegator count per protocol
+      operationId: getDelegatorCount
+      tags:
+        - delegates
+      parameters:
+        - name: address
+          in: path
+          description: The address delegating.
+          required: true
+          schema:
+            type: string
+          example: '0x2B888954421b424C5D3D9Ce9bB67c9bD47537d12'
+        - name: protocol
+          in: query
+          description: Protocol to query for
+          required: true
+          schema:
+            type: string
+          example: ens
+        - name: adapters
+          in: query
+          description: 'Array of Comma separated adapters, to query for'
+          required: false
+          schema:
+            type: string
+          example: '["onchain", "snapshot"]'
+      responses:
+        '200':
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      delegatorCount:
+                        type: integer
+              examples:
+                default:
+                  value: '{"data":{"delegatorCount":5731}}'
+      security:
+        - api-key: []
 
 components:
   schemas:
@@ -1559,6 +1606,11 @@ components:
         nextCursor:
           type: string
           example: "eyJyZWZJZCI6IlpHVnNaV2RoZEdsdmJqcGxibk02YzI1aGNITm9iM1E2TUhobVpXTTRPVE5rTlRnM05URXhaVEkxWW1Nek4yRTJaVEZqWW1JNU1qSTROemM0TWpnNU5XRTQifQ=="
+    DelegatorCountDetails:
+      type: object
+      properties:
+        delegatorCount:
+          type: integer
   securitySchemes:
     api-key:
       type: apiKey
