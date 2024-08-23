@@ -82,7 +82,8 @@ definitions:
     $parameters:
       name: "voters"
       primary_key: "nextCursor" 
-      path: "/protocols/{{ config['cname'] }}/voters" 
+      path: "/protocols/{{ config['cname'] }}/voters?limit=100" 
+  
   delegates_stream:
     $ref: "#/definitions/base_stream"
     request_options_provider:
@@ -93,35 +94,22 @@ definitions:
       schema:
        $ref: "#/schemas/boardroom_api"
     $parameters:
-      name: "voters"
+      name: "delegates"
       primary_key: "nextCursor" 
       path: "/delegates/getDelegatorsByProtocol/{{ config['cname'] }}" 
-  delegate_pitches_stream:
-    $ref: "#/definitions/base_stream"
-    request_options_provider:
-      request_parameters:
-        protocol: "{{ config['cname'] }}"
-    schema_loader:
-      type: InlineSchemaLoader
-      schema:
-       $ref: "#/schemas/boardroom_api"
-    $parameters:
-      name: "voters"
-      primary_key: "nextCursor" 
-      path: "/getDelegationPitchesByProtocol/{{ config['cname'] }}" 
-  
 streams:
   - "#/definitions/proposals_stream"
   - "#/definitions/discourse_posts_stream"
   - "#/definitions/voters_stream"
   - "#/definitions/delegates_stream"
-  - "#/definitions/delegate_pitches_stream"
 
 check:
   type: CheckStream
   stream_names:
     - "proposals"
     - "discourse-posts"
+    - "voters"
+    - "delegates"
 
 spec:
   type: Spec

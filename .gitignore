@@ -171,3 +171,4 @@ cython_debug/
 *.duckdb
 *.wal
 *.jsonl.gz
+experiments/.DS_Store
