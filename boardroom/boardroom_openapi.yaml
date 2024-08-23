@@ -1288,7 +1288,78 @@ paths:
                   value: '{"data":{"delegatorCount":5731}}'
       security:
         - api-key: []
-
+  '/getDelegationPitchesByProtocol/{protocol}':
+    get:
+      summary: Get delegation pitches by protocol
+      description: Get delegation pitches by protocol
+      operationId: getDelegationPitchesByProtocol
+      tags:
+        - delegationPitch
+      parameters:
+        - name: protocol
+          in: path
+          description: Protocol to query
+          required: true
+          schema:
+            type: string
+          example: ens
+      responses:
+        '200':
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      delegationPitches:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/DelegationPitch'
+              examples:
+                default:
+                  value: '{"data":{"delegationPitches":[{"address":"0xd409ceA9dD8dB30504168063953cE1Fa20748cab","delegationPitch":"My Delegation Pitch","protocol":"ens"}]}}'
+      security:
+        - api-key: []
+  '/getDelegationPitch/{protocol}/{address}':
+    get:
+      summary: Get delegation pitch by protocol and address
+      description: Get delegation pitch by protocol and address
+      operationId: getDelegationPitch
+      tags:
+        - delegationPitch
+      parameters:
+        - name: protocol
+          in: path
+          description: Protocol of pitch to query
+          required: true
+          schema:
+            type: string
+          example: ens
+        - name: address
+          in: path
+          description: User address of pitch
+          required: true
+          schema:
+            type: string
+          example: '0xd409ceA9dD8dB30504168063953cE1Fa20748cab'
+      responses:
+        '200':
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/DelegationPitch'
+              examples:
+                default:
+                  value: '{"data":{"address":"0xd409ceA9dD8dB30504168063953cE1Fa20748cab","delegationPitch":"My Delegation Pitch","protocol":"ens"}}'
+      security:
+        - api-key: []
 components:
   schemas:
     Protocol:
@@ -1596,21 +1667,15 @@ components:
         addressDelegatedTo:
           type: string
           example: "0x0000000000000000000000000000000000000000"
-    GetDelegationsResponse:
+    DelegationPitch:
       type: object
       properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/GetDelegations'
-        nextCursor:
+        protocol:
           type: string
-          example: "eyJyZWZJZCI6IlpHVnNaV2RoZEdsdmJqcGxibk02YzI1aGNITm9iM1E2TUhobVpXTTRPVE5rTlRnM05URXhaVEkxWW1Nek4yRTJaVEZqWW1JNU1qSTROemM0TWpnNU5XRTQifQ=="
-    DelegatorCountDetails:
-      type: object
-      properties:
-        delegatorCount:
-          type: integer
+        address:
+          type: string
+        delegationPitch:
+          type: string
   securitySchemes:
     api-key:
       type: apiKey
