@@ -82,7 +82,7 @@ definitions:
     $parameters:
       name: "voters"
       primary_key: "nextCursor" 
-      path: "/protocols/{{ config['cname'] }}/voters?limit=100" 
+      path: "/protocols/{{ config['cname'] }}/voters?limit=1000" 
   
   delegates_stream:
     $ref: "#/definitions/base_stream"
