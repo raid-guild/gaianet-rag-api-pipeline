@@ -593,7 +593,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  items:
+                  data:
                     type: array
                     items:
                       type: object
@@ -639,7 +639,7 @@ paths:
               examples:
                 Example 1:
                   value:
-                    items:
+                    data:
                       - id: '6558'
                         refId: ZGlzY291cnNldG9waWM6b3B0aW1pc206NjU1OA==
                         protocol: optimism
@@ -1034,7 +1034,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  items:
+                  data:
                     type: array
                     items:
                       type: object
@@ -1082,7 +1082,7 @@ paths:
               examples:
                 Example_1:
                   value:
-                    items:
+                    data:
                       - id: '26690'
                         refId: ZGlzY291cnNldG9waWNwb3N0Om9wdGltaXNtOjYxODc6MjY2OTA6OTk0NQ==
                         protocol: optimism
