@@ -1360,6 +1360,69 @@ paths:
                   value: '{"data":{"address":"0xd409ceA9dD8dB30504168063953cE1Fa20748cab","delegationPitch":"My Delegation Pitch","protocol":"ens"}}'
       security:
         - api-key: []
+  /delegates/getDelegatedVotingPowerByProtocol/{protocol}:
+    get:
+      summary: Get voting power by protocol
+      description: Get voting power by protocol
+      operationId: getDelegatedVotingPowerByProtocol
+      tags:
+        - delegation
+      parameters:
+        - name: protocol
+          in: path
+          required: true
+          description: cname of the protocol.
+          schema:
+            type: string
+            example: 'aave'
+        - name: limit
+          in: query
+          required: false
+          description: Response size limit
+          schema:
+            type: number
+        - name: cursor
+          in: query
+          required: false
+          description: Pagination cursor to retrieve next page
+          schema:
+            type: string
+        - name: adapters
+          in: query
+          description: 'Array of comma-separated adapters to query for'
+          schema:
+            type: string
+            example: '["onchain", "snapshot"]'
+      responses:
+        '200':
+          description: Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        protocol:
+                          type: string
+                        adapter:
+                          type: string
+                        address:
+                          type: string
+                        votePower:
+                          type: integer
+                        timestamp:
+                          type: integer
+                        blockNumber:
+                          type: integer
+              examples:
+                '0':
+                  value: '{"data":[{"protocol":"ens","adapter":"onchain","address":"0x983110309620D911731Ac0932219af06091b6744","votePower":"326596.6467","timestamp":"1650299076121","blockNumber":"14610206"}],"nextCursor":"eyJyZWZJZCI6IlpHVnNaV2RoZEdsdmJuQnZkMlZ5T21WdWN6cHZibU5vWVdsdU9qQjRPVGd6TVRFd016QTVOakl3WkRreE1UY3pNV0ZqTURrek1qSXhPV0ZtTURZd09URmlOamMwTkE9PSIsInZvdGVQb3dlciI6IjMyNjU5Ni42NDY3In0="}'
+      security:
+        - api-key: []
 components:
   schemas:
     Protocol:
