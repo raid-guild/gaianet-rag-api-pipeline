@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     api_key: str
     openapi_spec_file: str
     api_manifest_file: str
+    output_folder: str
 
 
 # @lru_cache()

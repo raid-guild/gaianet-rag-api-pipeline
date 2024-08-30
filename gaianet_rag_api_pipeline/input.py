@@ -13,6 +13,7 @@ def input(
     settings: Settings,
     config: dict[str, typing.Any] | None = None,
     source_manifest: bool | dict | pathlib.Path | str = False,
+    endpoint_text_fields: dict = dict(),
     streams: str | list[str] | None = None,
     force_full_refresh: bool = False
 ):
@@ -44,17 +45,13 @@ def input(
         check_source=False, # NOTICE: enforce to not check manifest during initialization
     )
 
-    valid_manifest = False # TODO: improve
-
     try: 
         api_connector.check()
-        valid_manifest = True
-    except e:
-        # TODO: usse logging
-        print("FATAL error: manifest error", e)
+    except Exception as error:
+        print("FATAL error: manifest error", error) # TODO: logger
+        raise error
 
-    if valid_manifest: # TODO: improve
-        return pw.io.python.read(
-            api_connector,
-            schema=BoardroomAPI # TODO:
-        )
+    return pw.io.python.read(
+        api_connector,
+        schema=BoardroomAPI # TODO: get this from mappings? or define standard base schema
+    )

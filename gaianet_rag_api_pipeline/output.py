@@ -2,4 +2,5 @@ import pathway as pw
 
 
 def output(output_table):
-    pw.io.jsonlines.write(output_table, "output.jsonl")
+    folder = "./output"
+    pw.io.jsonlines.write(output_table, f"{folder}/output.jsonl")

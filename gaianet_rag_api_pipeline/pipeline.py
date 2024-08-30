@@ -10,7 +10,7 @@ def pipeline(input_table: pw.Table) -> pw.Table:
     """Your custom logic."""
 
     preprocessed_table = preprocessing(input_table)
-    jsonl_serialize("preprocessed", preprocessed_table)
+    jsonl_serialize("preprocessed", preprocessed_table) # TODO: remove
     chunked_table = chunking(preprocessed_table)
     embeddings_table = embeddings(chunked_table)
 

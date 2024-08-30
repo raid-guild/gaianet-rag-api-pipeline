@@ -2582,6 +2582,45 @@ files = [
 ]
 
 [[package]]
+name = "openapi-schema-validator"
+version = "0.2.3"
+description = "OpenAPI schema validation for Python"
+optional = false
+python-versions = ">=3.7.0,<4.0.0"
+files = [
+    {file = "openapi-schema-validator-0.2.3.tar.gz", hash = "sha256:2c64907728c3ef78e23711c8840a423f0b241588c9ed929855e4b2d1bb0cf5f2"},
+    {file = "openapi_schema_validator-0.2.3-py3-none-any.whl", hash = "sha256:9bae709212a19222892cabcc60cafd903cbf4b220223f48583afa3c0e3cc6fc4"},
+]
+
+[package.dependencies]
+jsonschema = ">=3.0.0,<5.0.0"
+
+[package.extras]
+isodate = ["isodate"]
+rfc3339-validator = ["rfc3339-validator"]
+strict-rfc3339 = ["strict-rfc3339"]
+
+[[package]]
+name = "openapi-spec-validator"
+version = "0.4.0"
+description = "OpenAPI 2.0 (aka Swagger) and OpenAPI 3.0 spec validator"
+optional = false
+python-versions = ">=3.7.0,<4.0.0"
+files = [
+    {file = "openapi-spec-validator-0.4.0.tar.gz", hash = "sha256:97f258850afc97b048f7c2653855e0f88fa66ac103c2be5077c7960aca2ad49a"},
+    {file = "openapi_spec_validator-0.4.0-py3-none-any.whl", hash = "sha256:06900ac4d546a1df3642a779da0055be58869c598e3042a2fef067cfd99d04d0"},
+]
+
+[package.dependencies]
+jsonschema = ">=3.2.0,<5.0.0"
+openapi-schema-validator = ">=0.2.0,<0.3.0"
+PyYAML = ">=5.1"
+setuptools = "*"
+
+[package.extras]
+requests = ["requests"]
+
+[[package]]
 name = "opentelemetry-api"
 version = "1.26.0"
 description = "OpenTelemetry Python API"
@@ -5041,4 +5080,4 @@ test = ["big-O", "importlib-resources", "jaraco.functools", "jaraco.itertools", 
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.12"
-content-hash = "708c8ed798aef20d60bab773209d0ebe709bf45081c17a8e4bf2df0967ea6107"
+content-hash = "9f4dfb0f884d298c37e6b63b570ec351d1e41a3c99c5d5ce80bcad0e480c60bd"

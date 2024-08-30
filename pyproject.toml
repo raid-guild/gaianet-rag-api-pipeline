@@ -25,6 +25,7 @@ pathway = "0.14.0"
 pydantic = "2.7.4"
 pydantic-settings = "2.4.0"
 python-dotenv = "1.0.1"
+openapi-spec-validator = "0.4.0"
 
 [tool.poetry.scripts]
 api-pipeline = "run:run"

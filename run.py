@@ -10,21 +10,24 @@ import pathway as pw
 
 
 @click.command(name="api-pipeline")
-@click.argument("api-key", type=click.STRING)
-@click.option("--open-api-file", default="config/openapi.yaml", help="OpenAPI YAML spec file", type=click.Path(exists=True))
+@click.argument("mapping-manifest-file", type=click.Path(exists=True))
+@click.option("--api-key", default=None, help="API Auth key", type=click.STRING)
+@click.option("--openapi-spec-file", default="config/openapi.yaml", help="OpenAPI YAML spec file", type=click.Path(exists=True))
 @click.option("--api-manifest-file", default="config/connector.yaml", help="API YAML manifest", type=click.Path(exists=True))
 @click.option("--full-refresh", is_flag=True)
 def run(
+    # api_key: str,
+    mapping_manifest_file: str,
     api_key: str,
-    open_api_file: str,
+    openapi_spec_file: str,
     api_manifest_file: str,
     full_refresh: bool
 ):
     # TODO: set env_file based on dev/prod
+    # TODO: need to allow optional params to be read through the .env file
     settings = get_settings(
-        # api_key="a9e2a08afc04b15bd17e20f05373b9e5", # TODO: secret
-        api_key=api_key,
-        openapi_spec_file=open_api_file, # NOTICE: CLI param
+        api_key="a9e2a08afc04b15bd17e20f05373b9e5", # TODO: use click secrets or optional param
+        openapi_spec_file=openapi_spec_file, # NOTICE: CLI param
         api_manifest_file=api_manifest_file # NOTICE: CLI param
     ) 
     print("Config settings", settings.model_dump()) # TODO: use logging
@@ -32,23 +35,30 @@ def run(
 
     # TODO: make sure all dependencies are installed
 
-    # TODO: this should come from config
-    api_params = {
-        "cname": "aave", # NOTICE: CLI param
-        "page_size": 1 # TODO: currently not used
-    }
+    # TODO: omit source generation if source manifest is specified as optional param
+    (
+        (api_name, api_parameters),
+        (source_manifest, endpoint_text_fields)
+    ) = api_loader(
+        mapping_file=pathlib.Path(mapping_manifest_file),
+        openapi_spec_file=pathlib.Path(settings.openapi_spec_file),
+        output_folder=settings.output_folder,
+    )
 
-    api_loader() # TODO:
+    print(f"api config: {api_name} - {api_parameters}")
+    # print(f"endpoint_text_fields - {endpoint_text_fields}")
 
     input_table = input(
-        api_name="boardroom_api", # TODO: validate name only contains alphanumeric characters and underscores
+        api_name=api_name,
         settings=settings,
         config=dict(
             api_key=settings.api_key,
-            **api_params
+            **api_parameters
         ),
-        source_manifest=pathlib.Path(settings.api_manifest_file), # NOTICE: CLI parma BUT should come as dict after generation
-        streams="proposals", # TODO: for now extract proposals only 
+        # source_manifest=pathlib.Path(settings.api_manifest_file), # NOTICE: CLI parma BUT should come as dict after generation
+        source_manifest=source_manifest,
+        endpoint_text_fields=endpoint_text_fields,
+        # streams="proposals", # TODO: for now extract proposals only 
         force_full_refresh=full_refresh # NOTICE: CLI param
     )
     output_table = pipeline(input_table)

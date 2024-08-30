@@ -9,5 +9,8 @@ def preprocessing(input_table: pw.Table) -> pw.Table:
         data=to_json(input_table.data)
     )
 
-    output_table = input_table.flatten(input_table.data)
-    return output_table
+    # TODO: should flatten based on endpoint metadata
+    # case: protocol endpoint doesn't need flattening
+    # output_table = input_table.flatten(input_table.data)
+    # return output_table
+    return input_table
