@@ -818,6 +818,8 @@ paths:
                           type: integer
                         topicsAllTime:
                           type: integer
+                  nextCursor:
+                    type: string
               examples:
                 Example 1:
                   value:
@@ -1418,6 +1420,8 @@ paths:
                           type: integer
                         blockNumber:
                           type: integer
+                  nextCursor:
+                    type: string
               examples:
                 '0':
                   value: '{"data":[{"protocol":"ens","adapter":"onchain","address":"0x983110309620D911731Ac0932219af06091b6744","votePower":"326596.6467","timestamp":"1650299076121","blockNumber":"14610206"}],"nextCursor":"eyJyZWZJZCI6IlpHVnNaV2RoZEdsdmJuQnZkMlZ5T21WdWN6cHZibU5vWVdsdU9qQjRPVGd6TVRFd016QTVOakl3WkRreE1UY3pNV0ZqTURrek1qSXhPV0ZtTURZd09URmlOamMwTkE9PSIsInZvdGVQb3dlciI6IjMyNjU5Ni42NDY3In0="}'
