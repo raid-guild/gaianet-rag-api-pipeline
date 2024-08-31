@@ -1,6 +1,0 @@
-black
-click
-pathway
-python-dotenv
-pydantic
-pydantic-settings
