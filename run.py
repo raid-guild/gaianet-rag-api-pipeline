@@ -37,8 +37,8 @@ def run(
 
     # TODO: omit source generation if source manifest is specified as optional param
     (
-        (api_name, api_parameters),
-        (source_manifest, endpoint_text_fields)
+        (api_name, pagination_schema, api_parameters),
+        (source_manifest, endpoints)
     ) = api_loader(
         mapping_file=pathlib.Path(mapping_manifest_file),
         openapi_spec_file=pathlib.Path(settings.openapi_spec_file),
@@ -46,22 +46,26 @@ def run(
     )
 
     print(f"api config: {api_name} - {api_parameters}")
-    # print(f"endpoint_text_fields - {endpoint_text_fields}")
+    print(f"endpoints - {endpoints}")
 
-    input_table = input(
+    stream_tables = input(
         api_name=api_name,
         settings=settings,
+        endpoints=endpoints,
+        pagination_schema=pagination_schema,
+        # source_manifest=pathlib.Path(settings.api_manifest_file), # NOTICE: CLI parma BUT should come as dict after generation
+        source_manifest=source_manifest,
         config=dict(
             api_key=settings.api_key,
             **api_parameters
         ),
-        # source_manifest=pathlib.Path(settings.api_manifest_file), # NOTICE: CLI parma BUT should come as dict after generation
-        source_manifest=source_manifest,
-        endpoint_text_fields=endpoint_text_fields,
-        # streams="proposals", # TODO: for now extract proposals only 
         force_full_refresh=full_refresh # NOTICE: CLI param
     )
-    output_table = pipeline(input_table)
+
+    output_table = pipeline(
+        endpoints=endpoints,
+        stream_tables=stream_tables
+    )
     output(output_table)
 
     pw.run(monitoring_level=pw.MonitoringLevel.ALL)

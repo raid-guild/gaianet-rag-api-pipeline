@@ -1,3 +1,4 @@
+from gaianet_rag_api_pipeline.schema import PaginationSchemas
 from gaianet_rag_api_pipeline.utils import resolve_refs
 
 from openapi_spec_validator import validate_spec
@@ -109,33 +110,45 @@ def generate_source_manifest(
         entrypoint_type = data_root.get("type", "")
         #####
 
-        # validate textSchemas exist in response schema
-        # fields specified in textSchemas will be extracted to be preprocessed
-        # other response data fields will be included as json metadata
-        text_properties = details.\
-            get("textSchema", {}).\
-            get("properties", {})
-        data_fields = resolve_refs(data_root, openapi_spec)
-
         # get response data fields
+        data_fields = resolve_refs(data_root, openapi_spec)
         if entrypoint_type == "array":
             # need to get properties from nested items spec
             data_fields = data_fields.\
                 get("items", {})
         data_fields = data_fields.get("properties", {})
         fields_list = list(data_fields.keys())    
-        print(f"endpoint text fields: {text_properties}") # TODO: logger
         print(f"endpoint spec data fields: {data_fields}") # TODO: logger
 
+        # should validate textSchemas exist in response schema
+        # fields specified in textSchemas will be extracted to be preprocessed
+        # other response data fields will be included as json metadata
+        text_schemas = details.\
+            get("textSchema", {}).\
+            get("properties", {})
+
         # validate text properties are in the endpoint openapi spec as response data fields
-        for field, props in text_properties.items():
+        text_properties = list()
+        for text_schema in text_schemas:
+            field = list(text_schema.keys())[0]
+            props = text_schema[field]
             if field not in fields_list or props.get("type", "") != data_fields[field].get("type", ""):
                 error_msg = f"endpoint field not found or mismatch in openapi spec: {field} - {props}"
                 print(error_msg) # TODO: logger
                 raise Exception(error_msg)
+            text_properties.append(dict(field=field, **props))
+        print(f"endpoint text fields: {text_properties}") # TODO: logger
+
+        # build endpoints ids
+        stream_id = details.get("id", "")
+        stream_refId = f"{stream_id}_stream"
         
         # update endpoint pre-process text fields
-        endpoint_text_fields[endpoint] = text_properties
+        endpoint_text_fields[endpoint] = dict(
+            stream_id=stream_id,
+            entrypoint_type=entrypoint_type,
+            text_properties=text_properties,
+        )
 
         # setup pagination
         needs_pagination = entrypoint_type == "array"
@@ -143,9 +156,7 @@ def generate_source_manifest(
         #####
         
         # build endpoint stream definition
-        endpoint_id = details.get("id", "")
-        stream_id = f"{endpoint_id}_stream"
-        stream_definitions[stream_id] = {
+        stream_definitions[stream_refId] = {
             "$ref": f"#/definitions/{'paging_stream' if needs_pagination else 'single_stream'}" ,
             "schema_loader": {
                 "type": "InlineSchemaLoader",
@@ -154,17 +165,17 @@ def generate_source_manifest(
                 },
             },
             "$parameters": {
-                "name": endpoint_id,
+                "name": stream_id,
                 "primary_key": response_primary_key,
                 "path": f'"{endpoint_path}"',
             },
             **request_options
         }
             
-        stream_refs.append(f"#/definitions/{stream_id}")
-        stream_names.append(endpoint_id)
+        stream_refs.append(f"#/definitions/{stream_refId}")
+        stream_names.append(stream_id)
 
-        stream_yaml_spec = yaml.dump(stream_definitions[stream_id])
+        stream_yaml_spec = yaml.dump(stream_definitions[stream_refId])
         print(f"stream spec:\n {stream_yaml_spec}\n\n") # TODO: logger
 
     # build source manifest   
@@ -193,7 +204,7 @@ def api_loader(
     mapping_file: pathlib.Path,
     openapi_spec_file: pathlib.Path,
     output_folder: str,
-) -> Tuple[Tuple[str, dict], Tuple[dict, str]]:
+) -> Tuple[Tuple[str, PaginationSchemas, dict], Tuple[dict, str], ]:
     mappings = dict()
     with open(mapping_file, "r") as f:
         mappings = yaml.safe_load(f)
@@ -210,8 +221,16 @@ def api_loader(
     defIds = list(mappings.get("definitions", {}).keys())
     for refId in ["paging_stream", "single_stream"]:
         if refId not in defIds:
-            print(f"{refId} is missing in mapping definitions") # TODO: logger
-            raise Exception(f"{refId} stream is missing in mappings")
+            error_msg = f"{refId} is missing in mapping definitions"
+            print(error_msg) # TODO: logger
+            raise Exception(error_msg)
+    
+    # validate "base" retrievers are in mappings
+    for refId in ["retriever", "single_retriever"]:
+        if refId not in defIds:
+            error_msg = f"{refId} is missing in mapping definitions"
+            print(error_msg) # TODO: logger
+            raise Exception(error_msg)
 
     # load openapi spec
     (openapi_spec, _) = read_from_filename(openapi_spec_file)
@@ -229,6 +248,22 @@ def api_loader(
         openapi_spec=openapi_spec,
     )
 
+    # get pagination strategy
+    definitions = mappings.get("definitions", {})
+    pagination_strategy = definitions.\
+        get("retriever", {}).\
+        get("paginator", {}).\
+        get("pagination_strategy", {}).\
+        get("type", None)
+
+    if pagination_strategy not in [schema.name for schema in PaginationSchemas]:
+        error_msg = f"Pagination strategy '{pagination_strategy}' not supported"
+        print(error_msg) # TODO: logger
+        raise Exception(error_msg)
+
+    pagination_schema = PaginationSchemas[pagination_strategy]
+    print(f"pagination schema: {pagination_schema.name}") # TODO: logger
+
     # store generated manifest
     output_file = f"{output_folder}/{api_name}_source_generated.yaml"
     with open(output_file, "w") as out_file:
@@ -236,7 +271,7 @@ def api_loader(
         print(f"source manifest written to {output_file}") # TODO: logger
 
     return (
-        (api_name, api_parameters),
+        (api_name, pagination_schema, api_parameters),
         (source_manifest, endpoint_text_fields),
     )
     

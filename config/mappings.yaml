@@ -164,37 +164,37 @@ textSchemas:
   Protocol:
     type: object
     properties:
-      cname:
-        type: string
-      name:
-        type: string
-      categories:
-        type: array
-        items:
+      - cname:
           type: string
+      - name:
+          type: string
+      - categories:
+          type: array
+          items:
+            type: string
   Proposal:
     type: object
     properties:
-      title:
-        type: string
-      content:
-        type: string
-      summary:
-        type: string
+      - title:
+          type: string
+      - content:
+          type: string
+      - summary:
+          type: string
   DiscourseTopic:
     type: object
     properties:
-      title:
-        type: string
+      - title:
+          type: string
   DiscourseCategory:
     type: object
     properties:
-      name:
-        type: string
-      description:
-        type: string
+      - name:
+          type: string
+      - description:
+          type: string
   DiscourseTopicPost:
     type: object
     properties:
-      body:
-        type: string
+      - body:
+          type: string
