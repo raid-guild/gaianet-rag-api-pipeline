@@ -7,7 +7,7 @@ from gaianet_rag_api_pipeline.pipeline import pipeline
 import click
 import pathlib
 import pathway as pw
-
+import os
 
 @click.command(name="api-pipeline")
 @click.argument("mapping-manifest-file", type=click.Path(exists=True))
