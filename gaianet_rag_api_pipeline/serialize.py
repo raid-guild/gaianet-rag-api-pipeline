@@ -1,7 +1,9 @@
-import pathlib
 import pathway as pw
 
 
-def jsonl_serialize(name: str, input_table: pw.Table) -> None:
-    folder = "./output" # TODO:
-    pw.io.jsonlines.write(input_table, f"{folder}/{name}.jsonl")
+def jsonl_serialize(
+    filename: str,
+    input_table: pw.Table,
+    output_folder: str = "./output",
+) -> None:
+    pw.io.jsonlines.write(input_table, f"{output_folder}/{filename}.jsonl")

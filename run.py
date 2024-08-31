@@ -34,6 +34,10 @@ def run(
     print("Full refresh?", full_refresh)
 
     # TODO: make sure all dependencies are installed
+    # # Looks like this is only needed when using unstructured auto partition
+    # # Make sure libmagic is available
+    # LIBMAGIC_AVAILABLE = bool(importlib.util.find_spec("magic"))
+    # assert LIBMAGIC_AVAILABLE
 
     # TODO: omit source generation if source manifest is specified as optional param
     (
@@ -63,8 +67,10 @@ def run(
     )
 
     output_table = pipeline(
+        api_name=api_name,
         endpoints=endpoints,
-        stream_tables=stream_tables
+        stream_tables=stream_tables,
+        settings=settings,
     )
     output(output_table)
 

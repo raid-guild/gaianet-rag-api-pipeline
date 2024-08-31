@@ -6,17 +6,13 @@ from .json import (
     json_stringify, to_json
 )
 from .reducers import JSONAccumulator
+from .strings import concat_fields
 
 import json
 import pathway as pw
 
 
 json_reducer = pw.reducers.udf_reducer(JSONAccumulator)
-
-
-@pw.udf
-def concat_fields(separator: str, *fields) -> str:
-    return f"{separator}".join(fields)
 
 
 __all__ = [

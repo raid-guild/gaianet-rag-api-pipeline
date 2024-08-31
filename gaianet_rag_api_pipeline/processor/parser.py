@@ -1,8 +1,10 @@
 from collections.abc import Callable
 from io import BytesIO
+from nltk.downloader import Downloader
 from pathway import ColumnExpression, UDF
 from pathway.optional_import import optional_imports
 from typing import Any
+from unstructured.partition.text import partition_text
 
 
 class CustomParseUnstructured(UDF):
@@ -26,8 +28,29 @@ class CustomParseUnstructured(UDF):
         post_processors: list[Callable] | None = None,
         **unstructured_kwargs: Any,
     ):
-        with optional_imports("xpack-llm-docs"):
-            import unstructured.partition.auto  # noqa:F401
+        # # NOTICE: disabled auto partition due to issues with dependencies and poetry (torch)
+        # # More on how to install torch using poetry:
+        # #  - https://github.com/python-poetry/poetry/issues/6409#issuecomment-2203773939
+        # # More on unstructured system dependencies
+        # # - https://github.com/Unstructured-IO/unstructured/blob/main/README.md#installing-the-library
+        # # Other required dependencies:
+        # # - export CFLAGS="-Wno-nullability-completeness" if trying to install pillow-heif missingn module
+        # # - libmagic -> Required for having libmagic working:
+        # #   - brew install libmagic
+        # #   - pip install python-magic-bin
+        # with optional_imports("xpack-llm-docs"):
+        #     import unstructured.partition.auto  # noqa:F401
+
+        # NOTICE: required when using text partition directly
+        nltk_downloader = Downloader()
+        if not nltk_downloader.is_installed("punkt_tab"):
+            print(f"Downloading punkt_tab NLTK model...") # TODO: logger
+            nltk_downloader.download("punkt_tab")
+
+        if not nltk_downloader.is_installed("averaged_perceptron_tagger_eng"):
+            print(f"Downloading averaged_perceptron_tagger_eng NLTK model...") # TODO: logger
+            nltk_downloader.download("averaged_perceptron_tagger_eng")
+        ######
 
         super().__init__()
         _valid_modes = {"single", "elements", "paged"}
@@ -74,14 +97,22 @@ class CustomParseUnstructured(UDF):
             Note that when `mode` is set to `single` or `paged` some of these fields are
             removed if they are specific to a single element, e.g. `category_depth`.
         """
-        import unstructured.partition.auto
+        # # NOTICE: disabled auto partition. See constructor for more info
+        # import unstructured.partition.auto
 
         kwargs = {**self.kwargs, **kwargs}
 
         # print("kwargs", kwargs)
 
-        elements = unstructured.partition.auto.partition(
-            file=BytesIO(contents), **kwargs.pop("unstructured_kwargs")
+        # # NOTICE: disabled auto partition. See constructor for more info
+        # elements = unstructured.partition.auto.partition(
+        #     file=BytesIO(contents), **kwargs.pop("unstructured_kwargs")
+        # )
+
+        # NOTICE: we use partition_text directly as a workaround
+        elements = partition_text(
+            file=BytesIO(contents),
+            **kwargs.pop("unstructured_kwargs"),
         )
 
         post_processors = kwargs.pop("post_processors")
