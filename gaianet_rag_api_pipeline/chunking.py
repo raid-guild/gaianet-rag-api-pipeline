@@ -1,5 +1,5 @@
 from gaianet_rag_api_pipeline.processor import CustomParseUnstructured
-from gaianet_rag_api_pipeline.udfs import concat_fields, json_stringify
+from gaianet_rag_api_pipeline.udfs import concat_fields, json_merge, json_stringify
 
 import pathway as pw
 from typing import Callable, Optional
@@ -42,7 +42,7 @@ def chunking(
         multpage_sections=multipage_sections,
     )
 
-    chunks_table = input_table.select(
+    chunks_table_preview = input_table.select(
         content=parser(
             pw.apply_with_type(
                 lambda x: x.encode() if x else b"", bytes,
@@ -51,6 +51,13 @@ def chunking(
         ),
         metadata=pw.this.metadata
     )
-    output_table = chunks_table.flatten(pw.this.content)
+    chunks_table = chunks_table_preview.flatten(pw.this.content)
+
+    output_table = chunks_table.select(
+        element_id=pw.this.content.get("element_id", default=pw.Json("")).as_str(),
+        text=pw.this.content.get("text", default=pw.Json("")).as_str(),
+        metadata=json_merge(pw.this.metadata, pw.this.content["metadata"]),
+        type=pw.this.content.get("type", default=pw.Json("")).as_str(),
+    )
 
     return output_table
