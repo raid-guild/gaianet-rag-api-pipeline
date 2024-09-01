@@ -23,15 +23,20 @@ def run(
     api_manifest_file: str,
     full_refresh: bool
 ):
-    # TODO: set env_file based on dev/prod
-    # TODO: need to allow optional params to be read through the .env file
-    settings = get_settings(
-        api_key=api_key, # NOTICE: CLI param or env var
+    args = dict(
         openapi_spec_file=openapi_spec_file, # NOTICE: CLI param
         api_manifest_file=api_manifest_file # NOTICE: CLI param
-    ) 
+    )
+    if api_key:
+        args['api_key'] = api_key # NOTICE: CLI param or env var
+    
+    # TODO: set env_file based on dev/prod
+    settings = get_settings(**args)
     print("Config settings", settings.model_dump()) # TODO: use logging
     print("Full refresh?", full_refresh)
+
+    if not settings.api_key:
+        raise Exception("API_KEY not found")
 
     # TODO: make sure all dependencies are installed
     # # Looks like this is only needed when using unstructured auto partition
