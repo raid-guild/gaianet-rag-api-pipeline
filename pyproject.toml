@@ -30,7 +30,7 @@ litellm = "1.41.1"
 qdrant-client = "1.11.0"
 
 [tool.poetry.scripts]
-api-pipeline = "run:run"
+rag-api-pipeline = "run:entrypoint"
 
 [tool.poetry.group.dev.dependencies]
 requests-mock = "*"

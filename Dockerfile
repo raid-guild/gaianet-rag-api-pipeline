@@ -11,4 +11,4 @@ COPY . .
 RUN pip install poetry
 RUN poetry install
 
-CMD ["poetry", "run", "api-pipeline", "config/api_pipeline.yaml"]
+CMD ["poetry", "run", "rag-api-pipeline", "run-all", "config/api_pipeline.yaml"]

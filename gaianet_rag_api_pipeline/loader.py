@@ -278,3 +278,10 @@ def api_loader(
         chunking_params,
     )
     
+
+def get_chunking_params(manifest_file: pathlib.Path):
+    mappings = dict()
+    with open(manifest_file, "r") as f:
+        mappings = yaml.safe_load(f)
+
+    return mappings.get("chunking_param", {})
