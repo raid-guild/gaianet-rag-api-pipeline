@@ -1,4 +1,4 @@
-version: '3'
+version: '3.8'
 
 services:
   pathway_app:
@@ -11,3 +11,19 @@ services:
       PATHWAY_THREADS: 1
     volumes:
       - .:/gaianet_rag_api_pipeline
+    networks:
+      - gaianet_rag_api_pipeline_network
+
+  qdrant:
+    image: qdrant/qdrant:v1.10.0
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - ./qdrant_dev:/qdrant/storage:z
+    networks:
+      - gaianet_rag_api_pipeline_network
+
+networks:
+  gaianet_rag_api_pipeline_network:
+    driver: bridge
