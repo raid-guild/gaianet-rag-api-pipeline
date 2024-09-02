@@ -10,22 +10,22 @@ import pathway as pw
 import os
 
 @click.command(name="api-pipeline")
-@click.argument("mapping-manifest-file", type=click.Path(exists=True))
+@click.argument("api-manifest-file", type=click.Path(exists=True))
 @click.option("--api-key", default=lambda: os.environ.get("BOARDROOM_API_KEY", ""), help="API Auth key", type=click.STRING, prompt=True, prompt_required=False)
 @click.option("--openapi-spec-file", default="config/openapi.yaml", help="OpenAPI YAML spec file", type=click.Path(exists=True), prompt=True, prompt_required=False)
-@click.option("--api-manifest-file", default="config/connector.yaml", help="API YAML manifest", type=click.Path(exists=True), prompt=True, prompt_required=False)
+@click.option("--source-manifest-file", default="config/connector.yaml", help="Source YAML manifest", type=click.Path(exists=True), prompt=True, prompt_required=False)
 @click.option("--full-refresh", is_flag=True)
 def run(
     # api_key: str,
-    mapping_manifest_file: str,
+    api_manifest_file: str,
     api_key: str,
     openapi_spec_file: str,
-    api_manifest_file: str,
+    source_manifest_file: str,
     full_refresh: bool
 ):
     args = dict(
         openapi_spec_file=openapi_spec_file, # NOTICE: CLI param
-        api_manifest_file=api_manifest_file # NOTICE: CLI param
+        source_manifest_file=source_manifest_file # NOTICE: CLI param
     )
     if api_key:
         args['api_key'] = api_key # NOTICE: CLI param or env var
@@ -50,7 +50,7 @@ def run(
         (source_manifest, endpoints),
         chunking_params
     ) = api_loader(
-        mapping_file=pathlib.Path(mapping_manifest_file),
+        manifest_file=pathlib.Path(api_manifest_file),
         openapi_spec_file=pathlib.Path(settings.openapi_spec_file),
         output_folder=settings.output_folder,
     )
@@ -64,7 +64,7 @@ def run(
         settings=settings,
         endpoints=endpoints,
         pagination_schema=pagination_schema,
-        # source_manifest=pathlib.Path(settings.api_manifest_file), # NOTICE: CLI parma BUT should come as dict after generation
+        # source_manifest=pathlib.Path(settings.source_manifest_file), # NOTICE: CLI parma BUT should come as dict after generation
         source_manifest=source_manifest,
         config=dict(
             api_key=settings.api_key,

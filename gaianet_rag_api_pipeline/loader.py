@@ -201,12 +201,12 @@ def generate_source_manifest(
 
 
 def api_loader(
-    mapping_file: pathlib.Path,
+    manifest_file: pathlib.Path,
     openapi_spec_file: pathlib.Path,
     output_folder: str,
 ) -> Tuple[Tuple[str, PaginationSchemas, dict], Tuple[dict, str], dict[str, Any]]:
     mappings = dict()
-    with open(mapping_file, "r") as f:
+    with open(manifest_file, "r") as f:
         mappings = yaml.safe_load(f)
 
     # TODO: validate name only contains alphanumeric characters and underscores

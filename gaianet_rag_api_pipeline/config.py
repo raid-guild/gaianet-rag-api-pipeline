@@ -26,7 +26,7 @@ class Settings(BaseSettings):
 
     api_key: str
     openapi_spec_file: str
-    api_manifest_file: str
+    source_manifest_file: str
     output_folder: str
 
     gaia_node_api_base_url: str
