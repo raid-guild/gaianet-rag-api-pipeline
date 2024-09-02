@@ -21,8 +21,12 @@ Workaround in case of missing dependencies:
 
 ## Pipeline execution
 
+- Copy `config/.env/sample` into `config/.env` file and set environment variables accordingly
+- Set the API key in a `config/secrets/api_key` file
+- Define the API pipeline manifest and execute the following CLI command
+
 ```
-poetry run api-pipeline <BOARDROOM_API_KEY> --open-api-file config/openapi.yaml
+poetry run api-pipeline config/api_pipeline.yaml [--full-refresh]
 ```
 
 ## Local development
