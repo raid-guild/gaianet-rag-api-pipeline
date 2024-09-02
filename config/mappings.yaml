@@ -198,3 +198,14 @@ textSchemas:
     properties:
       - body:
           type: string
+
+chunking_param:
+  mode: "elements"
+  chunking_strategy: "by_title"
+  include_orig_elements: true
+  max_characters: 1500
+  new_after_n_chars: 1024
+  overlap: 0
+  overlap_all: false
+  combine_text_under_n_chars: 0
+  multipage_sections: true

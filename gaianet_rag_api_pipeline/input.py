@@ -15,6 +15,7 @@ def create_endpoint_stream(
     source_manifest: dict | pathlib.Path,
     stream_id: str,
     pagination_schema: PaginationSchemas,
+    autocommit_duration_ms: int,
     config: dict[str, typing.Any] | None = None,
     force_full_refresh: bool = False
 ) -> pw.Table:
@@ -42,7 +43,8 @@ def create_endpoint_stream(
 
     return pw.io.python.read(
         stream_connector,
-        schema=pagination_schema.value
+        schema=pagination_schema.value,
+        autocommit_duration_ms=autocommit_duration_ms
     )
 
 
@@ -80,6 +82,7 @@ def input(
             source_manifest=source_manifest,
             stream_id=stream_id,
             pagination_schema=pagination_schema,
+            autocommit_duration_ms=settings.autocommit_duration_ms,
             config=config,
             force_full_refresh=force_full_refresh,
         )

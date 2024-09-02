@@ -1,5 +1,5 @@
 from functools import cache, lru_cache
-from typing import Literal
+from typing import Literal, Optional
 
 # from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -19,15 +19,24 @@ class Settings(BaseSettings):
     #
     # env vars
     #
-    input_connector: Literal["python", "redpanda"] # TODO:remove
     autocommit_duration_ms: int
     pathway_threads: int
+    pathway_retry_max_attempts: int
+    pathway_retry_delay_ms: int
 
     api_key: str
     openapi_spec_file: str
     api_manifest_file: str
     output_folder: str
 
+    gaia_node_api_base_url: str
+    gaia_node_api_key: str
+    gaia_node_embeddings_model: str
+    gaia_node_embeddings_vector_size: int
+
+    qdrantdb_url: str
+    qdrantdb_timeout: int
+    qdrantdb_distance_fn: Literal["COSINE", "EUCLID", "DOT", "MANHATTAN"]
 
 # @lru_cache()
 @cache

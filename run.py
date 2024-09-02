@@ -47,7 +47,8 @@ def run(
     # TODO: omit source generation if source manifest is specified as optional param
     (
         (api_name, pagination_schema, api_parameters),
-        (source_manifest, endpoints)
+        (source_manifest, endpoints),
+        chunking_params
     ) = api_loader(
         mapping_file=pathlib.Path(mapping_manifest_file),
         openapi_spec_file=pathlib.Path(settings.openapi_spec_file),
@@ -56,6 +57,7 @@ def run(
 
     print(f"api config: {api_name} - {api_parameters}")
     print(f"endpoints - {endpoints}")
+    print(f"chunking params - {chunking_params}")
 
     stream_tables = input(
         api_name=api_name,
@@ -71,13 +73,21 @@ def run(
         force_full_refresh=full_refresh # NOTICE: CLI param
     )
 
-    output_table = pipeline(
+    # pipeline from streams to chunked data
+    embeddings_table = pipeline(
         api_name=api_name,
         endpoints=endpoints,
         stream_tables=stream_tables,
+        chunking_params=chunking_params,
         settings=settings,
     )
-    output(output_table)
+
+    # output to vector db
+    output(
+        api_name=api_name,
+        output_table=embeddings_table,
+        settings=settings,
+    )
 
     pw.run(monitoring_level=pw.MonitoringLevel.ALL)
 

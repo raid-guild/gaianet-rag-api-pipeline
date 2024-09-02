@@ -3,6 +3,7 @@ from io import BytesIO
 from nltk.downloader import Downloader
 from pathway import ColumnExpression, UDF
 from pathway.optional_import import optional_imports
+from pathway.udfs import async_executor
 from typing import Any
 from unstructured.partition.text import partition_text
 
@@ -26,6 +27,7 @@ class CustomParseUnstructured(UDF):
         self,
         mode: str = "single",
         post_processors: list[Callable] | None = None,
+        capacity: int | None = None,
         **unstructured_kwargs: Any,
     ):
         # # NOTICE: disabled auto partition due to issues with dependencies and poetry (torch)
@@ -52,7 +54,10 @@ class CustomParseUnstructured(UDF):
             nltk_downloader.download("averaged_perceptron_tagger_eng")
         ######
 
-        super().__init__()
+        super().__init__(
+            deterministic=True,
+            executor=async_executor(capacity=capacity) # TODO: adding more workers doesn't seems to improve execution time
+        )
         _valid_modes = {"single", "elements", "paged"}
         if mode not in _valid_modes:
             raise ValueError(
@@ -82,7 +87,7 @@ class CustomParseUnstructured(UDF):
     #     return result
 
     # def __wrapped__(self, contents: bytes, **kwargs) -> list[tuple[str, dict]]:
-    def __wrapped__(self, contents: bytes, **kwargs) -> list[dict]:
+    async def __wrapped__(self, contents: bytes, **kwargs) -> list[dict]:
         """
         Parse the given document:
 

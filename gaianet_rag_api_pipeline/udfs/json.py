@@ -3,8 +3,8 @@ import pathway as pw
 import typing
 
 
-@pw.udf
-def filter_json(document: pw.Json, fields_to_remove: list[str]) -> pw.Json:
+@pw.udf(deterministic=True)
+async def filter_json(document: pw.Json, fields_to_remove: list[str]) -> pw.Json:
     data = { **document.as_dict() }
     # data = { "refId": document["refId"] }
     for field in fields_to_remove:
@@ -13,14 +13,14 @@ def filter_json(document: pw.Json, fields_to_remove: list[str]) -> pw.Json:
     return data
 
 
-@pw.udf
-def json_concat_fields(data: pw.Json, fields: list[str]) -> str:
+@pw.udf(deterministic=True)
+async def json_concat_fields(data: pw.Json, fields: list[str]) -> str:
     values = [data[fname].as_str() for fname in fields]
     return "\n\n".join(values)
 
 
-@pw.udf
-def json_concat_fields_with_meta(data: pw.Json, fields: list[pw.Json]) -> str:
+@pw.udf(deterministic=True)
+async def json_concat_fields_with_meta(data: pw.Json, fields: list[pw.Json]) -> str:
     values = list()
     global_field = None
     try:
@@ -40,16 +40,16 @@ def json_concat_fields_with_meta(data: pw.Json, fields: list[pw.Json]) -> str:
     return "\n\n".join(values)
 
 
-@pw.udf
-def json_merge(base: pw.Json, content: pw.Json) -> pw.Json:
+@pw.udf(deterministic=True)
+async def json_merge(base: pw.Json, content: pw.Json) -> pw.Json:
     return { **base.as_dict(), **content.as_dict()}
 
 
-@pw.udf
-def json_stringify(data: pw.Json) -> str:
+@pw.udf(deterministic=True)
+async def json_stringify(data: pw.Json) -> str:
     return json.dumps(data.as_dict())
 
 
-@pw.udf
-def to_json(val: pw.Json) -> pw.Json:
+@pw.udf(deterministic=True)
+async def to_json(val: pw.Json) -> pw.Json:
     return pw.Json(json.loads(val.as_str()))

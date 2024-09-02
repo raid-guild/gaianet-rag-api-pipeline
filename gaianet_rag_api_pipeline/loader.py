@@ -5,7 +5,7 @@ from openapi_spec_validator import validate_spec
 from openapi_spec_validator.readers import read_from_filename
 import pathway as pw
 import pathlib
-from typing import Tuple
+from typing import Any, Tuple
 import yaml
 
 
@@ -204,7 +204,7 @@ def api_loader(
     mapping_file: pathlib.Path,
     openapi_spec_file: pathlib.Path,
     output_folder: str,
-) -> Tuple[Tuple[str, PaginationSchemas, dict], Tuple[dict, str], ]:
+) -> Tuple[Tuple[str, PaginationSchemas, dict], Tuple[dict, str], dict[str, Any]]:
     mappings = dict()
     with open(mapping_file, "r") as f:
         mappings = yaml.safe_load(f)
@@ -270,8 +270,11 @@ def api_loader(
         yaml.dump(source_manifest, out_file)
         print(f"source manifest written to {output_file}") # TODO: logger
 
+    chunking_params = mappings.get("chunking_param", {})
+
     return (
         (api_name, pagination_schema, api_parameters),
         (source_manifest, endpoint_text_fields),
+        chunking_params,
     )
     

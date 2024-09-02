@@ -12,6 +12,7 @@ def pipeline(
     api_name: str,
     endpoints: dict,
     stream_tables: typing.List[pw.Table],
+    chunking_params: dict[str, typing.Any],
     settings: Settings,
 ) -> pw.Table:
     """Preprocessing each endpoint stream."""
@@ -53,15 +54,29 @@ def pipeline(
     # TODO: consider other chunking parameters
     chunks_table = chunking(
         input_table=normalized_table,
+        mode=chunking_params.get("mode", "elements"),
+        capacity=settings.pathway_threads,
+        chunking_strategy=chunking_params.get("chunking_strategy", "by_title"),
+        include_orig_elements=chunking_params.get("include_orig_elements", None),
+        max_characters=chunking_params.get("max_characters", None),
+        new_after_n_chars=chunking_params.get("new_after_n_chars", None),
+        overlap=chunking_params.get("overlap", None),
+        overlap_all=chunking_params.get("overlap_all", None),
+        combine_text_under_n_chars=chunking_params.get("combine_text_under_n_chars", None),
+        multipage_sections=chunking_params.get("multipage_sections", None),
     )
 
     # serialize chunking stage
     jsonl_serialize(
         filename=f"{api_name}_chunked",
-        input_table=chunks_table
+        input_table=chunks_table,
     )
 
     # embeddings
-    embeddings_table = embeddings(chunks_table)
+    embeddings_table = embeddings(
+        input_table=chunks_table,
+        settings=settings,
+        cache_strategy=None, # pw.udfs.DefaultCache()
+    )
 
     return embeddings_table
