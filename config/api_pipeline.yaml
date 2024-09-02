@@ -136,11 +136,11 @@ endpoints:
     responseSchema: "#/schemas/boardroom_api"
     textSchema:
       $ref: "#/textSchemas/DiscourseTopic"
-  /discourseCategories:
-    id: "discourseCategories"
-    responseSchema: "#/schemas/boardroom_api"
-    textSchema:
-      $ref: "#/textSchemas/DiscourseCategory"
+  # /discourseCategories:
+  #   id: "discourseCategories"
+  #   responseSchema: "#/schemas/boardroom_api"
+  #   textSchema:
+  #     $ref: "#/textSchemas/DiscourseCategory"
   /discourseTopicPosts:
     id: "discourseTopicPosts"
     responseSchema: "#/schemas/boardroom_api"
