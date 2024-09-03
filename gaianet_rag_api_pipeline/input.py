@@ -93,6 +93,7 @@ def input(
 
 def read_jsonl_source(
     source_file: str,
-    schema: pw.Schema
+    schema: pw.Schema,
+    mode: typing.Literal["static", "streaming"] = "streaming"
 ) -> pw.Table:
-    return pw.io.jsonlines.read(source_file, schema=schema)
+    return pw.io.jsonlines.read(source_file, schema=schema, mode=mode)

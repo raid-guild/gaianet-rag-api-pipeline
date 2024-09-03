@@ -2,7 +2,8 @@ from gaianet_rag_api_pipeline.schema import AirbyteSchema
 
 from pathway import Json, Schema
 
-class NormalizedAPISchema(AirbyteSchema):
+# TODO: having issues with parsing AirbyteSchema._airbyte_extracted_at
+class NormalizedAPISchema(Schema):
     data: Json
     content: str
     metadata: Json

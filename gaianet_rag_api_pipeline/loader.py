@@ -436,9 +436,17 @@ def api_read(
     )
     
 
-def get_chunking_params(manifest_file: pathlib.Path):
+def get_dict_field(manifest_file: pathlib.Path, field_id: str) -> dict:
     mappings = dict()
     with open(manifest_file, "r") as f:
         mappings = yaml.safe_load(f)
 
-    return mappings.get("chunking_param", {})
+    return mappings.get(field_id, {})
+
+
+def get_str_field(manifest_file: pathlib.Path, field_id: str) -> str:
+    mappings = dict()
+    with open(manifest_file, "r") as f:
+        mappings = yaml.safe_load(f)
+
+    return mappings.get(field_id, "")

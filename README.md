@@ -26,7 +26,11 @@ Workaround in case of missing dependencies:
 - Define the API pipeline manifest and execute the following CLI command
 
 ```
-poetry run api-pipeline config/api_pipeline.yaml [--full-refresh]
+poetry run rag-api-pipeline run-all config/api_pipeline.yaml [--full-refresh]
+# or
+poetry run rag-api-pipeline from-normalized config/api_pipeline.yaml --normalized-data-file <file>
+# or
+poetry run rag-api-pipeline from-chunked config/api_pipeline.yaml --chunked-data-file <file>
 ```
 
 ## Local development

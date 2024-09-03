@@ -1,6 +1,6 @@
 from gaianet_rag_api_pipeline.config import get_settings
 from gaianet_rag_api_pipeline.input import input, read_jsonl_source
-from gaianet_rag_api_pipeline.loader import api_loader, api_read, get_chunking_params
+from gaianet_rag_api_pipeline.loader import api_loader, api_read, get_dict_field, get_str_field
 from gaianet_rag_api_pipeline.output import output
 import gaianet_rag_api_pipeline.pipeline as rag_api_pipeline
 from gaianet_rag_api_pipeline.schema import ChunkedDataSchema, NormalizedAPISchema
@@ -131,32 +131,46 @@ def run_all(
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
 @click.option("--normalized-data-file", required=True, help="Normalized data in JSONL format", type=click.Path(exists=True))
-def run_chunking(
+def from_normalized(
     ctx,
     api_manifest_file: str,
     normalized_data_file: str
 ):
-    """Execute the RAG API pipeline from the chunking stage
+    """Execute the RAG API pipeline normalized data
 
     API_MANIFEST_FILE is the pipeline YAML manifest that defines the Pipeline config settings and API endpoints to extract
     """
+    
+    # TODO: set env_file based on dev/prod
+    settings = get_settings()
 
     print(f"context - {ctx.obj}") # TODO: logger
     print(f"Data source - {normalized_data_file}")
 
-    chunking_params = get_chunking_params(
-        manifest_file=pathlib.Path(api_manifest_file)
+    api_name = get_str_field(
+        manifest_file=pathlib.Path(api_manifest_file),
+        field_id="api_name"
+    )
+
+    chunking_params = get_dict_field(
+        manifest_file=pathlib.Path(api_manifest_file),
+        field_id="chunking_param"
     )
 
     print(f"chunking params - {chunking_params}") # TODO: logger
 
     # input data
-    normalized_table = read_jsonl_source(source_file=normalized_data_file, schema=NormalizedAPISchema)
+    normalized_table = read_jsonl_source(
+        source_file=normalized_data_file,
+        schema=NormalizedAPISchema,
+        mode="static"
+    )
 
     print(normalized_table.schema)
 
     # chunked data
     chunks_table = rag_api_pipeline.step_2_chunking(
+        api_name=api_name,
         input_table=normalized_table,
         chunking_params=chunking_params,
         settings=settings
@@ -182,27 +196,40 @@ def run_chunking(
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
 @click.option("--chunked-data-file", required=True, help="Chunked data in JSONL format", type=click.Path(exists=True))
-def run_embeddings(
+def from_chunked(
     ctx,
     api_manifest_file: str,
     chunked_data_file: str
 ):
-    """Execute the RAG API pipeline from the embeddings stage
+    """Execute the RAG API pipeline from (cached) data chunks
 
     API_MANIFEST_FILE is the pipeline YAML manifest that defines the Pipeline config settings and API endpoints to extract
     """
 
+    # TODO: set env_file based on dev/prod
+    settings = get_settings()
+
     print(f"context - {ctx.obj}") # TODO: logger
     print(f"Data source - {chunked_data_file}")
 
-    chunking_params = get_chunking_params(
-        manifest_file=pathlib.Path(api_manifest_file)
+    api_name = get_str_field(
+        manifest_file=pathlib.Path(api_manifest_file),
+        field_id="api_name"
+    )
+
+    chunking_params = get_dict_field(
+        manifest_file=pathlib.Path(api_manifest_file),
+        field_id="chunking_param"
     )
 
     print(f"chunking params - {chunking_params}") # TODO: logger
 
     # input data
-    chunks_table = read_jsonl_source(source_file=chunked_data_file, schema=ChunkedDataSchema)
+    chunks_table = read_jsonl_source(
+        source_file=chunked_data_file,
+        schema=ChunkedDataSchema,
+        mode="static"
+    )
 
     print(chunks_table.schema)
 
