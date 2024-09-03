@@ -89,3 +89,10 @@ def input(
         stream_tables.append(stream)
     
     return stream_tables
+
+
+def read_jsonl_source(
+    source_file: str,
+    schema: pw.Schema
+) -> pw.Table:
+    return pw.io.jsonlines.read(source_file, schema=schema)

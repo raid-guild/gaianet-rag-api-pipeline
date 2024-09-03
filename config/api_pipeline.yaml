@@ -47,7 +47,7 @@ definitions:
     extractor:
       type: DpathExtractor
       field_path: []
-  requester:
+  requester_base:
     type: HttpRequester
     url_base: "https://api.boardroom.info/v1"
     http_method: "GET"
@@ -58,44 +58,26 @@ definitions:
         type: RequestOption
         field_name: "key"
         inject_into: request_parameter
-  single_retriever:
+  retriever_base:
     type: SimpleRetriever
     record_selector:
       $ref: "#/definitions/selector"
-    paginator:
-      type: NoPagination
-    requester:
-      $ref: "#/definitions/requester"
-  retriever:
-    type: SimpleRetriever
-    record_selector:
-      $ref: "#/definitions/selector"
-    paginator:
-      type: DefaultPaginator
-      pagination_strategy:
-        type: CursorPagination
-        # page_size: "{{ config['page_size'] }}"
-        # page_size: 100
-        cursor_value: "{{ response.get('nextCursor', '') }}"
-        stop_condition: "{{ 'nextCursor' not in response }}"
-      # page_size_option:
-      #   type: RequestOption
-      #   field_name: "limit"
-      #   inject_into: "request_parameter"
-      page_token_option:
-        type: RequestOption
-        field_name: "cursor"
-        inject_into: "request_parameter"
-    requester:
-      $ref: "#/definitions/requester"
-  single_stream:
-    type: DeclarativeStream
-    retriever:
-      $ref: "#/definitions/single_retriever"
-  paging_stream:
-    type: DeclarativeStream
-    retriever:
-      $ref: "#/definitions/retriever"
+  paginator:
+    type: DefaultPaginator
+    pagination_strategy:
+      type: CursorPagination
+      # page_size: "{{ config['page_size'] }}"
+      # page_size: 100
+      cursor_value: "{{ response.get('nextCursor', '') }}"
+      stop_condition: "{{ 'nextCursor' not in response }}"
+    # page_size_option:
+    #   type: RequestOption
+    #   field_name: "limit"
+    #   inject_into: "request_parameter"
+    page_token_option:
+      type: RequestOption
+      field_name: "cursor"
+      inject_into: "request_parameter"
 
 schemas:
   boardroom_api:
@@ -136,11 +118,11 @@ endpoints:
     responseSchema: "#/schemas/boardroom_api"
     textSchema:
       $ref: "#/textSchemas/DiscourseTopic"
-  # /discourseCategories:
-  #   id: "discourseCategories"
-  #   responseSchema: "#/schemas/boardroom_api"
-  #   textSchema:
-  #     $ref: "#/textSchemas/DiscourseCategory"
+  /discourseCategories:
+    id: "discourseCategories"
+    responseSchema: "#/schemas/boardroom_api"
+    textSchema:
+      $ref: "#/textSchemas/DiscourseCategory"
   /discourseTopicPosts:
     id: "discourseTopicPosts"
     responseSchema: "#/schemas/boardroom_api"

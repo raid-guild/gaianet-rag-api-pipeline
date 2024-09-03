@@ -1,8 +1,9 @@
 from gaianet_rag_api_pipeline.config import get_settings
-from gaianet_rag_api_pipeline.input import input
-from gaianet_rag_api_pipeline.loader import api_loader, get_chunking_params
+from gaianet_rag_api_pipeline.input import input, read_jsonl_source
+from gaianet_rag_api_pipeline.loader import api_loader, api_read, get_chunking_params
 from gaianet_rag_api_pipeline.output import output
-from gaianet_rag_api_pipeline.pipeline import pipeline
+import gaianet_rag_api_pipeline.pipeline as rag_api_pipeline
+from gaianet_rag_api_pipeline.schema import ChunkedDataSchema, NormalizedAPISchema
 
 import click
 import pathlib
@@ -25,15 +26,15 @@ def cli(ctx, debug):
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
 @click.option("--api-key", default=lambda: os.environ.get("BOARDROOM_API_KEY", ""), help="API Auth key", type=click.STRING, prompt=True, prompt_required=False)
-@click.option("--openapi-spec-file", default="config/openapi.yaml", help="OpenAPI YAML spec file (Default: config/openapi.yaml)", type=click.Path(exists=True), prompt=True, prompt_required=False)
-# @click.option("--source-manifest-file", default="config/connector.yaml", help="Source YAML manifest", type=click.Path(exists=True), prompt=True, prompt_required=False)
+@click.option("--openapi-spec-file", default="config/openapi.yaml", show_default=True, help="OpenAPI YAML spec file", type=click.Path(exists=True), prompt=True, prompt_required=False)
+@click.option("--source-manifest-file", default="", help="Source YAML manifest", type=click.Path()) # TODO: fix validation when empty
 @click.option("--full-refresh", is_flag=True, help="Clean up cache and extract API data from scratch")
 def run_all(
     ctx,
     api_manifest_file: str,
     api_key: str,
     openapi_spec_file: str,
-    # source_manifest_file: str,
+    source_manifest_file: str,
     full_refresh: bool
 ):
     """Run the complete RAG API pipeline.
@@ -45,7 +46,7 @@ def run_all(
 
     args = dict(
         openapi_spec_file=openapi_spec_file, # NOTICE: CLI param
-        # source_manifest_file=source_manifest_file # NOTICE: CLI param
+        source_manifest_file=source_manifest_file # NOTICE: CLI param
     )
     if api_key:
         args['api_key'] = api_key # NOTICE: CLI param or env var
@@ -54,6 +55,7 @@ def run_all(
     settings = get_settings(**args)
     print("Config settings", settings.model_dump()) # TODO: logger
     print("Full refresh?", full_refresh) # TODO: logger
+    print("source manifest", source_manifest_file)
 
     if not settings.api_key:
         raise Exception("API_KEY not found")
@@ -65,26 +67,39 @@ def run_all(
     # assert LIBMAGIC_AVAILABLE
 
     # TODO: omit source generation if source manifest is specified as optional param
-    (
-        (api_name, pagination_schema, api_parameters),
-        (source_manifest, endpoints),
-        chunking_params
-    ) = api_loader(
-        manifest_file=pathlib.Path(api_manifest_file),
-        openapi_spec_file=pathlib.Path(settings.openapi_spec_file),
-        output_folder=settings.output_folder,
-    )
+    if not source_manifest_file:
+        (
+            (api_name, pagination_schema, api_parameters),
+            (source_manifest, endpoints),
+            chunking_params
+        ) = api_loader(
+            manifest_file=pathlib.Path(api_manifest_file),
+            openapi_spec_file=pathlib.Path(settings.openapi_spec_file),
+            output_folder=settings.output_folder,
+        )
+    else:
+        print(f"Reading api spec form source manifest {source_manifest_file}") # TODO: logger
+        (
+            (api_name, pagination_schema, api_parameters),
+            (source_manifest, endpoints),
+            chunking_params
+        ) = api_read(
+            source_manifest_file=source_manifest_file,
+            manifest_file=pathlib.Path(api_manifest_file),
+            openapi_spec_file=pathlib.Path(settings.openapi_spec_file),
+            output_folder=settings.output_folder,
+        )
 
     print(f"api config: {api_name} - {api_parameters}") # TODO: logger
     print(f"endpoints - {endpoints}") # TODO: logger
     print(f"chunking params - {chunking_params}") # TODO: logger
 
+    # fetch data from endpoints as individual streams
     stream_tables = input(
         api_name=api_name,
         settings=settings,
         endpoints=endpoints,
         pagination_schema=pagination_schema,
-        # source_manifest=pathlib.Path(settings.source_manifest_file), # NOTICE: CLI parma BUT should come as dict after generation
         source_manifest=source_manifest,
         config=dict(
             api_key=settings.api_key,
@@ -94,7 +109,7 @@ def run_all(
     )
 
     # pipeline from streams to chunked data
-    embeddings_table = pipeline(
+    embeddings_table = rag_api_pipeline.execute(
         api_name=api_name,
         endpoints=endpoints,
         stream_tables=stream_tables,
@@ -135,6 +150,33 @@ def run_chunking(
 
     print(f"chunking params - {chunking_params}") # TODO: logger
 
+    # input data
+    normalized_table = read_jsonl_source(source_file=normalized_data_file, schema=NormalizedAPISchema)
+
+    print(normalized_table.schema)
+
+    # chunked data
+    chunks_table = rag_api_pipeline.step_2_chunking(
+        input_table=normalized_table,
+        chunking_params=chunking_params,
+        settings=settings
+    )
+
+    # embeddings
+    embeddings_table = rag_api_pipeline.step_3_generate_embeddings(
+        input_table=chunks_table,
+        settings=settings,
+    )
+
+    # output to vector db
+    output(
+        api_name=api_name,
+        output_table=embeddings_table,
+        settings=settings,
+    )
+
+    pw.run(monitoring_level=pw.MonitoringLevel.ALL)
+
 
 @cli.command()
 @click.pass_context
@@ -158,6 +200,26 @@ def run_embeddings(
     )
 
     print(f"chunking params - {chunking_params}") # TODO: logger
+
+    # input data
+    chunks_table = read_jsonl_source(source_file=chunked_data_file, schema=ChunkedDataSchema)
+
+    print(chunks_table.schema)
+
+    # embeddings
+    embeddings_table = rag_api_pipeline.step_3_generate_embeddings(
+        input_table=chunks_table,
+        settings=settings,
+    )
+
+    # output to vector db
+    output(
+        api_name=api_name,
+        output_table=embeddings_table,
+        settings=settings,
+    )
+
+    pw.run(monitoring_level=pw.MonitoringLevel.ALL)
 
 
 def entrypoint():
