@@ -175,3 +175,6 @@ experiments/.DS_Store
 
 # Folders
 output/**/*
+
+# MacOS
+.DS_Store
