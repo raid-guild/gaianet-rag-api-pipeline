@@ -29,13 +29,17 @@ def cli(ctx, debug):
 @click.option("--openapi-spec-file", default="config/openapi.yaml", show_default=True, help="OpenAPI YAML spec file", type=click.Path(exists=True), prompt=True, prompt_required=False)
 @click.option("--source-manifest-file", default="", help="Source YAML manifest", type=click.Path()) # TODO: fix validation when empty
 @click.option("--full-refresh", is_flag=True, help="Clean up cache and extract API data from scratch")
+@click.option("--normalized-only", is_flag=True, help="Run pipeline until the normalized data stage")
+@click.option("--chunked-only", is_flag=True, help="Run pipeline until the chunked data stage")
 def run_all(
     ctx,
     api_manifest_file: str,
     api_key: str,
     openapi_spec_file: str,
     source_manifest_file: str,
-    full_refresh: bool
+    full_refresh: bool,
+    normalized_only: bool,
+    chunked_only: bool
 ):
     """Run the complete RAG API pipeline.
 
@@ -111,21 +115,24 @@ def run_all(
         force_full_refresh=full_refresh # NOTICE: CLI param
     )
 
-    # pipeline from streams to chunked data
-    embeddings_table = rag_api_pipeline.execute(
+    # pipeline from streams to normalized|chunked|embeddings data
+    output_table = rag_api_pipeline.execute(
         api_name=api_name,
+        chunking_params=chunking_params,
         endpoints=endpoints,
         stream_tables=stream_tables,
-        chunking_params=chunking_params,
         settings=settings,
+        normalized_only=normalized_only,
+        chunked_only=chunked_only
     )
 
-    # output to vector db
-    output(
-        api_name=api_name,
-        output_table=embeddings_table,
-        settings=settings,
-    )
+    if not normalized_only and not chunked_only:
+        # output to vector db
+        output(
+            api_name=api_name,
+            output_table=output_table,
+            settings=settings,
+        )
 
     pw.run(monitoring_level=pw.MonitoringLevel.ALL)
 

@@ -105,10 +105,12 @@ def step_3_generate_embeddings(
 
 def execute(
     api_name: str,
+    chunking_params: dict[str, typing.Any],
     endpoints: dict,
     stream_tables: typing.List[pw.Table],
-    chunking_params: dict[str, typing.Any],
     settings: Settings,
+    normalized_only: typing.Optional[bool] = False,
+    chunked_only: typing.Optional[bool] = False
 ) -> pw.Table:
     """Preprocessing each endpoint stream."""
 
@@ -129,6 +131,10 @@ def execute(
         settings=settings
     )
 
+    # circuit breaker
+    if normalized_only:
+        return normalized_table
+
     # chunking
     chunks_table = step_2_chunking(
         api_name=api_name,
@@ -136,6 +142,10 @@ def execute(
         chunking_params=chunking_params,
         settings=settings
     )
+
+    # circuit breaker
+    if chunked_only:
+        return chunks_table
 
     # embeddings
     embeddings_table = step_3_generate_embeddings(
