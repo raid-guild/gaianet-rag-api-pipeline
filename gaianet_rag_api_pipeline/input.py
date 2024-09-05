@@ -78,7 +78,7 @@ def input(
         stream = create_endpoint_stream(
             api_name=api_name,
             cache_name=f"{api_name}_{stream_id}_cache",
-            cache_dir=cache_dir,
+            cache_dir=f"{cache_dir}/{api_name}",
             source_manifest=source_manifest,
             stream_id=stream_id,
             pagination_schema=pagination_schema,

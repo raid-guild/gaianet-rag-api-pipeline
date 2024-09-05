@@ -87,12 +87,15 @@ def run_all(
             source_manifest_file=source_manifest_file,
             manifest_file=pathlib.Path(api_manifest_file),
             openapi_spec_file=pathlib.Path(settings.openapi_spec_file),
-            output_folder=settings.output_folder,
         )
 
     print(f"api config: {api_name} - {api_parameters}") # TODO: logger
     print(f"endpoints - {endpoints}") # TODO: logger
     print(f"chunking params - {chunking_params}") # TODO: logger
+
+    # create pipeline cache/output folders
+    pathlib.Path(f"{settings.output_folder}/{api_name}").mkdir(exist_ok=True)
+    pathlib.Path(f"{settings.output_folder}/cache/{api_name}").mkdir(exist_ok=True, parents=True)
 
     # fetch data from endpoints as individual streams
     stream_tables = input(

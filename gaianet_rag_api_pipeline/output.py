@@ -17,7 +17,7 @@ def output(
         embedding_vector_size=settings.gaia_node_embeddings_vector_size,
         distance=Distance[settings.qdrantdb_distance_fn],
         qdrant_timeout=settings.qdrantdb_timeout,
-        snapshot_output_folder=settings.output_folder,
+        snapshot_output_folder=f"{settings.output_folder}/{api_name}",
     )
 
     pw.io.subscribe(output_table, vector_db.upsert_vector, vector_db.on_end)

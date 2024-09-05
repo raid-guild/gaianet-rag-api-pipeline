@@ -10,7 +10,8 @@ import typing
 def step_0_preprocessing(
     api_name: str,
     endpoints: dict,
-    stream_tables: typing.List[pw.Table]
+    stream_tables: typing.List[pw.Table],
+    settings: Settings,
 ) -> typing.List[pw.Table]:
     preprocessed_streams: typing.List[pw.Table] = list()
     for i, (_, details) in enumerate(endpoints.items()):
@@ -24,7 +25,8 @@ def step_0_preprocessing(
         # serialize pre-processing stage
         jsonl_serialize(
             filename=f"{api_name}_stream_{i}_preprocessed",
-            input_table=stream
+            input_table=stream,
+            output_folder=f"{settings.output_folder}/{api_name}"
         )
         preprocessed_streams.append(stream)
     
@@ -33,7 +35,8 @@ def step_0_preprocessing(
 
 def step_1_normalize_streams(
     api_name: str,
-    preprocessed_streams: typing.List[pw.Table]
+    preprocessed_streams: typing.List[pw.Table],
+    settings: Settings,
 ) -> pw.Table:
     normalized_table = None
     for stream in preprocessed_streams:
@@ -45,7 +48,8 @@ def step_1_normalize_streams(
     # serialize normalized stage
     jsonl_serialize(
         filename=f"{api_name}_normalized",
-        input_table=normalized_table
+        input_table=normalized_table,
+        output_folder=f"{settings.output_folder}/{api_name}"
     )
 
     return normalized_table
@@ -55,7 +59,7 @@ def step_2_chunking(
     api_name: str,
     input_table: pw.Table,
     chunking_params: dict[str, typing.Any],
-    settings: Settings
+    settings: Settings,
 ) -> pw.Table:
 
     # TODO: consider other chunking parameters
@@ -77,6 +81,7 @@ def step_2_chunking(
     jsonl_serialize(
         filename=f"{api_name}_chunked",
         input_table=chunks_table,
+        output_folder=f"{settings.output_folder}/{api_name}"
     )
 
     return chunks_table
@@ -113,13 +118,15 @@ def execute(
     preprocessed_streams: typing.List[pw.Table] = step_0_preprocessing(
         api_name=api_name,
         endpoints=endpoints,
-        stream_tables=stream_tables
+        stream_tables=stream_tables,
+        settings=settings
     )
 
     # concat and normalize data from all endpoint streams
     normalized_table = step_1_normalize_streams(
         api_name=api_name,
-        preprocessed_streams=preprocessed_streams
+        preprocessed_streams=preprocessed_streams,
+        settings=settings
     )
 
     # chunking

@@ -293,8 +293,7 @@ def api_loader(
 def api_read(
     source_manifest_file: pathlib.Path,
     manifest_file: pathlib.Path,
-    openapi_spec_file: pathlib.Path,
-    output_folder: str,
+    openapi_spec_file: pathlib.Path
 ) -> Tuple[Tuple[str, PaginationSchemas, dict], Tuple[dict, str], dict[str, Any]]:
     mappings = dict()
     with open(manifest_file, "r") as f:
