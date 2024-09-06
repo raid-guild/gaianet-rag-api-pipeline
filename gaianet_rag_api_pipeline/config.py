@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     pathway_retry_delay_ms: int
 
     api_key: str
+    api_data_encoding: str
     openapi_spec_file: str
     source_manifest_file: str
     output_folder: str

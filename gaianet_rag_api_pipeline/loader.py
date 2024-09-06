@@ -281,7 +281,7 @@ def api_loader(
         print(f"source manifest written to {output_file}") # TODO: logger
 
     # get chunking params
-    chunking_params = mappings.get("chunking_param", {})
+    chunking_params = mappings.get("chunking_params", {})
 
     return (
         (api_name, pagination_schema, api_parameters),
@@ -426,7 +426,7 @@ def api_read(
     ######
 
     # get chunking params
-    chunking_params = mappings.get("chunking_param", {})
+    chunking_params = mappings.get("chunking_params", {})
 
     return (
         (api_name, pagination_schema, api_parameters),

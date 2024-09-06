@@ -181,7 +181,7 @@ textSchemas:
       - body:
           type: string
 
-chunking_param:
+chunking_params:
   mode: "elements"
   chunking_strategy: "by_title"
   include_orig_elements: true

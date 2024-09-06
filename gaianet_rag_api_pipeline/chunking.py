@@ -10,6 +10,8 @@ def chunking(
     mode: str = "elements", # TODO: docs
     post_processors: list[Callable] | None = None, # UDF post-processors to be applied to resulting elements coming from the parser
     capacity: int | None = None, # udf workers for async execution
+    # Input params
+    encoding: str = 'utf-8',
     # Chunk Parameters 
     # - Common params
     chunking_strategy: str = "by_title",
@@ -34,6 +36,9 @@ def chunking(
         post_processors=post_processors,
         capacity=capacity if capacity > 0 else None,
         # Following kwargs will be added to the unstructred_kwargs dict
+        # > input params
+        encoding=encoding,
+        # > chunking params
         chunking_strategy=chunking_strategy,
         include_orig_elements=include_orig_elements,
         max_characters=max_characters,

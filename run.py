@@ -46,6 +46,9 @@ def run_all(
     API_MANIFEST_FILE is the pipeline YAML manifest that defines the Pipeline config settings and API endpoints to extract
     """
 
+    if normalized_only and chunked_only:
+        raise Exception("Cannot specify both --normalized-only and --chunked-only options")
+
     print(f"context - {ctx.obj}") # TODO: logger
 
     args = dict(
@@ -157,14 +160,16 @@ def from_normalized(
     print(f"context - {ctx.obj}") # TODO: logger
     print(f"Data source - {normalized_data_file}")
 
+    manifest_file = pathlib.Path(api_manifest_file)
+
     api_name = get_str_field(
-        manifest_file=pathlib.Path(api_manifest_file),
+        manifest_file=manifest_file,
         field_id="api_name"
     )
 
     chunking_params = get_dict_field(
-        manifest_file=pathlib.Path(api_manifest_file),
-        field_id="chunking_param"
+        manifest_file=manifest_file,
+        field_id="chunking_params"
     )
 
     print(f"chunking params - {chunking_params}") # TODO: logger
@@ -229,7 +234,7 @@ def from_chunked(
 
     chunking_params = get_dict_field(
         manifest_file=pathlib.Path(api_manifest_file),
-        field_id="chunking_param"
+        field_id="chunking_params"
     )
 
     print(f"chunking params - {chunking_params}") # TODO: logger
