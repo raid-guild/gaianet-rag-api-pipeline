@@ -14,7 +14,7 @@ def output(
     vector_db = QdrantDBVectorStore(
         collection_name=f"{api_name}_collection",
         qdrantdb_url=settings.qdrantdb_url,
-        embedding_vector_size=settings.gaia_node_embeddings_vector_size,
+        embedding_vector_size=settings.llm_embeddings_vector_size,
         distance=Distance[settings.qdrantdb_distance_fn],
         qdrant_timeout=settings.qdrantdb_timeout,
         snapshot_output_folder=f"{settings.output_folder}/{api_name}",

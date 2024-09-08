@@ -1,4 +1,4 @@
-from gaianet_rag_api_pipeline.config import get_settings, Settings
+from gaianet_rag_api_pipeline.config import get_settings, logger, Settings
 from gaianet_rag_api_pipeline.io.airbyte import AirbyteAPIConnector
 from gaianet_rag_api_pipeline.schema import PaginationSchemas
 
@@ -38,7 +38,7 @@ def create_endpoint_stream(
     try: 
         stream_connector.check()
     except Exception as error:
-        print(f"FATAL error: manifest error when creating {stream_id} stream", error) # TODO: logger
+        logger.error(f"FATAL error: manifest error when creating {stream_id} stream", exc_info=True)
         raise error
 
     return pw.io.python.read(
@@ -71,7 +71,7 @@ def input(
 
     streams = [details.get("stream_id", "") for endpoint, details in endpoints.items()]
 
-    print(f"input streams - {streams}") # TODO: logger
+    logger.debug(f"input streams - {streams}")
 
     stream_tables = list()
     for stream_id in streams:

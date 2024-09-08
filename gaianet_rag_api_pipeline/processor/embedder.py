@@ -1,15 +1,68 @@
+from gaianet_rag_api_pipeline.config import logger
+
 import asyncio
 import contextvars
-from functools import partial
+from functools import partial, wraps
+import inspect
 from litellm import (
     client,
     embedding,
     exception_type,
 )
 from litellm.utils import EmbeddingResponse
+from ollama import AsyncClient, Client
 from pathway.xpacks.llm.embedders import BaseEmbedder, _monkeypatch_openai_async
 from pathway.internals import udfs
 from pathway.optional_import import optional_imports
+
+
+def ollama_client(original_function):
+
+    @wraps(original_function)
+    def wrapper(*args, **kwargs):
+        try:
+            host = kwargs.get("api_base", "http://localhost:11434")
+            client = Client(host=host)
+            kwargs = {
+                "client": client,
+                **kwargs,
+            }
+            return original_function(*args, **kwargs)
+        except Exception as error:
+            logger.error(error, exc_info=True)
+            raise error
+    
+
+    @wraps(original_function)
+    async def wrapper_async(*args, **kwargs):
+        try:
+            host = kwargs.get("api_base", "http://localhost:11434")
+            client = AsyncClient(host=host)
+            kwargs = {
+                "client": client,
+                **kwargs,
+            }
+            return await original_function(*args, **kwargs)
+        except Exception as error:
+            logger.error(error, exc_info=True)
+            raise error
+    
+
+    is_coroutine = inspect.iscoroutinefunction(original_function)
+
+    # Return the appropriate wrapper based on the original function type
+    if is_coroutine:
+        return wrapper_async
+    else:
+        return wrapper
+
+
+@ollama_client
+async def ollama_embedding(*args, **kwargs) -> dict:
+    client = kwargs.get("client")
+    input = kwargs.get("input")
+    model = kwargs.get("model")
+    return await client.embeddings(model=model, prompt=input)
 
 
 @client
@@ -178,6 +231,15 @@ class CustomLiteLLMEmbedder(BaseEmbedder):
         # import litellm
 
         kwargs = {**self.kwargs, **kwargs}
-        # ret = await litellm.aembedding(input=[input or "."], **kwargs)
-        ret = await aembedding(input=[input or "."], **kwargs)
-        return ret.data[0]["embedding"]
+
+        # NOTICE: custom logic to support ollama
+        custom_llm_provider = kwargs.get("custom_llm_provider", None) # NOTICE: required update
+
+        if custom_llm_provider == "ollama":
+            ret = await ollama_embedding(input=(input or "."), **kwargs)
+            return ret["embedding"]
+        else:
+            # litellm will use the .llms.openai.OpenAIChatCompletion to make the request
+            # ret = await litellm.aembedding(input=[input or "."], **kwargs)
+            ret = await aembedding(input=[input or "."], **kwargs) 
+            return ret.data[0]["embedding"]

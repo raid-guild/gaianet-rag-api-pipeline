@@ -1,3 +1,5 @@
+from gaianet_rag_api_pipeline.config import logger
+
 import os.path
 import pathway as pw
 from qdrant_client import QdrantClient
@@ -54,23 +56,23 @@ class QdrantDBVectorStore():
         self.counter += 1 # TODO: better indexing (e.g. uuid)
     
     def on_end(self):
-        print("VectorDB updated!") # TODO: logger
+        logger.debug("VectorDB updated!")
         try:
             snapshot_rs = self.client.create_snapshot(
                 collection_name=self.collection_name
             )
             snapshot_name = snapshot_rs.name
             snapshot_url = f"{self.qdrantdb_url}/collections/{self.collection_name}/snapshots/{snapshot_name}"
-            print(f"You can Download a snapshot from {snapshot_url}") # TODO: logger
+            logger.info(f"You can Download a snapshot from {snapshot_url}")
             (output_file, _) = urllib.request.urlretrieve(
                 snapshot_url,
                 f"{self.snapshot_output_folder}/{snapshot_name}"
             )
-            print(f"Generated snapshot: {output_file}") # TODO: logger
+            logger.info(f"Snapshot downloaded to: {output_file}")
             with tarfile.open(f"{output_file}.tar.gz", "w:gz") as tar:
                 tar.add(output_file, arcname=os.path.basename(output_file))
                 tar.close()
-            print(f"Compressed snapshot: {output_file}.tar.gz") # TODO: logger
+            logger.info(f"Compressed snapshot: {output_file}.tar.gz")
         except Exception as error:
-            print(f"QdrantDBVectorStore: an error occurred when generating snapshot - {error}") # TODO: logger
+            logger.error(f"QdrantDBVectorStore: an error occurred when generating snapshot", exc_info=True)
             raise error

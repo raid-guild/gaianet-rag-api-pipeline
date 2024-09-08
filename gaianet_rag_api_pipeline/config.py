@@ -1,8 +1,12 @@
 from functools import cache, lru_cache
+import logging
 from typing import Literal, Optional
 
-# from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+logger = logging.getLogger(name="rag-api-pipeline")
+
 
 ENV_FILE_PATH = "config/.env"
 SECRETS_PATH = "config/secrets"
@@ -30,10 +34,11 @@ class Settings(BaseSettings):
     source_manifest_file: str
     output_folder: str
 
-    gaia_node_api_base_url: str
-    gaia_node_api_key: str
-    gaia_node_embeddings_model: str
-    gaia_node_embeddings_vector_size: int
+    llm_api_base_url: str
+    llm_api_key: str
+    llm_embeddings_model: str
+    llm_embeddings_vector_size: int
+    llm_provider: Literal["ollama", "openai"] # NOTICE: gaianet offers an openai compatible API
 
     qdrantdb_url: str
     qdrantdb_timeout: int

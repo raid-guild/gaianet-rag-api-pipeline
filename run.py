@@ -1,18 +1,20 @@
-from gaianet_rag_api_pipeline.config import get_settings
+from gaianet_rag_api_pipeline.config import get_settings, logger
 from gaianet_rag_api_pipeline.input import input, read_jsonl_source
 from gaianet_rag_api_pipeline.loader import api_loader, api_read, get_dict_field, get_str_field
 from gaianet_rag_api_pipeline.output import output
-import gaianet_rag_api_pipeline.pipeline as rag_api_pipeline
 from gaianet_rag_api_pipeline.schema import ChunkedDataSchema, NormalizedAPISchema
+import gaianet_rag_api_pipeline.pipeline as rag_api_pipeline
 
 import click
+from codetiming import Timer
+import logging
 import pathlib
 import pathway as pw
 import os
 
 
 @click.group()
-@click.option('--debug', default=False, help="enable logging debug level")
+@click.option('--debug', is_flag=True, help="enable logging debug level")
 @click.pass_context
 def cli(ctx, debug):
     click.echo(f"Debug mode is {'on' if debug else 'off'}")
@@ -20,20 +22,24 @@ def cli(ctx, debug):
     # by means other than the `if` block below)
     ctx.ensure_object(dict)
     ctx.obj['DEBUG'] = debug
+    logger.setLevel(level=logging.INFO if not debug else logging.DEBUG)
 
 
 @cli.command()
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
+@click.option("--llm-provider", default="openai", type=click.Choice(["ollama", "openai"], case_sensitive=True), show_default=True, help="Embedding model provider")
 @click.option("--api-key", default=lambda: os.environ.get("BOARDROOM_API_KEY", ""), help="API Auth key", type=click.STRING, prompt=True, prompt_required=False)
 @click.option("--openapi-spec-file", default="config/openapi.yaml", show_default=True, help="OpenAPI YAML spec file", type=click.Path(exists=True), prompt=True, prompt_required=False)
 @click.option("--source-manifest-file", default="", help="Source YAML manifest", type=click.Path()) # TODO: fix validation when empty
 @click.option("--full-refresh", is_flag=True, help="Clean up cache and extract API data from scratch")
 @click.option("--normalized-only", is_flag=True, help="Run pipeline until the normalized data stage")
 @click.option("--chunked-only", is_flag=True, help="Run pipeline until the chunked data stage")
+@Timer(name="rag-api-pipeline", text="run-all pipeline executed after: {:.2f} seconds", logger=logger.info)
 def run_all(
     ctx,
     api_manifest_file: str,
+    llm_provider: str,
     api_key: str,
     openapi_spec_file: str,
     source_manifest_file: str,
@@ -49,9 +55,10 @@ def run_all(
     if normalized_only and chunked_only:
         raise Exception("Cannot specify both --normalized-only and --chunked-only options")
 
-    print(f"context - {ctx.obj}") # TODO: logger
+    logger.debug(f"context - {ctx.obj}")
 
     args = dict(
+        llm_provider=llm_provider, # NOTICE: CLI param
         openapi_spec_file=openapi_spec_file, # NOTICE: CLI param
         source_manifest_file=source_manifest_file # NOTICE: CLI param
     )
@@ -60,20 +67,13 @@ def run_all(
     
     # TODO: set env_file based on dev/prod
     settings = get_settings(**args)
-    print("Config settings", settings.model_dump()) # TODO: logger
-    print("Full refresh?", full_refresh) # TODO: logger
-    print("source manifest", source_manifest_file)
+    logger.info(f"Config settings - {settings.model_dump()}")
+    logger.debug(f"Full refresh? - {full_refresh}")
+    logger.debug(f"source manifest - {source_manifest_file}")
 
     if not settings.api_key:
         raise Exception("API_KEY not found")
 
-    # TODO: make sure all dependencies are installed
-    # # Looks like this is only needed when using unstructured auto partition
-    # # Make sure libmagic is available
-    # LIBMAGIC_AVAILABLE = bool(importlib.util.find_spec("magic"))
-    # assert LIBMAGIC_AVAILABLE
-
-    # TODO: omit source generation if source manifest is specified as optional param
     if not source_manifest_file:
         (
             (api_name, pagination_schema, api_parameters),
@@ -85,7 +85,7 @@ def run_all(
             output_folder=settings.output_folder,
         )
     else:
-        print(f"Reading api spec form source manifest {source_manifest_file}") # TODO: logger
+        logger.info(f"Reading api spec form source manifest {source_manifest_file}")
         (
             (api_name, pagination_schema, api_parameters),
             (source_manifest, endpoints),
@@ -96,9 +96,9 @@ def run_all(
             openapi_spec_file=pathlib.Path(settings.openapi_spec_file),
         )
 
-    print(f"api config: {api_name} - {api_parameters}") # TODO: logger
-    print(f"endpoints - {endpoints}") # TODO: logger
-    print(f"chunking params - {chunking_params}") # TODO: logger
+    logger.debug(f"api config: {api_name} - {api_parameters}")
+    logger.debug(f"endpoints - {endpoints}")
+    logger.debug(f"chunking params - {chunking_params}")
 
     # create pipeline cache/output folders
     pathlib.Path(f"{settings.output_folder}/{api_name}").mkdir(exist_ok=True)
@@ -143,10 +143,13 @@ def run_all(
 @cli.command()
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
+@click.option("--llm-provider", default="openai", type=click.Choice(["ollama", "openai"], case_sensitive=True), show_default=True, help="Embedding model provider")
 @click.option("--normalized-data-file", required=True, help="Normalized data in JSONL format", type=click.Path(exists=True))
+@Timer(name="rag-api-pipeline", text="from-normalized pipeline executed after: {:.2f} seconds", logger=logger.info)
 def from_normalized(
     ctx,
     api_manifest_file: str,
+    llm_provider: str,
     normalized_data_file: str
 ):
     """Execute the RAG API pipeline normalized data
@@ -155,10 +158,10 @@ def from_normalized(
     """
     
     # TODO: set env_file based on dev/prod
-    settings = get_settings()
+    settings = get_settings(llm_provider=llm_provider)
 
-    print(f"context - {ctx.obj}") # TODO: logger
-    print(f"Data source - {normalized_data_file}")
+    logger.info(f"Config settings - {settings.model_dump()}")
+    logger.debug(f"Data source - {normalized_data_file}")
 
     manifest_file = pathlib.Path(api_manifest_file)
 
@@ -172,7 +175,7 @@ def from_normalized(
         field_id="chunking_params"
     )
 
-    print(f"chunking params - {chunking_params}") # TODO: logger
+    logger.debug(f"chunking params - {chunking_params}")
 
     # input data
     normalized_table = read_jsonl_source(
@@ -180,8 +183,6 @@ def from_normalized(
         schema=NormalizedAPISchema,
         mode="static"
     )
-
-    print(normalized_table.schema)
 
     # chunked data
     chunks_table = rag_api_pipeline.step_2_chunking(
@@ -210,10 +211,13 @@ def from_normalized(
 @cli.command()
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
+@click.option("--llm-provider", default="openai", type=click.Choice(["ollama", "openai"], case_sensitive=True), show_default=True, help="Embedding model provider")
 @click.option("--chunked-data-file", required=True, help="Chunked data in JSONL format", type=click.Path(exists=True))
+@Timer(name="rag-api-pipeline", text="from-chunked pipeline executed after: {:.2f} seconds", logger=logger.info)
 def from_chunked(
     ctx,
     api_manifest_file: str,
+    llm_provider: str,
     chunked_data_file: str
 ):
     """Execute the RAG API pipeline from (cached) data chunks
@@ -222,10 +226,10 @@ def from_chunked(
     """
 
     # TODO: set env_file based on dev/prod
-    settings = get_settings()
+    settings = get_settings(llm_provider=llm_provider)
 
-    print(f"context - {ctx.obj}") # TODO: logger
-    print(f"Data source - {chunked_data_file}")
+    logger.info(f"Config settings - {settings.model_dump()}")
+    logger.debug(f"Data source - {chunked_data_file}")
 
     api_name = get_str_field(
         manifest_file=pathlib.Path(api_manifest_file),
@@ -237,7 +241,7 @@ def from_chunked(
         field_id="chunking_params"
     )
 
-    print(f"chunking params - {chunking_params}") # TODO: logger
+    logger.debug(f"chunking params - {chunking_params}")
 
     # input data
     chunks_table = read_jsonl_source(
@@ -245,8 +249,6 @@ def from_chunked(
         schema=ChunkedDataSchema,
         mode="static"
     )
-
-    print(chunks_table.schema)
 
     # embeddings
     embeddings_table = rag_api_pipeline.step_3_generate_embeddings(

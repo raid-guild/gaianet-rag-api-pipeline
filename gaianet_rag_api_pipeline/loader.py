@@ -1,3 +1,4 @@
+from gaianet_rag_api_pipeline.config import logger
 from gaianet_rag_api_pipeline.schema import PaginationSchemas
 from gaianet_rag_api_pipeline.utils import resolve_refs
 
@@ -48,15 +49,15 @@ def generate_source_manifest(
     for endpoint, details in endpoints.items():
         if not details or not details.get("id", None):
             error_msg = f"Parse error in mapping endpoint: {endpoint} - {details}"
-            print(error_msg) # TODO: logger
+            logger.error(error_msg, exc_info=True)
             raise Exception(error_msg)
         
-        print(f"endpoint: {endpoint}") # TODO: logger
+        logger.debug(f"endpoint: {endpoint}")
 
         # make sure endpoint is in openapi spec
         if endpoint not in available_endpoints:
             error_msg = f"{endpoint} NOT found!"
-            print(error_msg) # TODO: logger
+            logger.errort(error_msg, exc_info=True)
             raise Exception(error_msg)
         #####
 
@@ -66,17 +67,17 @@ def generate_source_manifest(
         # validate mandatory params
         endpoint_params = endpoint_spec.get(request_method, {}).get("parameters", {})
         required_params = [param for param in endpoint_params if param.get("required", False)]
-        print(f"\t - required params: {[p.get('name', '') for p in required_params]}") # TODO: logger
+        logger.debug(f"\t - required params: {[p.get('name', '') for p in required_params]}")
         for p in required_params:
             if p.get("name", None) not in source_parameters:
                 error_msg = f"{p} not found in spec properties"
-                print(error_msg) # TODO: logger
+                logger.error(error_msg, exc_info=True)
                 raise Exception(error_msg)
         #####
 
         # update endpoint path with url params
         path_params = [param.get("name", "") for param in required_params if param.get("in", "") == "path"]
-        print(f"\t - path params: {path_params}") # TODO: logger  
+        logger.debug(f"\t - path params: {path_params}")
         endpoint_path = f"{endpoint}"
         for param in path_params:
             endpoint_path = endpoint_path.replace(f"{param}", f"{{ config['{param}'] }}")
@@ -85,8 +86,8 @@ def generate_source_manifest(
         # add query params if passed as source_parameters
         query_params = [param.get("name", "") for param in endpoint_params if param.get("in", "") == "query"]
         match_query_params = [param for param in query_params if param in source_parameters]
-        print(f"\t - available query params: {query_params}") # TODO: logger
-        print(f"\t - found query params: {match_query_params}") # TODO: logger
+        logger.debug(f"\t - available query params: {query_params}")
+        logger.debug(f"\t - found query params: {match_query_params}")
 
         # building endpoint request parameters
         request_parameters = dict()
@@ -116,7 +117,7 @@ def generate_source_manifest(
                 get("items", {})
         data_fields = data_fields.get("properties", {})
         fields_list = list(data_fields.keys())    
-        print(f"endpoint spec data fields: {data_fields}") # TODO: logger
+        logger.debug(f"endpoint spec data fields: {data_fields}")
 
         # should validate textSchemas exist in response schema
         # fields specified in textSchemas will be extracted and joined together to be preprocessed
@@ -132,10 +133,10 @@ def generate_source_manifest(
             props = text_schema[field]
             if field not in fields_list or props.get("type", "") != data_fields[field].get("type", ""):
                 error_msg = f"endpoint field not found or mismatch in openapi spec: {field} - {props}"
-                print(error_msg) # TODO: logger
+                logger.error(error_msg, exc_info=True)
                 raise Exception(error_msg)
             text_properties.append(dict(field=field, **props))
-        print(f"endpoint text fields: {text_properties}") # TODO: logger
+        logger.debug(f"endpoint text fields: {text_properties}")
 
         # build endpoints ids
         stream_id = details.get("id", "")
@@ -157,7 +158,7 @@ def generate_source_manifest(
             paginator = {
                 "$ref": "#/definitions/paginator"
             }
-        print(f"response schema: needs pagination? {needs_pagination} - {paginator} - {response_schema}") # TODO: logger
+        logger.debug(f"response schema: needs pagination? {needs_pagination} - {paginator} - {response_schema}")
         #####
 
         # setup requester
@@ -167,7 +168,7 @@ def generate_source_manifest(
         has_request_params = len(request_parameters.keys()) > 0
         if has_request_params:
             requester["request_parameters"] = request_parameters
-        print(f"response schema: has request parameters? {has_request_params} - {request_parameters}") # TODO: logger
+        logger.debug(f"response schema: has request parameters? {has_request_params} - {request_parameters}")
         
         # build endpoint stream definition
         stream_definitions[stream_refId] = {
@@ -194,7 +195,7 @@ def generate_source_manifest(
         stream_names.append(stream_id)
 
         stream_yaml_spec = yaml.dump(stream_definitions[stream_refId])
-        print(f"stream spec:\n {stream_yaml_spec}\n\n") # TODO: logger
+        logger.debug(f"stream spec:\n {stream_yaml_spec}\n\n")
 
     # build source manifest   
     definitions = {
@@ -233,14 +234,14 @@ def api_loader(
         raise Exception("api_name not found in mappings")
 
     api_parameters = mappings.get("api_parameters", None)
-    print(f"api parameters - {api_parameters}") # TODO: logger
+    logger.debug(f"api parameters - {api_parameters}")
 
     # validate "base" definitions are in mappings
     defIds = list(mappings.get("definitions", {}).keys())
     for refId in ["paginator", "requester_base", "retriever_base", "selector"]:
         if refId not in defIds:
             error_msg = f"{refId} is missing in mapping definitions"
-            print(error_msg) # TODO: logger
+            logger.error(error_msg, exc_info=True)
             raise Exception(error_msg)
 
     # load openapi spec
@@ -250,7 +251,7 @@ def api_loader(
     try:
         validate_spec(openapi_spec)
     except Exception as error:
-        print(f"Spec not valid. A {type(error).__name__} error was raised", error) # TODO: logger
+        logger.error(f"Spec not valid. A {type(error).__name__} error was raised", exc_info=True)
         raise error
 
     # generate source manifest
@@ -268,17 +269,17 @@ def api_loader(
 
     if pagination_strategy not in [schema.name for schema in PaginationSchemas]:
         error_msg = f"Pagination strategy '{pagination_strategy}' not supported"
-        print(error_msg) # TODO: logger
+        logger.error(error_msg, exc_info=True)
         raise Exception(error_msg)
 
     pagination_schema = PaginationSchemas[pagination_strategy]
-    print(f"pagination schema: {pagination_schema.name}") # TODO: logger
+    logger.debug(f"pagination schema: {pagination_schema.name}")
 
     # store generated manifest
     output_file = f"{output_folder}/{api_name}_source_generated.yaml"
     with open(output_file, "w") as out_file:
         yaml.dump(source_manifest, out_file)
-        print(f"source manifest written to {output_file}") # TODO: logger
+        logger.debug(f"source manifest written to {output_file}")
 
     # get chunking params
     chunking_params = mappings.get("chunking_params", {})
@@ -308,7 +309,7 @@ def api_read(
     api_config = mappings.get("api_config", {})
 
     api_parameters = mappings.get("api_parameters", None)
-    print(f"api parameters - {api_parameters}") # TODO: logger
+    logger.debug(f"api parameters - {api_parameters}")
 
     # read source manifest
     source_manifest = dict()
@@ -321,7 +322,7 @@ def api_read(
     for refId in ["paginator", "requester_base", "retriever_base", "selector"]:
         if refId not in defIds:
             error_msg = f"{refId} is missing in mapping definitions"
-            print(error_msg) # TODO: logger
+            logger.error(error_msg, exc_info=True)
             raise Exception(error_msg)
     ######
 
@@ -333,7 +334,7 @@ def api_read(
     try:
         validate_spec(openapi_spec)
     except Exception as error:
-        print(f"Spec not valid. A {type(error).__name__} error was raised", error) # TODO: logger
+        logger.error(f"Spec not valid. A {type(error).__name__} error was raised", exc_info=True)
         raise error
     ######
 
@@ -376,7 +377,7 @@ def api_read(
                 get("items", {})
         data_fields = data_fields.get("properties", {})
         fields_list = list(data_fields.keys())    
-        print(f"endpoint spec data fields: {data_fields}") # TODO: logger
+        logger.debug(f"endpoint spec data fields: {data_fields}")
 
         # should validate textSchemas exist in response schema
         # fields specified in textSchemas will be extracted to be preprocessed
@@ -392,10 +393,10 @@ def api_read(
             props = text_schema[field]
             if field not in fields_list or props.get("type", "") != data_fields[field].get("type", ""):
                 error_msg = f"endpoint field not found or mismatch in openapi spec: {field} - {props}"
-                print(error_msg) # TODO: logger
+                logger.error(error_msg, exc_info=True)
                 raise Exception(error_msg)
             text_properties.append(dict(field=field, **props))
-        print(f"endpoint text fields: {text_properties}") # TODO: logger
+        logger.debug(f"endpoint text fields: {text_properties}")
 
         # build endpoints ids
         stream_id = details.get("id", "")
@@ -418,11 +419,11 @@ def api_read(
 
     if pagination_strategy not in [schema.name for schema in PaginationSchemas]:
         error_msg = f"Pagination strategy '{pagination_strategy}' not supported"
-        print(error_msg) # TODO: logger
+        logger.error(error_msg, exc_info=True)
         raise Exception(error_msg)
 
     pagination_schema = PaginationSchemas[pagination_strategy]
-    print(f"pagination schema: {pagination_schema.name}") # TODO: logger
+    logger.debug(f"pagination schema: {pagination_schema.name}")
     ######
 
     # get chunking params

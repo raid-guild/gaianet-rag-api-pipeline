@@ -28,6 +28,8 @@ python-dotenv = "1.0.1"
 openapi-spec-validator = "0.4.0"
 litellm = "1.41.1"
 qdrant-client = "1.11.0"
+ollama = "^0.3.2"
+codetiming = "^1.4.0"
 
 [tool.poetry.scripts]
 rag-api-pipeline = "run:entrypoint"

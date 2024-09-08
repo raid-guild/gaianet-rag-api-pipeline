@@ -1,3 +1,5 @@
+from gaianet_rag_api_pipeline.config import logger
+
 from collections.abc import Callable
 from io import BytesIO
 from nltk.downloader import Downloader
@@ -46,11 +48,11 @@ class CustomParseUnstructured(UDF):
         # NOTICE: required when using text partition directly
         nltk_downloader = Downloader()
         if not nltk_downloader.is_installed("punkt_tab"):
-            print(f"Downloading punkt_tab NLTK model...") # TODO: logger
+            logger.info(f"Downloading punkt_tab NLTK model...")
             nltk_downloader.download("punkt_tab")
 
         if not nltk_downloader.is_installed("averaged_perceptron_tagger_eng"):
-            print(f"Downloading averaged_perceptron_tagger_eng NLTK model...") # TODO: logger
+            logger.info(f"Downloading averaged_perceptron_tagger_eng NLTK model...")
             nltk_downloader.download("averaged_perceptron_tagger_eng")
         ######
 

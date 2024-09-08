@@ -91,13 +91,11 @@ def step_2_chunking(
 def step_3_generate_embeddings(
     input_table: pw.Table,
     settings: Settings,
-    custom_llm_provider: str = "openai",
     cache_strategy: pw.udfs.CacheStrategy | None = None,
 ) -> pw.Table:
     embeddings_table = embeddings(
         input_table=input_table,
         settings=settings,
-        custom_llm_provider=custom_llm_provider,
         cache_strategy=cache_strategy, # pw.udfs.DefaultCache()
     )
 
