@@ -66,7 +66,7 @@ def step_2_chunking(
     chunks_table = chunking(
         input_table=input_table,
         mode=chunking_params.get("mode", "elements"),
-        capacity=settings.pathway_threads,
+        capacity=settings.chunking_batch_capacity,
         encoding=settings.api_data_encoding,
         chunking_strategy=chunking_params.get("chunking_strategy", "by_title"),
         include_orig_elements=chunking_params.get("include_orig_elements", None),

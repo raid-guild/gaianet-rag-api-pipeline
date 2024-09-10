@@ -24,9 +24,11 @@ class Settings(BaseSettings):
     # env vars
     #
     autocommit_duration_ms: int
-    pathway_threads: int
     pathway_retry_max_attempts: int
     pathway_retry_delay_ms: int
+
+    chunking_batch_capacity: int
+    embeddings_batch_capacity: int
 
     api_key: str
     api_data_encoding: str

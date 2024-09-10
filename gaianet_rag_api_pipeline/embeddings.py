@@ -15,8 +15,7 @@ def embeddings(
         api_key=settings.llm_api_key, # NOTICE: can't be empty otherwise python API throws an error
         custom_llm_provider=settings.llm_provider,
         model=settings.llm_embeddings_model,
-        # TODO: tune parallelization
-        capacity=settings.pathway_threads if settings.pathway_threads > 0 else None,
+        capacity=settings.embeddings_batch_capacity if settings.embeddings_batch_capacity > 0 else None,
         retry_strategy=pw.asynchronous.udfs.FixedDelayRetryStrategy(
             max_retries=settings.pathway_retry_max_attempts,
             delay_ms=settings.pathway_retry_delay_ms
