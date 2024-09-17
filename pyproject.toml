@@ -18,7 +18,7 @@ packages = [ { include = "gaianet_rag_api_pipeline" }, {include = "run.py" } ]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.12"
-airbyte = "0.16.4"
+airbyte = "0.17.6"
 black = "24.4.2"
 click= "8.1.7"
 pathway = {version = "0.14.0", extras = ["xpack-llm-docs"]}

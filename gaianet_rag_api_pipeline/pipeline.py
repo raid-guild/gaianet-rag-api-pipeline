@@ -15,11 +15,9 @@ def step_0_preprocessing(
 ) -> typing.List[pw.Table]:
     preprocessed_streams: typing.List[pw.Table] = list()
     for i, (_, details) in enumerate(endpoints.items()):
-        entrypoint_type = details.get("entrypoint_type")
         text_properties = details.get("text_properties")
         stream = preprocessing(
             input_stream=stream_tables[i],
-            entrypoint_type=entrypoint_type,
             text_properties=text_properties
         )
         # serialize pre-processing stage

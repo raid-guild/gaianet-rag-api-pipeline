@@ -23,13 +23,15 @@ def cli(ctx, debug):
     ctx.ensure_object(dict)
     ctx.obj['DEBUG'] = debug
     logger.setLevel(level=logging.INFO if not debug else logging.DEBUG)
+    if debug:
+        os.environ["AIRBYTE_STRUCTURED_LOGGING"] = "true"
 
 
 @cli.command()
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
 @click.option("--llm-provider", default="openai", type=click.Choice(["ollama", "openai"], case_sensitive=True), show_default=True, help="Embedding model provider")
-@click.option("--api-key", default=lambda: os.environ.get("BOARDROOM_API_KEY", ""), help="API Auth key", type=click.STRING, prompt=True, prompt_required=False)
+@click.option("--api-key", default=lambda: os.environ.get("API_KEY", ""), help="API Auth key", type=click.STRING, prompt=True, prompt_required=False)
 @click.option("--openapi-spec-file", default="config/openapi.yaml", show_default=True, help="OpenAPI YAML spec file", type=click.Path(exists=True), prompt=True, prompt_required=False)
 @click.option("--source-manifest-file", default="", help="Source YAML manifest", type=click.Path()) # TODO: fix validation when empty
 @click.option("--full-refresh", is_flag=True, help="Clean up cache and extract API data from scratch")
@@ -55,7 +57,7 @@ def run_all(
     if normalized_only and chunked_only:
         raise Exception("Cannot specify both --normalized-only and --chunked-only options")
 
-    logger.debug(f"context - {ctx.obj}")
+    logger.info(f"context - {ctx.obj}")
 
     args = dict(
         llm_provider=llm_provider, # NOTICE: CLI param
@@ -76,7 +78,7 @@ def run_all(
 
     if not source_manifest_file:
         (
-            (api_name, pagination_schema, api_parameters),
+            (api_name, api_parameters),
             (source_manifest, endpoints),
             chunking_params
         ) = api_loader(
@@ -87,7 +89,7 @@ def run_all(
     else:
         logger.info(f"Reading api spec form source manifest {source_manifest_file}")
         (
-            (api_name, pagination_schema, api_parameters),
+            (api_name, api_parameters),
             (source_manifest, endpoints),
             chunking_params
         ) = api_read(
@@ -100,6 +102,11 @@ def run_all(
     logger.debug(f"endpoints - {endpoints}")
     logger.debug(f"chunking params - {chunking_params}")
 
+    # set airbyte logging level if debug is enabled
+    if (ctx.obj['DEBUG']):
+        airbyte_logger = logging.getLogger(f"airbyte.{api_name}")
+        airbyte_logger.setLevel(logging.DEBUG)
+
     # create pipeline cache/output folders
     pathlib.Path(f"{settings.output_folder}/{api_name}").mkdir(exist_ok=True)
     pathlib.Path(f"{settings.output_folder}/cache/{api_name}").mkdir(exist_ok=True, parents=True)
@@ -109,7 +116,6 @@ def run_all(
         api_name=api_name,
         settings=settings,
         endpoints=endpoints,
-        pagination_schema=pagination_schema,
         source_manifest=source_manifest,
         config=dict(
             api_key=settings.api_key,

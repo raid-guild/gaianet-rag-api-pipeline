@@ -1,4 +1,4 @@
-from gaianet_rag_api_pipeline.schema import AirbyteSchema
+# from gaianet_rag_api_pipeline.schema import AirbyteSchema
 
 from pathway import Json, Schema
 

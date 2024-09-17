@@ -1,0 +1,1018 @@
+version: "3.0.0"
+
+api_name: "optimism_agora_api"
+
+api_parameters:
+
+api_config:
+  request_method: "get"
+  content_type: "application/json"
+  response_entrypoint_field: "data"
+
+chunking_params:
+  mode: "elements"
+  chunking_strategy: "by_title"
+  include_orig_elements: true
+  max_characters: 1500
+  new_after_n_chars: 1024
+  overlap: 0
+  overlap_all: false
+  combine_text_under_n_chars: 0
+  multipage_sections: true
+
+spec:
+  connection_specification:
+    $schema: http://json-schema.org/draft-07/schema#
+    additionalProperties: true
+    properties:
+      api_key:
+        airbyte-secret: true
+        description: Agora API Key.
+        type: string
+    required:
+    - api_key
+    title: Agora API Spec
+    type: object
+  documentation_url: https://docs.airbyte.com/integrations/sources/agora
+  type: Spec
+
+definitions:
+  selector:
+    type: RecordSelector
+    extractor:
+      type: DpathExtractor
+      field_path: ["data"]
+  selector_single:
+    type: RecordSelector
+    extractor:
+      type: DpathExtractor
+      field_path: []
+  requester_base:
+    type: HttpRequester
+    url_base: "https://vote.optimism.io/api/v1"
+    http_method: "GET"
+    authenticator: # More on https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/authentication
+      type: BearerAuthenticator
+      api_token: "{{ config['api_key'] }}"
+  retriever_base:
+    type: SimpleRetriever
+    record_selector:
+      $ref: "#/definitions/selector"
+  retriever_single_base:
+    type: SimpleRetriever
+    record_selector:
+      $ref: "#/definitions/selector_single"
+  paginator: # More on https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/pagination
+    type: DefaultPaginator
+    pagination_strategy: # More on https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/pagination#offset-increment
+      type: "OffsetIncrement"
+      page_size: 50
+    page_token_option:
+      type: "RequestOption"
+      field_name: "offset"
+      inject_into: "request_parameter"
+    page_size_option:
+      type: "RequestOption"
+      inject_into: "request_parameter"
+      field_name: "limit"
+
+endpoints:
+  /proposals:
+    id: "proposals"
+    primary_key: "id"
+    responseSchema: "#/schemas/Proposal"
+    textSchema:
+      $ref: "#/textSchemas/Proposal"
+  /projects:
+    id: "projects"
+    primary_key: "id"
+    responseSchema: "#/schemas/Project"
+    textSchema:
+      $ref: "#/textSchemas/Project"
+
+schemas:
+  PageMetadata:
+    summary: Pagination metadata
+    description: Metadata associated with paginated requests.
+    type: object
+    properties:
+      has_next:
+        summary: Flag indicating if there's more data for retrieval
+        description: A boolean flag indicating if there is additional data past the returned page to retrieve.
+        type: boolean
+      total_returned:
+        summary: Total records returned
+        description: A number indicating the total amount of records returned for the request.
+        type: integer
+        format: int32
+      next_offset:
+        summary: Offset to supply to the next request
+        description: A number indicating the offset at which a subsequent request may retrieve the next set of records.
+        type: integer
+        format: int32
+  Delegation:
+    summary: A delegation of voting power
+    description: A delegation of voting power from one address to another.
+    type: object
+    properties:
+      from:
+        summary: Delegator address
+        description: Address of the delegator.
+        type: string
+        examples:
+          - "0xDa6d1F091B672C0f9e215eB9fa6B5a84bF2c5e11"
+      to:
+        summary: Delegatee address
+        description: Address of the delegatee.
+        type: string
+        examples:
+          - "0xDa6d1F091B672C0f9e215eB9fa6B5a84bF2c5e11"
+      allowance:
+        summary: Voting allowance for delegate in OP tokens (18 decimals)
+        description: Total amount of voting power delegated to or from address.
+        type: string
+        examples:
+          - "100000000000000000000000"
+      timestamp:
+        summary: When delegation occurred
+        description: The datetime on which the delegation of voting power occurred.
+        type: string
+        format: date-time
+        examples:
+          - "2024-01-17T19:37:15.983Z"
+      type:
+        summary: Type of delegation
+        description: The type of delegation; can be advanced or direct. Advanced delegations are made through Alligator. Direct delegations are made through OP token.
+        type: string
+        enum:
+          - DIRECT
+          - ADVANCED
+      amount:
+        summary: Amount delegated
+        description: The amount of voting power delegated; can be full or partial.
+        type: string
+        enum:
+          - FULL
+          - PARTIAL
+      transaction_hash:
+        summary: Transaction hash of delegation
+        description: The transaction hash of the delegation transaction.
+        type: string
+        examples:
+          - "0x8ed595a6f85b2d21e32602094d261034d11706dc100d8f48e11a03c15378cfcf"
+  DelegateChunk:
+    summary: A chunk of delegate data
+    description: Data associated with a voting delegate. Sub-resources under this delegate are not expanded.
+    type: object
+    properties:
+      address:
+        summary: Delegate address
+        description: Address of the delegate.
+        type: string
+        examples:
+          - "0xDa6d1F091B672C0f9e215eB9fa6B5a84bF2c5e11"
+      votingPower:
+        summary: Delegate's available voting power
+        description: An object providing a breakdown of a delegate's overall voting power between direct, advanced, and total.
+        type: object
+        properties:
+          advanced:
+            description: Advanced voting power.
+            type: string
+            examples:
+              - "10000"
+          direct:
+            description: Direct voting power.
+            type: string
+            examples:
+              - "20000"
+          total:
+            description: Total voting power.
+            type: string
+            examples:
+              - "30000"
+      isCitizen:
+        description: A boolean flag indicating whether or not this delegate is an Agora citizen.
+        type: boolean
+      statement:
+        $ref: "#/schemas/DelegateStatement"
+  Delegate:
+    summary: A voting delegate
+    description: Data associated with a voting delegate. Sub-resources under this delegate are not expanded.
+    type: object
+    properties:
+      address:
+        summary: Delegate address
+        description: Address of the delegate.
+        type: string
+        examples:
+          - "0xDa6d1F091B672C0f9e215eB9fa6B5a84bF2c5e11"
+      votingPower:
+        summary: Delegate's available voting power
+        description: An object providing a breakdown of a delegate's overall voting power between direct, advanced, and total.
+        type: object
+        properties:
+          advanced:
+            description: Advanced voting power.
+            type: string
+            examples:
+              - "10000"
+          direct:
+            description: Direct voting power.
+            type: string
+            examples:
+              - "20000"
+          total:
+            description: Total voting power.
+            type: string
+            examples:
+              - "30000"
+      isCitizen:
+        description: A boolean flag indicating whether or not this delegate is an Agora citizen.
+        type: boolean
+      statement:
+        $ref: "#/schemas/DelegateStatement"
+      votingPowerRelativeToVotableSupply:
+        summary: Delegate's voting power relative to votable supply
+        description: The delegate's voting power relative to the votable supply.
+        type: number
+      votingPowerRelativeToQuorum:
+        summary: Delegate's voting power relative to quorum
+        description: The delegate's voting power relative to the quorum.
+        type: number
+      proposalsCreated:
+        summary: Number of proposals created
+        description: The number of proposals created by the delegate.
+        type: number
+      proposalsVotedOn:
+        summary: Number of proposals voted on
+        description: The number of proposals voted on by the delegate.
+        type: number
+      votedFor:
+        summary: Number of proposals voted for
+        description: The number of proposals voted for by the delegate.
+        type: string
+      votedAgainst:
+        summary: Number of proposals voted against
+        description: The number of proposals voted against by the delegate.
+        type: string
+      votedAbstain:
+        summary: Number of proposals abstained from
+        description: The number of proposals abstained from by the delegate.
+        type: string
+      votingParticipation:
+        summary: Voting participation
+        description: The delegate's voting participation.
+        type: string
+      lastTenProps:
+        summary: Number of proposals voted on out of the last ten
+        description: The number of proposals voted on out of the last ten.
+        type: string
+      numOfDelegators:
+        summary: Number of delegators
+        description: The number of delegators.
+        type: string
+  DelegateStatement:
+    summary: A delegate's statement
+    description: A delegate's statement, including the social links and topIssues.
+    type: object
+    properties:
+      statement:
+        summary: Delegate's statement
+        description: A statement from the delegate describing their voting positions.
+        type: string
+      twitter:
+        summary: Twitter handle
+        description: Twitter handle for the delegate.
+        type: string
+      discord:
+        summary: Discord handle
+        description: Discord handle for the delegate.
+        type: string
+      warpcast:
+        summary: Warpcast handle
+        description: Warpcast handle for the delegate.
+        type: string
+      topIssues:
+        summary: Top issues for a delegate
+        description: The most important issues for a given delegate.
+        type: array
+        items:
+          $ref: "#/schemas/Issue"
+  Issue:
+    summary: Description of a governance issue
+    description: An object describing a particular view on a particular governance issue.
+    type: object
+    properties:
+      type:
+        type: string
+        examples:
+          - "Funding"
+      value:
+        type: string
+        examples:
+          - "Grant funding should be directed to projects with a great track record"
+  SnapshotProposalResults:
+    summary: Results of a snapshot proposal
+    description: An object describing the results of a snapshot proposal, including status and scores.
+    type: object
+    properties:
+      scores:
+        summary: Scores for the proposal
+        type: array
+        items:
+          type: string
+      status:
+        summary: Status of the proposal
+        type: string
+        enum:
+          - pending
+          - active
+          - closed
+  StandardProposalResults:
+    summary: Results of a standard proposal
+    description: An object describing the results of a standard proposal.
+    type: object
+    properties:
+      for:
+        summary: Number of votes for
+        type: string
+      against:
+        summary: Number of votes against
+        type: string
+      abstain:
+        summary: Number of abstentions
+        type: string
+  ApprovalProposalResults:
+    summary: Results of an approval proposal
+    description: An object describing the results of an approval proposal.
+    type: object
+    properties:
+      for:
+        summary: Number of votes for
+        type: string
+      against:
+        summary: Number of votes against
+        type: string
+      abstain:
+        summary: Number of abstentions
+        type: string
+      options:
+        type: array
+        items:
+          type: object
+          properties:
+            option:
+              type: string
+            votes:
+              type: string
+      criteria:
+        type: string
+        enum:
+          - THRESHOLD
+          - TOP_CHOICES
+      criteriaValue:
+        summary: Threshold required to pass or number of top choices that is passed
+        type: string
+  OptimisticProposalResults:
+    summary: Results of an optimistic proposal
+    description: An object describing the results of an optimistic proposal.
+    type: object
+    properties:
+      for:
+        summary: Number of votes for
+        type: string
+      against:
+        summary: Number of votes against
+        type: string
+      abstain:
+        summary: Number of abstentions
+        type: string
+  SnapshotProposalData:
+    summary: Data associated with a snapshot proposal
+    description: >
+      Metadata and data associated with a snapshot proposal, including start/end/created times, scores, and votes.
+    type: object
+    properties:
+      votingStrategy:
+        $ref: "#/schemas/VotingStrategy"
+      title:
+        summary: Title of the proposal
+        type: string
+      startTimestamp:
+        summary: Start time of the proposal
+        type: string
+        format: date-time
+      endTimestamp:
+        summary: End time of the proposal
+        type: string
+        format: date-time
+      createdTimestamp:
+        summary: Creation time of the proposal
+        type: string
+        format: date-time
+      link:
+        summary: Link to the proposal
+        type: string
+      scores:
+        summary: Scores for the proposal
+        type: array
+        items:
+          type: string
+      votes:
+        summary: Votes for the proposal
+        type: string
+      state:
+        summary: State of the proposal
+        type: string
+        enum:
+          - ACTIVE
+          - CLOSED
+          - PENDING
+  StandardProposalData:
+    summary: Data associated with standard proposal
+    description: >
+      Metadata and data associated with a standard proposal, including onchain execution data.
+    type: object
+    properties:
+      votingStrategy:
+        $ref: "#/schemas/VotingStrategy"
+      options:
+        type: array
+        items:
+          type: object
+          properties:
+            executionData:
+              $ref: "#/schemas/ExecutionData"
+  ApprovalProposalData:
+    summary: Data associated with an approval proposal
+    description: >
+      Metadata and data associated with an approval proposal, including onchain execution data.
+    type: object
+    properties:
+      votingStrategy:
+        $ref: "#/schemas/VotingStrategy"
+      options:
+        type: array
+        items:
+          type: object
+          properties:
+            executionData:
+              $ref: "#/schemas/ExecutionData"
+            budgetTokensSpent:
+              summary: Budget tokens spent
+              type: string
+            description:
+              summary: Description of the proposal
+              type: string
+      proposalSettings:
+        type: object
+        properties:
+          maxApprovals:
+            summary: Maximum approvals for the proposal
+            type: string
+          criteria:
+            summary: Criteria for the proposal
+            type: string
+            enum:
+              - THRESHOLD
+              - TOP_CHOICES
+          budgetToken:
+            summary: Budget token for the proposal
+            type: string
+          criteriaValue:
+            summary: Criteria value for the proposal
+            type: string
+          budgetAmount:
+            summary: Budget amount for the proposal
+            type: string
+  OptimisticProposalData:
+    summary: Data associated with an optimistic proposal
+    description: >
+      Metadata and data associated with an optimistic proposal, including onchain execution data.
+    type: object
+    properties:
+      votingStrategy:
+        $ref: "#/schemas/VotingStrategy"
+      executionData:
+        $ref: "#/schemas/ExecutionData"
+      description:
+        summary: Description of the proposal
+        type: string
+  ExecutionData:
+    summary: Structured execution data for proposal
+    description: >
+      Provides the values, targets, calldata, and functions for proposal execution.
+    type: object
+    properties:
+      values:
+        summary: Values for execution
+        type: array
+        items:
+          type: string
+      targets:
+        summary: Targets for execution
+        type: array
+        items:
+          type: string
+      signatures:
+        summary: Function signatures
+        type: array
+        items:
+          type: string
+      calldata:
+        summary: Calldata for execution
+        type: array
+        items:
+          type: string
+      description:
+        summary: Description of the option
+        type: string
+      functionArgsName:
+        summary: Functions for execution
+        type: array
+        items:
+          type: object
+          properties:
+            functionName:
+              summary: Function name
+              type: string
+            functionArgs:
+              summary: Data for function
+              type: array
+              items:
+                type: string
+      budgetTokensSpent:
+        summary: Total tokens spent in the option transactions
+        type: string
+  Proposal:
+    summary: A specific governance proposal for voting
+    description: >
+      An object describing the specifics and metadata associated with a particular governance proposal,
+      including the specific measure, proposer, data, etc.
+    type: object
+    properties:
+      id:
+        type: string
+      proposer:
+        summary: Proposer's address
+        description: The address which submitted the proposal for voting.
+        type: string
+      snapshotBlockNumber:
+        summary: Block number of the voting power snapshot
+        description: Block number of the proposal at which the voting power was calculated
+        type: number
+      createdTime:
+        summary: Proposal creation time
+        description: Timestamp on which this proposal was created.
+        type: string
+      startTime:
+        summary: Start time of the proposal
+        description: Timestamp at which this proposal is open for voting.
+        type: string
+      endTime:
+        summary: End time of the proposal
+        description: Timestamp at which the proposal has closed for voting.
+        type: string
+      cancelledTime:
+        summary: Cancelled time of the proposal
+        description: Timestamp at which this proposal has been canceled. Zero if not canceled.
+        type: string
+      executedTime:
+        summary: Execution time of the proposal
+        description: Timestamp at which this proposal has been executed. Zero if not executed.
+        type: string
+      markdowntitle:
+        summary: Title of the proposal
+        description: Title of the proposal
+        type: string
+      description:
+        summary: Description of the proposal
+        description: Extended information and context around the proposal.
+        type: string
+      quorum:
+        summary: Minimum participation for passage
+        description: >
+          The minimum number of voting power needed to be involved in a given proposal as a prerequisite for passage
+        type: string
+      approvalThreshold:
+        summary: Minimum amount needed for option to pass
+        description: The amount of voting power needed to pass an option in the given approval voting proposal.
+        type: string
+      proposalData:
+        oneOf:
+          - $ref: "#/schemas/SnapshotProposalData"
+          - $ref: "#/schemas/StandardProposalData"
+          - $ref: "#/schemas/ApprovalProposalData"
+          - $ref: "#/schemas/OptimisticProposalData"
+        discriminator:
+          propertyName: votingStrategy
+      unformattedProposalData:
+        summary: Unformatted proposal data
+        description: >
+          The raw, unformatted data associated with the proposal.
+        type: string
+      proposalResults:
+        oneOf:
+          - $ref: "#/schemas/SnapshotProposalResults"
+          - $ref: "#/schemas/StandardProposalResults"
+          - $ref: "#/schemas/ApprovalProposalResults"
+          - $ref: "#/schemas/OptimisticProposalResults"
+      proposalType:
+        summary: Type of proposal
+        description: The type of proposal; can be standard, approval, optimistic, or snapshot.
+        type: string
+        enum:
+          - STANDARD
+          - APPROVAL
+          - OPTIMISTIC
+          - SNAPSHOT
+      status:
+        summary: Status of the proposal
+        description: The current status of the proposal; can be active, closed, or pending.
+        type: string
+        enum:
+          - "CANCELLED"
+          - "SUCCEEDED"
+          - "DEFEATED"
+          - "ACTIVE"
+          - "PENDING"
+          - "QUEUED"
+          - "EXECUTED"
+          - "CLOSED"
+      createdTransactionHash:
+        summary: Transaction hash of proposal creation
+        description: The transaction hash of the transaction which created the proposal.
+        type: string
+      cancelledTransactionHash:
+        summary: Transaction hash of proposal cancellation
+        description: The transaction hash of the transaction which canceled the proposal.
+        type: string
+      executedTransactionHash:
+        summary: Transaction hash of proposal execution
+        description: The transaction hash of the transaction which executed the proposal.
+        type: string
+      proposalTemplate:
+        $ref: "#/schemas/ProposalTemplate"
+  ProposalTemplate:
+    summary: Metadata about the proposal
+    description: >
+      An object describing the particular voting parameters of a proposal.
+    type: object
+    properties:
+      name:
+        summary: Name of proposal template
+        description: Name of proposal template
+        type: string
+      proposalTemplateId:
+        summary: Numeric id of the proposal template
+        description: Numeric id of the proposal template
+        type: integer
+      votingStrategy:
+        $ref: "#/schemas/VotingStrategy"
+      quorum:
+        summary: Minimum participation for passage
+        description: >
+          The minimum number of voting power needed to be involved in a given proposal as a prerequisite for passage
+        type: string
+      approvalThreshold:
+        summary: Amount needed for measure to pass
+        description: The amount of voting power needed to pass the given proposal.
+        type: string
+      contractAddress:
+        summary: Governor contract address
+        description: Governor contract address to which this proposal was submitted.
+        type: string
+      createBlock:
+        summary: Proposal creation block number
+        description: Block number on which this proposal template was created.
+        type: string
+  VotingStrategy:
+    summary: The voting strategy for a proposal
+    description: Enum description of the proposal's voting strategy.
+    type: string
+    enum:
+      - STANDARD
+      - ADVANCED
+      - OPTIMISTIC
+      - SNAPSHOT
+  VoteSupport:
+    summary: Disposition of the vote
+    description: Describes which way the vote was cast (i.e. for/against/abstention)
+    type: string
+    enum:
+      - FOR
+      - AGAINST
+      - ABSTAIN
+  Vote:
+    summary: Information about a given vote
+    description: Information and metadata about a specific vote on a governance proposal.
+    type: object
+    properties:
+      transactionHash:
+        summary: Transaction hash of the vote
+        description: The transaction hash of the transaction in which the vote was cast.
+        type: string
+      proposalId:
+        summary: Proposal ID for the vote
+        description: The unique ID of the proposal on which the vote was cast.
+        type: string
+      address:
+        summary: Address casting the vote
+        description: On-chain address of the EOA or contract which cast the vote.
+        type: string
+      support:
+        $ref: "#/schemas/VoteSupport"
+      reason:
+        summary: Reason for the vote
+        description: A voter-supplied reason for voting the particular way they did.
+        type: string
+      weight:
+        summary: Voting power behind the vote
+        description: Numeric description of the weight and voting power behind the vote.
+        type: string
+      params:
+        summary: Array of votes that have been chosen by the voter
+        description: An array of items to submit for approval for multiple choice votes.
+        type: array
+        items:
+          type: string
+      proposalValue:
+        summary: Value of the proposal
+        description: The total value that the proposal will be executed with.
+        type: string
+      proposalTitle:
+        summary: Title of the proposal
+        description: The title of the proposal.
+        type: string
+      proposalType:
+        summary: Type of the proposal
+        description: The type of the proposal.
+        type: string
+        enum:
+          - STANDARD
+          - APPROVAL
+          - OPTIMISTIC
+          - SNAPSHOT
+      timestamp:
+        summary: Timestamp of the vote
+        description: The timestamp at which the vote was cast.
+        type: string
+        format: date-time
+  VotingToken:
+    allOf:
+      - $ref: "#/schemas/Contract"
+      - type: object
+        properties:
+          totalSupply:
+            summary: Total supply of the voting token
+            description: The total supply of the voting token.
+            type: string
+          votableSupply:
+            summary: Votable supply of the voting token
+            description: The votable supply of the voting token.
+            type: string
+  Contract:
+    summary: Information about a deployed contract
+    description: Metadata about a specific smart contract deployed on chain.
+    type: object
+    properties:
+      address:
+        summary: Contract address
+        description: The address of the contract on chain.
+        type: string
+      chainId:
+        summary: Chain ID of the contract
+        description: The chain ID on which the contract is deployed.
+        type: string
+  Comment:
+    summary: A comment
+    description: >
+      A discussion comment, including the author, timestamp, and content.
+    type: object
+    properties:
+      comment_id:
+        summary: Comment ID
+        description: The unique ID of the comment.
+        type: string
+      created_at:
+        summary: Timestamp of the comment
+        description: The timestamp at which the comment was created.
+        type: string
+        format: date-time
+      updated_at:
+        summary: Timestamp of the comment edit
+        description: The timestamp at which the comment was last edited.
+        type: string
+        format: date-time
+      comment:
+        summary: Content of the comment
+        description: The text content of the comment.
+        type: string
+      address:
+        summary: Author of the comment
+        description: The delegate address of the author of the comment.
+        type: string
+      votes_count:
+        summary: Count of votes on the comment
+        description: The number of votes on the comment.
+        type: integer
+      votes:
+        type: array
+        items:
+          $ref: "#/schemas/CommentVote"
+  CommentVote:
+    summary: A vote on a comment
+    description: >
+      A vote on a comment, including the voter, timestamp, and vote (-1, 0, 1).
+    type: object
+    properties:
+      comment_id:
+        summary: Comment ID
+        description: The unique ID of the comment.
+        type: string
+      voter:
+        summary: Voter address
+        description: The address of the voter.
+        type: string
+      vote:
+        summary: Vote value
+        description: The value of the vote (-1, 0, 1).
+        type: integer
+      created_at:
+        summary: Timestamp of the vote
+        description: The timestamp at which the vote was created.
+        type: string
+        format: date-time
+      updated_at:
+        summary: Timestamp of the vote update
+        description: The timestamp at which the comment was last edited.
+        type: string
+        format: date-time
+  SocialLinks:
+    summary: Social media links for a project
+    description: >
+      Social media links for a project, including links to Twitter, Discord, and other platforms.
+    type: object
+    properties:
+      twitter:
+        type: string
+      farcaster:
+        type: string
+      mirror:
+        type: string
+      website:
+        type: string
+  Organization:
+    summary: Organization information for a project
+    description: >
+      Information about the organization behind a project, including name and avatar.
+    type: object
+    properties:
+      name:
+        type: string
+      profileAvatarUrl:
+        type: string
+  Project:
+    summary: A project submitted for RetroFunding
+    description: >
+      Information about a project submitted for Retroactive Public Goods Funding on Agora.
+    type: object
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      category:
+        type: string
+      description:
+        type: string
+      profileAvatarUrl:
+        type: string
+      projectCoverImageUrl:
+        type: string
+      socialLinks:
+        $ref: "#/schemas/SocialLinks"
+      team:
+        type: array
+        items:
+          type: string
+      github:
+        type: array
+        items:
+          oneOf:
+            - type: string
+            - type: object
+              properties:
+                repo_rank:
+                  type: number
+                star_count:
+                  type: number
+                starred_events:
+                  type: number
+                starred_by_top_devs:
+                  type: number
+                fork_count:
+                  type: number
+                forked_events:
+                  type: number
+                forked_by_top_devs:
+                  type: number
+                fulltime_developer_average_6_months:
+                  type: number
+                new_contributor_count_6_months:
+                  type: number
+                age_of_project_years:
+                  type: number
+      packages:
+        type: array
+        items:
+          type: string
+      links:
+        type: array
+        items:
+          type: string
+      organization:
+        $ref: "#/schemas/Organization"
+      contracts:
+        summary: Deployed contracts for the project
+        description: >
+          Information about the contracts deployed by the project, including the contract address, chain ID, deployer, and creation block.
+        type: array
+        items:
+          allOf:
+            - $ref: "#/schemas/Contract"
+            - type: object
+              properties:
+                address:
+                  summary: Address of the deployed contract
+                  description: The address of the deployed contract.
+                  type: string
+                deploymentTxHash:
+                  summary: Transaction hash of the deployment
+                  description: The transaction hash of the deployment transaction.
+                  type: string
+                deployerAddress:
+                  summary: Address of the deployer
+                  description: The address of the entity which deployed the contract.
+                  type: string
+                chainId:
+                  summary: Chain ID of the contract
+                  description: The chain ID on which the contract was deployed.
+                  type: string
+      grantsAndFunding:
+        type: object
+        properties:
+          ventureFunding:
+            type: array
+            items:
+              type: object
+              properties:
+                amount:
+                  type: string
+                year:
+                  type: string
+                details:
+                  type: string
+          grants:
+            type: array
+            items:
+              type: object
+              properties:
+                grant:
+                  type: string
+                link:
+                  type: string
+                amount:
+                  type: string
+                date:
+                  type: string
+                details:
+                  type: string
+          revenue:
+            type: array
+            items:
+              type: object
+              properties:
+                amount:
+                  type: string
+                details:
+                  type: string
+
+textSchemas:
+  Proposal:
+    type: object
+    properties:
+      markdowntitle:
+        type: string
+      description:
+        type: string
+  Project:
+    type: object
+    properties:
+      name:
+        type: string
+      category:
+        type: string
+      description:
+        type: string

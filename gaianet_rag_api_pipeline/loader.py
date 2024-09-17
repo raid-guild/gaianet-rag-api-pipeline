@@ -1,5 +1,4 @@
 from gaianet_rag_api_pipeline.config import logger
-from gaianet_rag_api_pipeline.schema import PaginationSchemas
 from gaianet_rag_api_pipeline.utils import resolve_refs
 
 from openapi_spec_validator import validate_spec
@@ -9,10 +8,20 @@ import pathlib
 from typing import Any, Tuple
 import yaml
 
+# Base definitions that MUST be in api pipeline manifest
+BASE_DEFINITIONS = [
+    "selector", # selector with field_path defined to extract multiple records from API response
+    "selector_single", # selector with empty field_path. Useful for single record API responses
+    "paginator", # API pagination strategy
+    "requester_base", # API Requester definition
+    "retriever_base", # Base API retriever with `selector`
+    "retriever_single_base", # Base API retriever with `selector_single`
+]
+
 
 def validate_base_definitions(mappings: dict):
     defIds = list(mappings.get("definitions", {}).keys())
-    for refId in ["paginator", "requester_base", "retriever_base", "selector"]:
+    for refId in BASE_DEFINITIONS:
         if refId not in defIds:
             error_msg = f"{refId} is missing in mapping definitions"
             logger.error(error_msg)
@@ -23,7 +32,14 @@ def load_openapi_spec(openapi_spec_file: pathlib.Path) -> dict:
     (openapi_spec, _) = read_from_filename(openapi_spec_file)
     # validate openapi spec
     try:
-        validate_spec(openapi_spec)
+        # TODO: to support openapi >= 3.1.0 a library upgrade is needed.
+        # However there's a dependency conflict with `jsonschema`
+        spec_version = openapi_spec.get("openapi")
+        (major, minor, _) = spec_version.split(".")
+        if int(major) == 3 and int(minor) > 0:
+            logger.warn("Loader cannot validate openapi >= 3.1.0. Bypassing validation...")
+        else:
+            validate_spec(openapi_spec)
     except Exception as error:
         logger.error(f"Spec not valid. A {type(error).__name__} error was raised", exc_info=True)
         raise error
@@ -36,39 +52,32 @@ def get_endpoints(mappings: dict):
     return {endpoint: resolve_refs(details, mappings) for endpoint, details in endpoints.items()}
 
 
-def get_pagination_schema(api_definitions: dict) -> PaginationSchemas:
-    pagination_strategy = api_definitions.\
-        get("paginator", {}).\
-        get("pagination_strategy", {}).\
-        get("type", None)
-
-    if pagination_strategy not in [schema.name for schema in PaginationSchemas]:
-        error_msg = f"Pagination strategy '{pagination_strategy}' not supported"
-        logger.error(error_msg)
-        raise Exception(error_msg)
-
-    return PaginationSchemas[pagination_strategy]
-
-
 def get_endpoint_response_schema(
-    endpoint_spec: dict,
+    openapi_endpoint_spec: dict,
     request_method: str,
     content_type: str,
     response_entrypoint_field: str
 ) -> dict:
-    response_schema = endpoint_spec.\
+    response_schema = openapi_endpoint_spec.\
         get(request_method, {}).\
         get("responses", {}).get("200", {}).\
         get("content", {}).get(content_type, {}).\
         get("schema", {})
 
-    return response_schema.\
-        get("properties", {}).\
-        get(response_entrypoint_field, {})
+    # TODO: make sure this works with API endpoints that return single records
+    if len(response_entrypoint_field) > 0:
+        return response_schema.\
+            get("properties", {}).\
+            get(response_entrypoint_field, {})
+    return response_schema
 
 
-def get_response_data_fields(data_root: dict, entrypoint_type: str, openapi_spec: dict) -> dict:
-    data_fields = resolve_refs(data_root, openapi_spec)
+def get_response_data_fields(
+    schema_fields_root: dict,
+    entrypoint_type: str,
+    openapi_spec: dict
+) -> dict:
+    data_fields = resolve_refs(schema_fields_root, openapi_spec)
     if entrypoint_type == "array":
         # need to get properties from nested items spec
         data_fields = data_fields.\
@@ -84,15 +93,16 @@ def get_endpoint_text_properties(endpoint_details: dict, data_fields: dict) -> d
         get("textSchema", {}).\
         get("properties", {})
     
+    logger.debug(f"textSchemas - {text_schemas}")
+    
     fields_list = list(data_fields.keys())
 
     # validate text properties are in the endpoint openapi spec as response data fields
     text_properties = list()
-    for text_schema in text_schemas:
-        field = list(text_schema.keys())[0]
-        props = text_schema[field]
+    for field in text_schemas.keys():
+        props = text_schemas[field]
         if field not in fields_list or props.get("type", "") != data_fields[field].get("type", ""):
-            error_msg = f"endpoint field not found or mismatch in openapi spec: {field} - {props}"
+            error_msg = f"endpoint field not found or mismatch in openapi spec: {field} - {props} NOT in {data_fields}"
             logger.error(error_msg)
             raise Exception(error_msg)
         text_properties.append(dict(field=field, **props))
@@ -126,15 +136,13 @@ def generate_source_manifest(
     # Config settings
     request_method = api_config.get("request_method", "get")
     content_type = api_config.get("content_type", "application/json")
-    response_entrypoint_field = api_config.get("response_entrypoint_field", "data")
-    response_primary_key = api_config.get("response_primary_key", None)
+    response_entrypoint_field = api_config.get("response_entrypoint_field", "data") # TODO: consider entrypoint per endpoint
 
-    if not response_primary_key:
-        raise Exception("response_primary_key missing in mappings api_config")
-
+    # Get endpoints from openapi spec
     openapi_endpoints = openapi_spec.get("paths", {})
     available_endpoints = list(openapi_endpoints.keys())
 
+    # go over endpoints in api manifest
     for endpoint, details in endpoints.items():
         if not details or not details.get("id", None):
             error_msg = f"Parse error in mapping endpoint: {endpoint} - {details}"
@@ -150,11 +158,11 @@ def generate_source_manifest(
             raise Exception(error_msg)
         #####
 
-        # get endpoint spec
-        endpoint_spec = openapi_endpoints.get(endpoint, {})
+        # get endpoint spec from openapi manifest
+        openapi_endpoint_spec = openapi_endpoints.get(endpoint, {})
 
         # validate mandatory params
-        endpoint_params = endpoint_spec.get(request_method, {}).get("parameters", {})
+        endpoint_params = openapi_endpoint_spec.get(request_method, {}).get("parameters", {})
         required_params = [param for param in endpoint_params if param.get("required", False)]
         logger.debug(f"\t - required params: {[p.get('name', '') for p in required_params]}")
         for p in required_params:
@@ -184,19 +192,21 @@ def generate_source_manifest(
             request_parameters = { param: "{{ <var> }}".replace("<var>", f"config['{param}']") for param in match_query_params }
         #####
 
-        # get response schema from endpoint spec
-        data_root = get_endpoint_response_schema(
-            endpoint_spec=endpoint_spec,
+        # get response schema fields from endpoint spec
+        schema_fields_root = get_endpoint_response_schema(
+            openapi_endpoint_spec=openapi_endpoint_spec,
             request_method=request_method,
             content_type=content_type,
             response_entrypoint_field=response_entrypoint_field
         )
+        logger.debug(f"schema_fields_root - {schema_fields_root}")
 
-        # get entrypoint type
-        entrypoint_type = data_root.get("type", "")
+        # get entrypoint type: either array or object
+        entrypoint_type = schema_fields_root.get("type", "")
+        logger.debug(f"entrypoint_type - {entrypoint_type}")
 
         # get response data fields
-        data_fields = get_response_data_fields(data_root, entrypoint_type, openapi_spec)
+        data_fields = get_response_data_fields(schema_fields_root, entrypoint_type, openapi_spec)
         logger.debug(f"endpoint spec data fields: {data_fields}")
 
         # get endpoint text properties
@@ -210,14 +220,14 @@ def generate_source_manifest(
         stream_id = details.get("id", "")
         stream_refId = f"{stream_id}_stream"
         
-        # update endpoint pre-process text fields
+        # set endpoint text fields to preprocess during the chunking stage
         endpoint_text_fields[endpoint] = dict(
             stream_id=stream_id,
             entrypoint_type=entrypoint_type,
             text_properties=text_properties,
         )
 
-        # setup pagination
+        # setup pagination. NoPagination by default
         paginator = {
             "type": "NoPagination"
         }
@@ -237,24 +247,34 @@ def generate_source_manifest(
         if has_request_params:
             requester["request_parameters"] = request_parameters
         logger.debug(f"response schema: has request parameters? {has_request_params} - {request_parameters}")
+
+        # setup retriever
+        retriever_base = "#/definitions/retriever_base" if entrypoint_type == "array" else "#/definitions/retriever_single_base"
+
+        # Disabled: make sure primary key is in response schema
+        # primary_key = details.get("primary_key", "")
+        # if primary_key not in data_fields.keys():
+        #     error_msg = f"primary_key '{primary_key}' not found in response schema"
+        #     logger.error(error_msg)
+        #     raise Exception(error_msg)
         
         # build endpoint stream definition
         stream_definitions[stream_refId] = {
             "type": "DeclarativeStream",
             "retriever": {
-                "$ref": "#/definitions/retriever_base",
+                "$ref": retriever_base,
                 "paginator": paginator,
                 "requester": requester,
             },
             "schema_loader": {
                 "type": "InlineSchemaLoader",
                 "schema": {
-                    "$ref": details.get("responseSchema", ""),
+                    "$ref": details.get("responseSchema", ""), # TODO: we should automatically inject this from openapi spec instead
                 },
             },
             "$parameters": {
                 "name": stream_id,
-                "primary_key": response_primary_key,
+                # "primary_key": f'"{primary_key}"', # TODO: not mandatory. Might be removed to avoid user errors
                 "path": f'"{endpoint_path}"',
             },
         }
@@ -290,8 +310,8 @@ def generate_source_manifest(
 def api_loader(
     manifest_file: pathlib.Path,
     openapi_spec_file: pathlib.Path,
-    output_folder: str,
-) -> Tuple[Tuple[str, PaginationSchemas, dict], Tuple[dict, str], dict[str, Any]]:
+    output_folder: str
+) -> Tuple[Tuple[str, dict], Tuple[dict, dict], dict[str, Any]]:
     mappings = dict()
     with open(manifest_file, "r") as f:
         mappings = yaml.safe_load(f)
@@ -301,7 +321,7 @@ def api_loader(
     if not api_name:
         raise Exception("api_name not found in mappings")
 
-    api_parameters = mappings.get("api_parameters", None)
+    api_parameters = mappings.get("api_parameters") or {}
     logger.debug(f"api parameters - {api_parameters}")
 
     # validate "base" definitions are in mappings
@@ -316,11 +336,6 @@ def api_loader(
         openapi_spec=openapi_spec,
     )
 
-    # get pagination strategy
-    definitions = mappings.get("definitions", {})
-    pagination_schema = get_pagination_schema(api_definitions=definitions)
-    logger.debug(f"pagination schema: {pagination_schema.name}")
-
     # store generated manifest
     output_file = f"{output_folder}/{api_name}_source_generated.yaml"
     with open(output_file, "w") as out_file:
@@ -331,9 +346,9 @@ def api_loader(
     chunking_params = mappings.get("chunking_params", {})
 
     return (
-        (api_name, pagination_schema, api_parameters),
+        (api_name, api_parameters),
         (source_manifest, endpoint_text_fields),
-        chunking_params,
+        chunking_params
     )
 
 
@@ -341,7 +356,7 @@ def api_read(
     source_manifest_file: pathlib.Path,
     manifest_file: pathlib.Path,
     openapi_spec_file: pathlib.Path
-) -> Tuple[Tuple[str, PaginationSchemas, dict], Tuple[dict, str], dict[str, Any]]:
+) -> Tuple[Tuple[str, dict], Tuple[dict, dict], dict[str, Any]]:
     mappings = dict()
     with open(manifest_file, "r") as f:
         mappings = yaml.safe_load(f)
@@ -354,7 +369,7 @@ def api_read(
     # get base api config
     api_config = mappings.get("api_config", {})
 
-    api_parameters = mappings.get("api_parameters", None)
+    api_parameters = mappings.get("api_parameters") or {}
     logger.debug(f"api parameters - {api_parameters}")
 
     # read source manifest
@@ -371,33 +386,34 @@ def api_read(
     # get endpoints and expand refs
     endpoints = get_endpoints(mappings)
 
-    # get pagination strategy
-    definitions = source_manifest.get("definitions", {})
-    pagination_schema = get_pagination_schema(api_definitions=definitions)
-    logger.debug(f"pagination schema: {pagination_schema.name}")
-
     # Config settings
     request_method = api_config.get("request_method", "get")
     content_type = api_config.get("content_type", "application/json")
-    response_entrypoint_field = api_config.get("response_entrypoint_field", "data")
+    response_entrypoint_field = api_config.get("response_entrypoint_field", "data") # TODO: consider entrypoint per endpoint
 
+    # get endpoints from openapi spec
     openapi_endpoints = openapi_spec.get("paths", {})
+
     endpoint_text_fields = dict()
+    # go over endpoints in api manifest
     for endpoint, details in endpoints.items():
-        # get endpoint spec
-        endpoint_spec = openapi_endpoints.get(endpoint, {})
-        # get response schema from endpoint spec
-        data_root = get_endpoint_response_schema(
-            endpoint_spec=endpoint_spec,
+        # get endpoint spec from openapi manifest
+        openapi_endpoint_spec = openapi_endpoints.get(endpoint, {})
+        # get response schema fields from endpoint spec
+        schema_fields_root = get_endpoint_response_schema(
+            openapi_endpoint_spec=openapi_endpoint_spec,
             request_method=request_method,
             content_type=content_type,
             response_entrypoint_field=response_entrypoint_field
         )
+        logger.debug(f"schema_fields_root - {schema_fields_root}")
+
         # get entrypoint type
-        entrypoint_type = data_root.get("type", "")
+        entrypoint_type = schema_fields_root.get("type", "")
+        logger.debug(f"entrypoint_type - {entrypoint_type}")
 
         # get response data fields
-        data_fields = get_response_data_fields(data_root, entrypoint_type, openapi_spec)
+        data_fields = get_response_data_fields(schema_fields_root, entrypoint_type, openapi_spec)
         logger.debug(f"endpoint spec data fields: {data_fields}")
 
         # get endpoint text properties
@@ -410,7 +426,7 @@ def api_read(
         # build endpoints ids
         stream_id = details.get("id", "")
         
-        # update endpoint pre-process text fields
+        # set endpoint text fields to preprocess during the chunking stage
         endpoint_text_fields[endpoint] = dict(
             stream_id=stream_id,
             entrypoint_type=entrypoint_type,
@@ -421,9 +437,9 @@ def api_read(
     chunking_params = mappings.get("chunking_params", {})
 
     return (
-        (api_name, pagination_schema, api_parameters),
+        (api_name, api_parameters),
         (source_manifest, endpoint_text_fields),
-        chunking_params,
+        chunking_params
     )
     
 

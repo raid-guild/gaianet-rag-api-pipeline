@@ -1,3 +1,14 @@
+from enum import Enum
+
+
+class YamlDataTypes(Enum):
+    string = str
+    object = dict
+    array = list
+    number = float
+    integer = int
+    boolean = bool
+
 
 def resolve_refs(data, root):
     if isinstance(data, dict):

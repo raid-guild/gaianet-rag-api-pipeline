@@ -1,3 +1,5 @@
+from gaianet_rag_api_pipeline.config import logger
+
 from airbyte.caches import CacheBase
 from airbyte.sources import Source, get_source
 import pandas as pd
@@ -34,6 +36,8 @@ class AirbyteAPIConnector(ConnectorSubject):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
+        logger.debug(f"Creating new Airbyte source: {name}")
+        logger.debug(f"Source manifest - {source_manifest}")
         self.source = get_source(
             name=name,
             config=config,
@@ -42,50 +46,56 @@ class AirbyteAPIConnector(ConnectorSubject):
             install_if_missing=install_if_missing,
             install_root=install_root
         )
-        # check source yaml definition is correct
-        if check_source:
-            self.check()
+        logger.debug(f"Airbyte source {name} loaded.")
 
         # select streams
         if streams: self.source.select_streams(streams)
         else: self.source.select_all_streams()
+
+        logger.debug(f"Selected streams: {streams}")
+
+        # check source yaml definition is correct
+        if check_source:
+            logger.debug(f"Checking source...")
+            self.check()
 
         # read parameters
         self.cache = cache
         self.force_full_refresh = force_full_refresh
         self.skip_validation = skip_validation
 
-        # connector parameters
-        # self.mode = mode
-        # self.refresh_interval = refresh_interval_ms / 1000.0
     
     def check(self):
         self.source.check()
 
+
     def run(self):
+        logger.debug(f"reading data...")
         result = self.source.read(
             cache=self.cache,
             force_full_refresh=self.force_full_refresh,
             skip_validation=self.skip_validation
         )
+        logger.debug(f"reading data - Done.")
         for stream_name, data in result.streams.items():
-            # NOTICE: workaround to remove duplicate records that contains the latest page
-            # with null cursor. This happens when running multiple times with force_full_refresh
-            # TODO: how to clean up cache completely so recods with null nextCursor are removed
-            df = data.to_pandas()
-            df_clean = df.dropna(how='any', ignore_index=True) # drop record pages with null nextCursor
-            df_null = df[df.isna().any(axis=1)] # get record pages with null nextCursor
-            df_final = pd.concat([
-                df_clean,
-                df_null.iloc[[0], :] # include the latest page
-            ])
-            records = df_final.to_dict(orient='records')
+            logger.debug(f"{stream_name}: {len(data)} records")
+            # DEPRECATED
+            # # NOTICE: workaround to remove duplicate records that contains the latest page
+            # # with null cursor. This happens when running multiple times with force_full_refresh
+            # # TODO: how to clean up cache completely so recods with null nextCursor are removed
+            # df = data.to_pandas()
+            # df_clean = df.dropna(how='any', ignore_index=True) # drop record pages with null nextCursor
+            # df_null = df[df.isna().any(axis=1)] # get record pages with null nextCursor
+            # df_final = pd.concat([
+            #     df_clean,
+            #     df_null.iloc[[0], :] # include the latest page
+            # ])
+            # records = df_final.to_dict(orient='records')
+            records = list(data)
 
             for row in records:
                 self.next(stream=stream_name, **row)
-            # for row in list(data):
-            #     self.next(stream=stream_name, **dict(row))
-            
+
 
     def on_stop(self):
         pass
