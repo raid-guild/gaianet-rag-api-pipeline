@@ -54,7 +54,7 @@ def create_endpoint_stream(
         # NOTICE: using lowercase field name as airbyte returns fields like that
         schema_columns[f"{field.lower()}"] = pw.column_definition(
             dtype=dtype | None,
-            primary_key=(field == "id"),
+            # primary_key=(field == "id"), # NOTICE: disabled to use pathway own indexer
             default_value=dtype()
         )
     logger.debug(f"schema columns for {stream_id} stream - {schema_columns}")

@@ -1,5 +1,7 @@
+from gaianet_rag_api_pipeline.config import logger
 import pandas as pd
 import pathway as pw
+import time
 
 
 def preprocessing(
@@ -35,7 +37,10 @@ def preprocessing(
 
         # get preprocessed table to be forwarded to the streams normalization stage
         preprocessed_table = table[["preprocessed_text", "preprocessed_metadata"]]
-        preprocessed_table.columns = ["content", "metadata"]
+        preprocessed_table.rename(
+            columns={"preprocessed_text": "content", "preprocessed_metadata": "metadata"},
+            inplace=True
+        )
         return preprocessed_table
 
     output_table = preprocess_table(input_stream)
