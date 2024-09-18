@@ -1,6 +1,7 @@
 import { defineConfig } from "vocs";
 
 export default defineConfig({
+  basePath: "/gaianet-rag-api-pipeline",
   banner: {
     dismissable: false,
     content: "This is still under development",
@@ -54,8 +55,5 @@ export default defineConfig({
       icon: 'github', 
       link: 'https://github.com/raid-guild/gaianet-rag-api-pipeline', 
     },
-  ],
-  vite: {
-    base: "/gaianet-rag-api-pipeline/"
-  }
+  ]
 });
