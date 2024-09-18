@@ -18,52 +18,83 @@ thes tool, tech stack and/or how it works under the hood, check the content menu
 
 ## Setup Instructions
 
-1. Activate your virtual environment (if using a custom virtual environment)
-2. Install project dependencies:
+::::steps
+### Clone this repository
 
-```bash
+Git clone or download this repository to your local.
+
+### Activate your virtual environment
+
+If using a custom virtual environment, you should activate your virtual environment, otherwise poetry will handle the environment for you
+
+### Install project dependencies
+
+Navigate to the directory where this repository was cloned/download and execute the following on a terminal:
+
+```bash [terminal]
 poetry install
 ```
 
-3. Copy `config/.env/sample` into `config/.env` file and set environment variables accordingly. Check the [environment variables](#environment-variables) section 
+### Set environment variables
+
+Copy `config/.env/sample` into `config/.env` file and set environment variables accordingly. Check the [environment variables](#environment-variables) section 
 for details.
-4. Define the pipeline manifest for your REST API you're looking to extract data from. Check how to define an API pipeline manifest in 
+
+### Define your API Pipeline manifest
+
+Define the pipeline manifest for your REST API you're looking to extract data from. Check how to define an API pipeline manifest in 
 [Defining an API Pipeline Manifest](/manifest-definition) for details, or take a look at the in-depth review of the sample manifests available in 
 [API Examples](/examples).
-5. Set the REST API key in a `config/secrets/api_key` file, or specify it using the `--api-key` as argument to the CLI
-6. Get the base URL of your Qdrant Vector DB or deploy a local `Qdrant` ([Docs](https://qdrant.tech/documentation/)) vector database instance using docker:
 
-```
-# IMPORTANT: make sure you use qdrant:v1.10.1 for compatibility with Gaianet node
+### Set the REST API Key
+
+Set the REST API key in a `config/secrets/api_key` file, or specify it using the `--api-key` as argument to the CLI
+
+### Setup a Qdrant DB instance
+
+Get the base URL of your Qdrant Vector DB or deploy a local `Qdrant` ([Docs](https://qdrant.tech/documentation/)) vector database instance using docker:
+
+```bash [terminal]
 docker run -p 6333:6333 -p 6334:6334 -v ./qdrant_dev:/qdrant/storage:z qdrant/qdrant:v1.10.1
 ```
 
-7. Get your Gaianet node running ([Docs](https://docs.gaianet.ai/node-guide/quick-start)) or install Ollama ([Docs](https://ollama.com/)) provider locally. 
+:::warning
+IMPORTANT: make sure you use `qdrant:v1.10.1` for compatibility with Gaianet node
+:::
+
+### Select and Setup an LLM provider
+
+Get your Gaianet node running ([Docs](https://docs.gaianet.ai/node-guide/quick-start)) or install Ollama ([Docs](https://ollama.com/)) provider locally. 
 The latter is recommended if you're looking to run the pipeline on consumer hardware.
-8. Load the LLM embeddings model of your preference into the LLM provider you chose in the previous step:
-  - You can find info on how to customize a Gaianet node [here](https://docs.gaianet.ai/node-guide/customize)
-  - If you chose Ollama, follow these instructions to import the LLM embeddings model:
-    - Make sure the Ollama service is up and running
-    - Go to the folder where the embeddings model is located. For this example, the llm model file is `nomic-embed-text-v1.5.f16.gguf` ([Source](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/tree/main?show_file_info=nomic-embed-text-v1.5.f16.gguf))
-    - Create a file with name `Modelfile` and paste the following (replace `<path/to/model>` with your local directory):
-```
+
+### Load an LLM embeddings model
+
+Load the LLM embeddings model of your preference into the LLM provider you chose in the previous step:
+- You can find info on how to customize a Gaianet node [here](https://docs.gaianet.ai/node-guide/customize)
+- If you chose Ollama, follow these instructions to import the LLM embeddings model:
+  - Make sure the Ollama service is up and running
+  - Go to the folder where the embeddings model is located. For this example, the llm model file is `nomic-embed-text-v1.5.f16.gguf` ([Source](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/tree/main?show_file_info=nomic-embed-text-v1.5.f16.gguf))
+  - Create a file with name `Modelfile` and paste the following (replace `<path/to/model>` with your local directory):
+
+```docker 
 FROM <path/to/model>/nomic-embed-text-v1.5.f16.gguf
 ```
-    - Import the model by running the following command on a terminal:
-```bash
+  - Import the model by running the following command on a terminal:
+```bash [terminal]
 ollama create Nomic-embed-text-v1.5
 ```
-    - Make sure the model setting by running the command:
-```bash
+  - Make sure the model setting by running the command:
+```bash [terminal]
 ollama show Nomic-embed-text-v1.5
 ```
+::::
 
 ## Pipeline CLI
 
 Now you're ready to use the `rag-api-pipeline` CLI commands to execute different tasks of the RAG pipeline, from extracting data from an API source to generating vector embeddings 
 and a database snapshot. If you need more details about the parameters available on each command you can execute:
 
-```bash
+```bash [Terminal]
 poetry run rag-api-pipeline <command> --help
 ```
 
@@ -71,7 +102,7 @@ poetry run rag-api-pipeline <command> --help
 
 Below you can find the default instructions available and an in-depth review of both the functionality and available arguments that each command offers:
 
-```bash
+```bash [Terminal]
 # run the entire pipeline
 poetry run rag-api-pipeline run-all API_MANIFEST_FILE ----openapi-spec-file <openapi-spec-yaml-file> [--full-refresh] [--llm-provider openapi|ollama]
 # or run using an already normalized dataset
@@ -103,6 +134,18 @@ database snapshot generation. You can specify the following arguments to the com
   * `--chunked-data-file`: path to the chunked dataset in JSONL format (mandatory). Check the [Architecture](/architecture) section for details on the 
   required data schema.
 
+## CLI Output
+
+Cached API stream data and results produced from running any of the CLI commands are stored in `<OUTPUT_FOLDER>/<api_name>`. The following files and folders 
+are created by the tool within this `baseDir` folder:
+
+- `{baseDir}/cache/{api_name}/*`: extracted API data is cached into a local DuckDB. Database files are stored in this directory. If the `--full-refresh` argument
+is specified to the `run-all` command, the cache will be cleared and API data will be extracted from scratch.
+- `{baseDir}/{api_name}_stream_{x}_preprocessed.jsonl`: data streams from each API endpoint is preprocessed and stored in JSONL format
+- `{baseDir}/{api_name}_normalized.jsonl`: preprocessed data streams from each API endpoint are joined together and stored in JSONL format
+- `{baseDir}/{api_name}_chunked.jsonl`: normalized data that goes through the data chunking stage is then stored in JSONL format
+- `{baseDir}/{api_name}_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot`: vector embeddings snapshot file that was exported from Qdrant DB
+- `{baseDir}/{api_name}_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`: compressed knowledge base that contains the vector embeddings snapshot
 
 ## Environment variables
 

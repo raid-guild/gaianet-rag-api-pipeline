@@ -19,12 +19,23 @@ export default defineConfig({
       link: "/getting-started",
     },
     {
-      text: "Defining the API Pipeline Manifest",
-      link: "/manifest-definition",
+      text: "API Examples",
+      collapsed: true,
+      link: "/apis",
+      items: [
+        {
+          text: "Boardroom API",
+          link: "/apis/boardroom-api",
+        },
+        {
+          text: "Agora API",
+          link: "/apis/agora-api",
+        },
+      ]
     },
     {
-      text: "API Examples",
-      link: "/examples",
+      text: "Defining the API Pipeline Manifest",
+      link: "/manifest-definition",
     },
     {
       text: "Architecture",
@@ -48,7 +59,16 @@ export default defineConfig({
     },
   ],
   topNav: [
-    { text: 'Home', link: '/' },
+    { text: "Home", link: "/" },
+    {
+      text: "APIs",
+      items: [
+        {
+          text: "Boardroom Governance API",
+          link: "/apis/boardroom-api"
+        }
+      ]
+    }
   ],
   socials: [ 
     { 
