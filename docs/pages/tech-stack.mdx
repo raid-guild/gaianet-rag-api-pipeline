@@ -1,0 +1,50 @@
+# RAG API Pipeline Tech Stack
+
+## Overview
+This page outlines the technologies and tools utilized in the AI pipeline, covering data extraction, caching, processing, and vector search for efficient data flow and feature embedding generation.
+
+## Tech Stack
+
+### 1. PyAirbyte
+- **Description**: Utilities for interacting with Airbyte connectors using Python.
+- **Key Features**:
+  - Facilitates integration with Airbyte data sources.
+  - Supports **Declarative API Connectors** via the Airbyte CDK, enabling low-code development of custom connectors.
+
+### 2. Pathway
+- **Description**: A Python-based data processing framework designed for creating AI-driven pipelines over data streams.
+- **Core Technology**:
+  - **Rust Engine** with multithreading and multiprocessing capabilities for high performance.
+- **Use Case**: Efficient data processing, enabling AI models to process large, real-time data streams.
+
+### 3. Data Caching
+- **Description**: Implements caching mechanisms at various stages in the pipeline to optimize performance and reduce redundant data processing.
+- **Technologies Used**:
+  - **Airbyte DuckDB Cache**: Used for caching API data extractions, ensuring efficient retrieval of extracted data without re-querying the source.
+  - **JSONL Output Connectors**: After normalization and chunking, data is cached and stored in JSONL format, streamlining further processing stages.
+
+### 4. Unstructured (Python Library)
+- **Description**: Simplifies the ingestion and pre-processing of diverse data formats within data workflows, specifically designed for **Large Language Models (LLMs)**.
+- **Features**:
+  - Functions to **partition**, **chunk**, **clean**, and **stage** raw source documents for further analysis.
+  - Optimized for unstructured data handling, making it easier to prepare data for machine learning tasks.
+
+### 5. Gaia Node for Feature Embedding Generation
+- **Description**: The Gaia Node is responsible for generating feature embeddings, which are used to create dense vector representations of the data.
+- **RAG API Server**:
+  - Provides an **OpenAI-like API** to interact with the pipeline.
+  - Embeddings generated here are used downstream in vector search and other AI models.
+
+### 6. QdrantDB
+- **Description**: A **vector similarity search engine** and **vector database**.
+- **Key Features**:
+  - Provides efficient vector searches based on similarity, crucial for tasks like nearest-neighbor search in large datasets.
+  - Acts as a **knowledge base snapshot** repository, storing vectors generated from processed data and feature embeddings.
+
+
+## Data Flow Overview
+1. **Data Extraction**: PyAirbyte connects to various data sources, using Airbyte DuckDB Cache for efficient retrieval.
+2. **Processing & Transformation**: Pathway handles real-time processing of data streams, transforming raw data into usable formats.
+3. **Data Normalization & Caching**: Data undergoes normalization, is chunked, and stored in JSONL format.
+4. **Embedding Generation**: Gaia Node generates vector embeddings from processed data.
+5. **Vector Search**: QdrantDB allows for vector similarity search, enabling efficient knowledge retrieval based on embeddings.

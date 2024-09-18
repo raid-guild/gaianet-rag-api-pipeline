@@ -1,0 +1,115 @@
+# RAG API Pipeline Deployment
+
+## Overview
+This page outlines the deployment process for the AI pipeline, including the necessary components and their configurations.
+
+## Deployment Process
+
+### Local development
+
+Start with building your containers: `docker compose -f local.yml build`.
+
+You are ready to start developing your application!
+Define your custom logic in `gaianet_rag_api_pipeline/pipeline.py`. It already contains a sample code which sums all the input values.
+
+You can test it in the following modes:
+
+- [debug (batch mode)] run your Pathway app code with pytest with `docker compose -f local.yml run --rm pathway_app pytest`
+- [streaming] run your Pathway app `docker compose -f local.yml up`. Modify `InfiniteStream` in `gaianet_rag_api_pipeline/input.py` to feed it with different data. The results are streamed to the `output.csv` file (you can change this in `gaianet_rag_api_pipeline/output.py`)
+
+
+### Production environment
+
+Production environment streams data from `redpanda`.
+Build production containers with `docker compose -f prod.yml build`
+
+To run your application invoke:
+1. `docker compose -f prod.yml rm -svf` to clean the state so that `redpanda` can start without issues
+2. `docker compose -f prod.yml up`
+
+For test, you can push messages to redpanda by running
+`docker compose -f prod.yml exec redpanda rpk topic create gaianet_rag_api_pipeline` to make sure the topic is created
+and then `docker compose -f prod.yml exec redpanda rpk topic produce gaianet_rag_api_pipeline`
+
+and typing in the messages, e.g:
+`{"value":10}`
+
+
+## Working with a Snapshot
+
+You can optionally use ollama to generate a snapshot and work with it for your gaianet node
+
+### Setting up Ollama
+Download and install ollama from official [website](https://ollama.com/download)
+
+### Setting up Embeddings Model with Ollama
+
+1. Download the prefered embedding model from [HuggingFace](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf)
+2. Create `Modelfile` to use embedding model with ollama
+
+```
+FROM ./nomic-embed-text-v1.5.f16.gguf # this is the path to the embedding model
+```
+Learn more about Ollama Modelfile [here](https://github.com/ollama/ollama/blob/main/docs/modelfile.md)
+
+To use the new Modelfile Save it as a file (e.g. Modelfile) and run the following command:
+
+```bash
+ollama create choose-a-model-name -f <location of the file e.g. ./Modelfile>'
+ollama run choose-a-model-name
+```
+
+### Setup a qdrant vector db instance
+
+- Run the following command to start a qdrant vector db instance (make sure to have docker daemon running)
+
+```bash
+docker run -p 6333:6333 -p 6334:6334 -v ./qdrant_dev:/qdrant/storage:z qdrant/qdrant:v1.10.1
+```
+
+### Generating a Snapshopt
+
+
+### Using the Snapshot
+to use the generated snapshot with gaianet node without the full pipeline, you can edit the config file and add the following:
+
+```
+"snapshot": "/your-snapshot-path-or-url", # this can be http url or local path
+```
+make sure to add the snapshot to the config file run the following command to start the node:
+
+```bash
+gaianet init
+gaianet start
+```
+
+
+
+
+## Recommended GaiaNet Node Configuration
+- Tested on Mac Studio 32GB RAM
+```json
+{
+  "address": "your-node-address",
+  "chat": "https://huggingface.co/gaianet/Meta-Llama-3.1-8B-Instruct-GGUF/resolve/main/Meta-Llama-3.1-8B-Instruct-Q5_K_M.gguf",
+  "chat_batch_size": "64",
+  "chat_ctx_size": "8192",
+  "chat_name": "Boardroom-Llama-3-Chat",
+  "description": "Llama-3-chat model. with Boardroom API snapshot",
+  "domain": "us.gaianet.network",
+  "embedding": "https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf",
+  "embedding_batch_size": "2048",
+  "embedding_collection_name": "boardroom_api_collection", # this is the name of the collection in the snapshot
+  "embedding_ctx_size": "2048",
+  "embedding_name": "Nomic-embed-text-v1.5",
+  "llamaedge_port": "8080",
+  "prompt_template": "llama-3-chat",
+  "qdrant_limit": "1",
+  "qdrant_score_threshold": "0.5",
+  "rag_policy": "system-message",
+  "rag_prompt": "Use the following pieces of context to answer the user's question. Respond directly to the user with your answer, do not say 'this is the answer' or 'this is the answer' or similar language. Never mention your knowledge base or say 'according to the context' or 'hypothetical' or other similar language. Use json metadata included in knowledge base whenever possible enrich your answers. The term aave refers the DAO protocol where discussions and proposals are posted. If you don't know the answer, don't try to make up an answer. \n----------------\n",
+  "reverse_prompt": "",
+  "snapshot": "/your-snapshot-path-or-url",
+  "system_prompt": "You are an AI assistant designed to provide clear, concise, and accurate answers to user queries. Your primary functions include retrieving relevant information from the provided RAG (Retrieval-Augmented Generation) data and utilizing your pre-training data when necessary. Use json metadata included in RAG data whenever possible enrich your answers. The term aave refers the DAO protocol where discussions and proposals are posted. If no relevant information is found, you will inform the user that you are not familiar with the knowledge."
+}
+```

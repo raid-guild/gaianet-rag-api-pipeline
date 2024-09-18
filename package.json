@@ -1,0 +1,24 @@
+{
+  "name": "Docs",
+  "private": true,
+  "version": "0.0.0",
+  "homepage": "https://raid-guild.github.io/gaianet-rag-api-pipeline",
+  "type": "module",
+  "scripts": {
+    "dev": "vocs dev",
+    "build": "vocs build",
+    "preview": "vocs preview",
+    "predeploy": "vocs build",
+    "deploy": "gh-pages -d docs/dist"
+  },
+  "dependencies": {
+    "react": "latest",
+    "react-dom": "latest",
+    "vocs": "latest"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "gh-pages": "^6.1.1",
+    "typescript": "latest"
+  }
+}
