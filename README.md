@@ -42,8 +42,8 @@ for details.
 ### 5. Define your API Pipeline manifest
 
 Define the pipeline manifest for your REST API you're looking to extract data from. Check how to define an API pipeline manifest in 
-[Defining an API Pipeline Manifest](docs/pages/manifest-definition) for details, or take a look at the in-depth review of the sample manifests available in 
-[API Examples](docs/pages/apis).
+[Defining an API Pipeline Manifest](docs/pages/manifest-definition.mdx) for details, or take a look at the in-depth review of the sample manifests available in 
+[API Examples](docs/pages/apis.mdx).
 
 ### 6. Set the REST API Key
 
@@ -120,13 +120,13 @@ database snapshot generation. You can specify the following arguments to the com
 - **from-normalized**: executes the RAG data pipeline using an already normalized JSONL dataset. You can specify the following arguments to the command:
   * `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
   * `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
-  * `--normalized-data-file`: path to the normalized dataset in JSONL format (mandatory). Check the [Architecture](docs/pages/architecture) section for details on the 
+  * `--normalized-data-file`: path to the normalized dataset in JSONL format (mandatory). Check the [Architecture](docs/pages/architecture.mdx) section for details on the 
   required data schema.
 
 - **from chunked**: executes the RAG data pipeline using an already chunked dataset in JSONL format. You can specify the following arguments to the command:
   * `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
   * `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
-  * `--chunked-data-file`: path to the chunked dataset in JSONL format (mandatory). Check the [Architecture](docs/pages/architecture) section for details on the 
+  * `--chunked-data-file`: path to the chunked dataset in JSONL format (mandatory). Check the [Architecture](docs/pages/architecture.mdx) section for details on the 
   required data schema.
 
 ## CLI Output
