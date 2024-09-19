@@ -20,7 +20,7 @@ export default defineConfig({
     },
     {
       text: "API Examples",
-      collapsed: true,
+      collapsed: false,
       link: "/apis",
       items: [
         {
@@ -35,27 +35,45 @@ export default defineConfig({
     },
     {
       text: "Defining the API Pipeline Manifest",
+      collapsed: false,
       link: "/manifest-definition",
+      items: [
+        {
+          text: "Overview",
+          link: "/manifest-definition/overview",
+        },
+        {
+          text: "Working with Other APIs",
+          link: "/manifest-definition/other-apis",
+        }
+      ]
     },
     {
       text: "Architecture",
+      collapsed: false,
       link: "/architecture",
+      items: [
+        {
+          text: "Overview",
+          link: "/architecture/overview",
+        },
+        {
+          text: "Process Flow",
+          link: "/architecture/process",
+        },
+        {
+          text: "Tech stack",
+          link: "/architecture/tech-stack",
+        }
+      ]
     },
     {
-      text: "Tech Stack",
-      link: "/tech-stack",
+      text: "Gaianet Node Deployment",
+      link: "/node-deployment",
     },
     {
-      text: "Using with CLI",
-      link: "/cli",
-    },
-    {
-      text: "Working with Other APIs",
-      link: "/other-apis",
-    },
-    {
-      text: "Deployment",
-      link: "/deployment",
+      text: "CLI Reference",
+      link: "/cli-reference",
     },
   ],
   topNav: [

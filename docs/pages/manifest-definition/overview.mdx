@@ -1,0 +1,44 @@
+# API Pipeline Manifest - Overview
+
+Under the hood, the `rag-api-pipeline` uses [Airbyte’s CDK low-code framework](https://docs.airbyte.com/connector-development/config-based/low-code-cdk-overview) 
+to build source connectors for any REST APIs by generating a declarative YAML manifest based on two required spec files:
+
+1. A well-defined [OpenAPI spec](https://swagger.io/specification/) for the target REST API: most API providers publishes their OpenAPI-based schema definition 
+somewhere. If you cannot find it, there's a wide range of [tools](https://openapi.tools/) to generate/convert any API spec schema into the required format.
+1. A source RAG API pipeline manifest
+
+## RAG API pipeline manifest - Schema definition
+
+The API pipeline manifest MUST include the following base definitions:
+
+### api_name
+
+### api_parameters
+
+### api_config
+
+### chunking_params
+
+### spec
+
+### Airbyte Connector definitions
+
+#### selector
+
+#### selector_single
+
+#### requester_base
+
+#### retriever_base
+
+#### retriever_single_base
+
+#### paginator
+
+### Endpoints definitions
+
+### schemas
+
+### targetSchemas
+
+

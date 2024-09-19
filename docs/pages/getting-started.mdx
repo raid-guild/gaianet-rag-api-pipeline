@@ -76,7 +76,7 @@ Load the LLM embeddings model of your preference into the LLM provider you chose
   - Go to the folder where the embeddings model is located. For this example, the llm model file is `nomic-embed-text-v1.5.f16.gguf` ([Source](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/tree/main?show_file_info=nomic-embed-text-v1.5.f16.gguf))
   - Create a file with name `Modelfile` and paste the following (replace `<path/to/model>` with your local directory):
 
-```docker 
+```docker [Modelfile]
 FROM <path/to/model>/nomic-embed-text-v1.5.f16.gguf
 ```
   - Import the model by running the following command on a terminal:

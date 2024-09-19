@@ -1,0 +1,140 @@
+version: "3.0.0"
+
+api_name: "template_api"
+
+api_parameters: # leave it empty if no exta parameters are needed
+  foo: "bar"
+
+api_config:
+  request_method: "get"
+  content_type: "application/json"
+  response_entrypoint_field: "data"
+
+chunking_params:
+  mode: "elements"
+  chunking_strategy: "by_title"
+  include_orig_elements: true
+  max_characters: 1500
+  new_after_n_chars: 1024
+  overlap: 0
+  overlap_all: false
+  combine_text_under_n_chars: 0
+  multipage_sections: true
+
+spec:
+  type: Spec
+  documentation_url: https://docs.airbyte.com/integrations/sources/template_api
+  connection_specification:
+    $schema: http://json-schema.org/draft-07/schema#
+    title: Template API Spec
+    type: object
+    required: # include all api_parameters from above
+      - api_key
+      - foo
+    additionalProperties: true
+    properties:
+      # 'TODO: This schema defines the configuration required for the source. This usually involves metadata such as database and/or authentication information.':
+      api_key:
+        type: string
+        description: >-
+          API Key. See <a href="https://docs.boardroom.io/docs/api/05c1fb6d88a07-governance-api">here</a>
+          for details.
+        airbyte-secret: true
+      foo:
+        type: string
+        description: >-
+          example api parameter
+        examples:
+          - foo
+          - bar
+
+definitions:
+  selector:
+    type: RecordSelector
+    extractor:
+      type: DpathExtractor
+      field_path: ["data"]
+  selector_single:
+    type: RecordSelector
+    extractor:
+      type: DpathExtractor
+      field_path: ["data"] # NOTICE: in the case of boardroom: a single record is return wrapped in "data"
+  requester_base:
+    type: HttpRequester
+    url_base: "https://api.template.io/v1"
+    http_method: "GET"
+    authenticator:
+      type: ApiKeyAuthenticator
+      api_token: "{{ config['api_key'] }}"
+      inject_into: # More on https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/request-options#request-options-1
+        type: RequestOption
+        field_name: "key"
+        inject_into: request_parameter
+  retriever_base:
+    type: SimpleRetriever
+    record_selector:
+      $ref: "#/definitions/selector"
+  retriever_single_base:
+    type: SimpleRetriever
+    record_selector:
+      $ref: "#/definitions/selector_single"
+  paginator:
+    type: DefaultPaginator
+    pagination_strategy: # More on https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/pagination#cursor
+      type: CursorPagination
+      cursor_value: "{{ response.get('nextCursor', '') }}"
+      stop_condition: "{{ 'nextCursor' not in response }}"
+    page_token_option:
+      type: RequestOption
+      field_name: "cursor"
+      inject_into: "request_parameter"
+
+endpoints:
+  "/example/{foo}"":
+    id: "example"
+    primary_key: "id"
+    responseSchema: "#/schemas/exampleSchema"
+    textSchema:
+      $ref: "#/textSchemas/Example"
+  /about:
+    id: "about"
+    primary_key: "id"
+    responseSchema: "#/schemas/aboutSchema"
+    textSchema:
+      $ref: "#/textSchemas/About"
+
+schemas:
+  exampleSchema:
+    type: object
+    $schema: http://json-schema.org/draft-07/schema#
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+      createdAt:
+        type: string
+  aboutSchema:
+    type: object
+    $schema: http://json-schema.org/draft-07/schema#
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      description:
+        type: string
+
+textSchemas:
+  Example:
+    type: object
+    properties:
+      title:
+        type: string
+  About:
+    type: object
+    properties:
+      name:
+        type: string
+      description:
+        type: string
