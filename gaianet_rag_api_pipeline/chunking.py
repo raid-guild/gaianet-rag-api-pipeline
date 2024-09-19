@@ -25,11 +25,36 @@ def chunking(
     multipage_sections: Optional[bool] = None # If True, sections can span multiple pages. Defaults to True
 ) -> pw.Table:
     """
-        chunking data
-        Details on chunking techniques
-        # - basic -> combines sequential elements to maximally fill each chunk
-        # - by_title -> preserves section boundaries and optionally page boundaries
-        # https://docs.unstructured.io/open-source/core-functionality/chunking
+    Splits and chunks input data from a table based on a specified chunking strategy and parameters.
+
+    This function applies different chunking techniques to the `input_table`, allowing for both basic
+    and advanced chunking strategies, such as splitting text based on character length, section titles, 
+    and page boundaries. It also supports overlap between chunks for better context preservation.
+
+    Args:
+        input_table (pw.Table): The input table containing the data to be chunked.
+        mode (str, optional): Specifies the mode for parsing the data, such as "elements". Defaults to "elements".
+        post_processors (list[Callable], optional): A list of UDF post-processors applied to the resulting elements from the parser. Defaults to None.
+        capacity (int, optional): Specifies the number of UDF workers for asynchronous execution. Defaults to None.
+        encoding (str, optional): Encoding used for the input data. Defaults to 'utf-8'.
+        chunking_strategy (str, optional): Strategy for chunking the data (e.g., "by_title"). Defaults to "by_title".
+        include_orig_elements (Optional[bool], optional): Whether to include the original elements in the chunked output. Defaults to None (which behaves as True).
+        max_characters (Optional[int], optional): The hard limit on characters per chunk. Defaults to None (500).
+        new_after_n_chars (Optional[int], optional): The soft limit for characters per chunk, where new sections will start. Defaults to None.
+        overlap (Optional[int], optional): The number of characters to overlap between chunks for context preservation. Defaults to None (0).
+        overlap_all (Optional[bool], optional): Whether to apply overlap to all chunks. Defaults to False.
+        combine_text_under_n_chars (Optional[int], optional): Combines text elements until the section reaches a certain character count. Defaults to `max_characters`.
+        multipage_sections (Optional[bool], optional): Whether sections can span multiple pages. Defaults to True.
+
+    Returns:
+        pw.Table: A table containing the chunked output data, with the resulting text and metadata.
+
+    Notes:
+        - The `chunking_strategy` supports multiple methods:
+            - "basic" combines sequential elements to fill each chunk.
+            - "by_title" preserves section boundaries and optionally page boundaries.
+        - You can configure chunking behavior with parameters like `max_characters`, `new_after_n_chars`, and `overlap`.
+        - For more information on chunking techniques, see the [Unstructured.io documentation](https://docs.unstructured.io/open-source/core-functionality/chunking).
     """
     parser = CustomParseUnstructured(
         mode=mode,

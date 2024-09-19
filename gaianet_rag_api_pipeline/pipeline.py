@@ -13,6 +13,22 @@ def step_0_preprocessing(
     stream_tables: typing.List[pw.Table],
     settings: Settings,
 ) -> typing.List[pw.Table]:
+    """
+    Preprocesses each stream table according to endpoint-specific text properties.
+
+    This function iterates through the provided endpoint details and applies preprocessing
+    to each corresponding stream table. The preprocessed data is then serialized to JSONL
+    files in the specified output folder.
+
+    Args:
+        api_name (str): The name of the API, used to name output files.
+        endpoints (dict): A dictionary of endpoint details, including text properties for preprocessing.
+        stream_tables (typing.List[pw.Table]): A list of stream tables to be preprocessed.
+        settings (Settings): Configuration settings, including output folder path.
+
+    Returns:
+        typing.List[pw.Table]: A list of preprocessed stream tables.
+    """
     preprocessed_streams: typing.List[pw.Table] = list()
     for i, (_, details) in enumerate(endpoints.items()):
         text_properties = details.get("text_properties")
@@ -36,6 +52,20 @@ def step_1_normalize_streams(
     preprocessed_streams: typing.List[pw.Table],
     settings: Settings,
 ) -> pw.Table:
+    """
+    Concatenates and normalizes a list of preprocessed stream tables.
+
+    This function merges multiple preprocessed stream tables into a single normalized table.
+    The merged table is then serialized to JSONL in the specified output folder.
+
+    Args:
+        api_name (str): The name of the API, used to name the output file.
+        preprocessed_streams (typing.List[pw.Table]): A list of preprocessed stream tables to be normalized.
+        settings (Settings): Configuration settings, including output folder path.
+
+    Returns:
+        pw.Table: The concatenated and normalized table.
+    """
     normalized_table = None
     for stream in preprocessed_streams:
         if not normalized_table:
@@ -59,8 +89,21 @@ def step_2_chunking(
     chunking_params: dict[str, typing.Any],
     settings: Settings,
 ) -> pw.Table:
+    """
+    Partition and Chunks the normalized table into smaller segments according to the provided chunking parameters.
 
-    # TODO: consider other chunking parameters
+    This function performs chunking on the input table based on the specified parameters
+    and then serializes the chunked data to JSONL in the specified output folder.
+
+    Args:
+        api_name (str): The name of the API, used to name the output file.
+        input_table (pw.Table): The table to be chunked.
+        chunking_params (dict[str, typing.Any]): Parameters for chunking, such as mode and capacity.
+        settings (Settings): Configuration settings, including output folder path and encoding.
+
+    Returns:
+        pw.Table: The chunked table.
+    """
     chunks_table = chunking(
         input_table=input_table,
         mode=chunking_params.get("mode", "elements"),
@@ -91,6 +134,20 @@ def step_3_generate_embeddings(
     settings: Settings,
     cache_strategy: pw.udfs.CacheStrategy | None = None,
 ) -> pw.Table:
+    """
+    Generates embeddings for the chunked table.
+
+    This function computes embeddings for the input table using the specified settings
+    and optionally a cache strategy. The embeddings are returned as a new table.
+
+    Args:
+        input_table (pw.Table): The table for which embeddings are to be generated.
+        settings (Settings): Configuration settings for generating embeddings, including caching.
+        cache_strategy (pw.udfs.CacheStrategy | None): Optional caching strategy for embeddings.
+
+    Returns:
+        pw.Table: The table containing the generated embeddings.
+    """
     embeddings_table = embeddings(
         input_table=input_table,
         settings=settings,
@@ -109,7 +166,25 @@ def execute(
     normalized_only: typing.Optional[bool] = False,
     chunked_only: typing.Optional[bool] = False
 ) -> pw.Table:
-    """Preprocessing each endpoint stream."""
+    """
+    Executes the end-to-end data processing pipeline for the specified API.
+
+    This function performs preprocessing, normalization, chunking, and embedding generation
+    based on the provided settings and parameters. It supports optional intermediate stages,
+    allowing for early termination if only normalization or chunking is needed.
+
+    Args:
+        api_name (str): The name of the API, used to name output files.
+        chunking_params (dict[str, typing.Any]): Parameters for chunking the data.
+        endpoints (dict): A dictionary of endpoint details, including text properties for preprocessing.
+        stream_tables (typing.List[pw.Table]): A list of stream tables to be processed.
+        settings (Settings): Configuration settings for the processing pipeline.
+        normalized_only (typing.Optional[bool], optional): If True, skips chunking and embedding stages.
+        chunked_only (typing.Optional[bool], optional): If True, skips embedding stage.
+
+    Returns:
+        pw.Table: The final table resulting from the processing pipeline.
+    """
 
     output_folder = settings.output_folder
 

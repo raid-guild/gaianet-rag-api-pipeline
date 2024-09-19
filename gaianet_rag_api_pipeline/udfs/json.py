@@ -4,11 +4,37 @@ import pathway as pw
 
 @pw.udf(deterministic=True)
 async def json_merge(base: pw.Json, content: pw.Json) -> pw.Json:
+    """
+    Asynchronously merges two JSON objects into one.
+
+    This function takes two JSON objects (`base` and `content`), converts them to Python dictionaries, 
+    and merges them. The result is returned as a new JSON object, with `content` overriding any 
+    conflicting keys in `base`.
+
+    Args:
+        base (pw.Json): The base JSON object.
+        content (pw.Json): The JSON object to be merged with the base.
+
+    Returns:
+        pw.Json: A JSON object containing the merged data from both input JSON objects.
+    """
     return { **base.as_dict(), **content.as_dict()}
 
 
 @pw.udf(deterministic=True)
 async def json_stringify(data: pw.Json) -> str:
+    """
+    Asynchronously converts a JSON object to a string.
+
+    This function takes a `pw.Json` object, converts it to a Python dictionary, and then serializes it into
+    a JSON-formatted string.
+
+    Args:
+        data (pw.Json): The JSON object to be stringified.
+
+    Returns:
+        str: A string representation of the input JSON object.
+    """
     return json.dumps(data.as_dict())
 
 

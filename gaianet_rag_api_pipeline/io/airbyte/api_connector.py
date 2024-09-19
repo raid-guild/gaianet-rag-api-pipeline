@@ -10,6 +10,16 @@ import typing
 
 
 class AirbyteAPIConnector(ConnectorSubject):
+    """
+    AirbyteAPIConnector is responsible for interacting with Airbyte sources and streams. It handles
+    loading the source, managing stream selection, reading data, and passing records downstream.
+    
+    Attributes:
+        source (Source): The Airbyte source object loaded from the provided configuration.
+        cache (CacheBase | None): Cache mechanism used to store read results.
+        force_full_refresh (bool): Whether to force a full refresh of the source's data.
+        skip_validation (bool): If True, skips source validation during read operations.
+    """
 
     source: Source
 
@@ -35,6 +45,29 @@ class AirbyteAPIConnector(ConnectorSubject):
         # *args,
         **kwargs,
     ):
+        """
+        Initializes the AirbyteAPIConnector by setting up the Airbyte source, selecting streams,
+        and optionally validating the source.
+        Args:
+            name (str): The name of the Airbyte source.
+            config (dict[str, typing.Any] | None, optional): Configuration settings for the source.
+            streams (str | list[str] | None, optional): Specific stream(s) to read from the source.
+            version (str | None, optional): Version of the source connector.
+            source_manifest (bool | dict | pathlib.Path | str, optional): Manifest for the Airbyte source. Defaults to False.
+            install_if_missing (bool, optional): If True, installs the source connector if it's missing. Defaults to True.
+            install_root (pathlib.Path | None, optional): Root directory for installing connectors. Defaults to None.
+            cache (CacheBase | None, optional): Cache for storing read results. Defaults to None.
+            force_full_refresh (bool, optional): Forces a full refresh when reading data. Defaults to False.
+            skip_validation (bool, optional): Skips validation during the source read process. Defaults to False.
+            check_source (bool, optional): If True, performs a source check after initialization. Defaults to True.
+            **kwargs: Additional arguments passed to the parent class.
+        
+        Raises:
+        ValueError: If the source configuration or manifest is invalid.
+    
+        Side Effects:
+            Logs debug messages during initialization and stream selection.
+        """
         super().__init__(*args, **kwargs)
         logger.debug(f"Creating new Airbyte source: {name}")
         logger.debug(f"Source manifest - {source_manifest}")
@@ -66,10 +99,12 @@ class AirbyteAPIConnector(ConnectorSubject):
 
     
     def check(self):
+        """Validates the Airbyte source configuration to ensure proper setup."""
         self.source.check()
 
 
     def run(self):
+        """Reads data from the selected streams and passes each record downstream."""
         logger.debug(f"reading data...")
         result = self.source.read(
             cache=self.cache,
@@ -98,4 +133,5 @@ class AirbyteAPIConnector(ConnectorSubject):
 
 
     def on_stop(self):
+        """Handles any cleanup or shutdown logic when stopping the connector (currently not implemented)."""
         pass

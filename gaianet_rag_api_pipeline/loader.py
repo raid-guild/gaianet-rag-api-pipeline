@@ -20,6 +20,19 @@ BASE_DEFINITIONS = [
 
 
 def validate_base_definitions(mappings: dict):
+    """
+    Validates that all required base definitions are present in the provided mappings.
+
+    This function checks if all identifiers listed in `BASE_DEFINITIONS` are included in the `definitions` 
+    section of the `mappings` dictionary. If any of the required base definitions are missing, it logs an 
+    error and raises an exception.
+
+    Args:
+        mappings (dict): A dictionary containing the mappings which include the `definitions` section.
+
+    Raises:
+        Exception: If any required base definition is missing in the `definitions` section.
+    """
     defIds = list(mappings.get("definitions", {}).keys())
     for refId in BASE_DEFINITIONS:
         if refId not in defIds:
@@ -29,6 +42,23 @@ def validate_base_definitions(mappings: dict):
 
 
 def load_openapi_spec(openapi_spec_file: pathlib.Path) -> dict:
+    """
+    Loads and validates an OpenAPI specification from a file.
+
+    This function reads an OpenAPI specification from the specified file and validates its structure. 
+    It checks the version of the OpenAPI specification and skips validation if the version is greater than 
+    or equal to 3.1.0 due to current library limitations. If the specification is invalid, it logs an error 
+    and raises an exception.
+
+    Args:
+        openapi_spec_file (pathlib.Path): The path to the OpenAPI specification file.
+
+    Returns:
+        dict: The OpenAPI specification as a dictionary.
+
+    Raises:
+        Exception: If there is an error during the validation of the OpenAPI specification.
+    """
     (openapi_spec, _) = read_from_filename(openapi_spec_file)
     # validate openapi spec
     try:
@@ -48,6 +78,18 @@ def load_openapi_spec(openapi_spec_file: pathlib.Path) -> dict:
 
 
 def get_endpoints(mappings: dict):
+    """
+    Extracts and resolves endpoints from the mappings.
+
+    This function retrieves the endpoints section from the `mappings` dictionary and resolves references 
+    in the endpoint details using the provided mappings.
+
+    Args:
+        mappings (dict): A dictionary containing the mappings with an `endpoints` section.
+
+    Returns:
+        dict: A dictionary of endpoints with resolved references.
+    """
     endpoints = mappings.get("endpoints", {})
     return {endpoint: resolve_refs(details, mappings) for endpoint, details in endpoints.items()}
 
@@ -58,6 +100,22 @@ def get_endpoint_response_schema(
     content_type: str,
     response_entrypoint_field: str
 ) -> dict:
+    """
+    Retrieves the response schema for a specific endpoint and request method.
+
+    This function extracts the response schema from the OpenAPI endpoint specification based on the 
+    request method, content type, and optional entrypoint field.
+
+    Args:
+        openapi_endpoint_spec (dict): The OpenAPI specification for the endpoint.
+        request_method (str): The HTTP method for the request (e.g., "GET", "POST").
+        content_type (str): The MIME type of the response content (e.g., "application/json").
+        response_entrypoint_field (str): The field in the response schema to use as the entry point, if applicable.
+
+    Returns:
+        dict: The response schema for the specified endpoint and request method. If an entrypoint field is 
+              specified, returns the schema for that field within the response schema.
+    """
     response_schema = openapi_endpoint_spec.\
         get(request_method, {}).\
         get("responses", {}).get("200", {}).\
@@ -77,6 +135,20 @@ def get_response_data_fields(
     entrypoint_type: str,
     openapi_spec: dict
 ) -> dict:
+    """
+    Retrieves the data fields from the response schema.
+
+    This function resolves references in the schema fields root and extracts the data fields based on the 
+    entrypoint type (array or object) from the OpenAPI specification.
+
+    Args:
+        schema_fields_root (dict): The root schema fields to resolve.
+        entrypoint_type (str): The type of the entry point ("array" or "object").
+        openapi_spec (dict): The OpenAPI specification used for resolving references.
+
+    Returns:
+        dict: The data fields from the response schema, which may include nested items if the entrypoint type is "array".
+    """
     data_fields = resolve_refs(schema_fields_root, openapi_spec)
     if entrypoint_type == "array":
         # need to get properties from nested items spec
@@ -86,6 +158,22 @@ def get_response_data_fields(
 
 
 def get_endpoint_text_properties(endpoint_details: dict, data_fields: dict) -> dict:
+    """
+    Extracts text properties from the endpoint details and validates them against response data fields.
+
+    This function identifies and validates text properties from the `textSchema` in the endpoint details. 
+    It ensures that these text properties exist in the response data fields and have matching types. 
+
+    Args:
+        endpoint_details (dict): The details of the endpoint, including `textSchema`.
+        data_fields (dict): The response data fields to validate against.
+
+    Returns:
+        dict: A list of text properties extracted from the endpoint details.
+
+    Raises:
+        Exception: If text properties are missing from the response data fields or type mismatches are found.
+    """
     # should validate textSchemas exist in response schema
     # fields specified in textSchemas will be extracted and joined together to be preprocessed
     # other response data fields will be included as json metadata
@@ -114,6 +202,30 @@ def generate_source_manifest(
     mappings: dict,
     openapi_spec: dict,
 ) -> Tuple[dict, dict]:
+    """
+    Generates a source manifest and endpoint text fields from the provided mappings and OpenAPI specification.
+
+    This function creates a source manifest that includes a list of stream definitions, endpoint details, 
+    and other configurations required for data extraction. It also extracts text fields from the endpoints 
+    based on the OpenAPI specification and mappings.
+
+    Args:
+        mappings (dict): A dictionary containing the mappings, including API configuration, specifications, 
+                         and definitions.
+        openapi_spec (dict): A dictionary representing the OpenAPI specification, including endpoint 
+                             definitions and response schemas.
+
+    Returns:
+        Tuple[dict, dict]: A tuple containing two elements:
+            - A dictionary representing the generated source manifest, which includes the definitions, 
+              streams, and other configurations.
+            - A dictionary with endpoint text fields, where each key is an endpoint and the value is a dictionary 
+              containing information about the text properties and entrypoint type.
+
+    Raises:
+        Exception: If there is an error in parsing endpoint details, validating parameters, or constructing 
+                   the source manifest.
+    """
     stream_refs = []
     stream_names = []
     stream_definitions = dict()
@@ -312,6 +424,30 @@ def api_loader(
     openapi_spec_file: pathlib.Path,
     output_folder: str
 ) -> Tuple[Tuple[str, dict], Tuple[dict, dict], dict[str, Any]]:
+    """
+    Loads API mappings, OpenAPI specification, and generates a source manifest.
+
+    This function reads API mappings from a YAML file and the OpenAPI specification from another file. 
+    It validates the mappings, generates a source manifest based on the mappings and OpenAPI spec, 
+    and writes the generated manifest to a specified output folder. It also retrieves chunking parameters 
+    from the mappings.
+
+    Args:
+        manifest_file (pathlib.Path): Path to the YAML file containing API mappings.
+        openapi_spec_file (pathlib.Path): Path to the OpenAPI specification file.
+        output_folder (str): Directory path where the generated source manifest will be saved.
+
+    Returns:
+        Tuple[Tuple[str, dict], Tuple[dict, dict], dict[str, Any]]:
+            - A tuple containing the API name (str) and API parameters (dict) extracted from the mappings.
+            - A tuple containing:
+                - The generated source manifest (dict).
+                - Endpoint text fields (dict) extracted from the source manifest.
+            - Chunking parameters (dict) retrieved from the mappings.
+
+    Raises:
+        Exception: If the `api_name` is not found in the mappings or if validation errors occur.
+    """
     mappings = dict()
     with open(manifest_file, "r") as f:
         mappings = yaml.safe_load(f)
@@ -357,6 +493,31 @@ def api_read(
     manifest_file: pathlib.Path,
     openapi_spec_file: pathlib.Path
 ) -> Tuple[Tuple[str, dict], Tuple[dict, dict], dict[str, Any]]:
+    """
+    Reads API mappings, OpenAPI specification, and source manifest to extract API details and configuration.
+
+    This function reads API mappings and source manifest from specified files and validates the base definitions. 
+    It also loads the OpenAPI specification and retrieves endpoint details, including schema and text properties.
+    It returns a tuple containing API details, source manifest, and chunking parameters.
+
+    Args:
+        source_manifest_file (pathlib.Path): Path to the YAML file containing the source manifest.
+        manifest_file (pathlib.Path): Path to the YAML file containing API mappings.
+        openapi_spec_file (pathlib.Path): Path to the OpenAPI specification file.
+
+    Returns:
+        Tuple[Tuple[str, dict], Tuple[dict, dict], dict[str, Any]]:
+            - A tuple containing:
+                - The API name (str) extracted from the mappings.
+                - API parameters (dict) extracted from the mappings.
+            - A tuple containing:
+                - The source manifest (dict) read from the source manifest file.
+                - Endpoint text fields (dict) including stream IDs, entrypoint types, and text properties for each endpoint.
+            - Chunking parameters (dict) retrieved from the mappings.
+
+    Raises:
+        Exception: If the `api_name` is not found in the mappings or if validation errors occur.
+    """
     mappings = dict()
     with open(manifest_file, "r") as f:
         mappings = yaml.safe_load(f)
@@ -444,6 +605,19 @@ def api_read(
     
 
 def get_dict_field(manifest_file: pathlib.Path, field_id: str) -> dict:
+    """
+    Retrieve a dictionary field from a YAML manifest file.
+
+    This function reads a YAML file and returns the value associated with the specified field ID.
+    If the field ID is not found, an empty dictionary is returned.
+
+    Args:
+        manifest_file (pathlib.Path): Path to the YAML manifest file.
+        field_id (str): The ID of the field to retrieve.
+
+    Returns:
+        dict: The dictionary value associated with the specified field ID, or an empty dictionary if the field ID is not found.
+    """
     mappings = dict()
     with open(manifest_file, "r") as f:
         mappings = yaml.safe_load(f)
@@ -452,6 +626,19 @@ def get_dict_field(manifest_file: pathlib.Path, field_id: str) -> dict:
 
 
 def get_str_field(manifest_file: pathlib.Path, field_id: str) -> str:
+    """
+    Retrieve a string field from a YAML manifest file.
+
+    This function reads a YAML file and returns the value associated with the specified field ID.
+    If the field ID is not found, an empty string is returned.
+
+    Args:
+        manifest_file (pathlib.Path): Path to the YAML manifest file.
+        field_id (str): The ID of the field to retrieve.
+
+    Returns:
+        str: The string value associated with the specified field ID, or an empty string if the field ID is not found.
+    """
     mappings = dict()
     with open(manifest_file, "r") as f:
         mappings = yaml.safe_load(f)

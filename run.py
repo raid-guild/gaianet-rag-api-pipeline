@@ -17,6 +17,15 @@ import os
 @click.option('--debug', is_flag=True, help="enable logging debug level")
 @click.pass_context
 def cli(ctx, debug):
+    """
+    Command-line interface (CLI) entry point for the RAG API pipeline.
+
+    Sets up the CLI context and configures logging based on the `--debug` flag.
+
+    Args:
+        ctx (click.Context): The context object for the CLI.
+        debug (bool): Flag to enable debug logging. If set, logging will be at the DEBUG level.
+    """
     click.echo(f"Debug mode is {'on' if debug else 'off'}")
     # ensure that ctx.obj exists and is a dict (in case `cli()` is called
     # by means other than the `if` block below)
@@ -49,9 +58,24 @@ def run_all(
     normalized_only: bool,
     chunked_only: bool
 ):
-    """Run the complete RAG API pipeline.
+    """
+    Run the complete RAG API pipeline.
 
-    API_MANIFEST_FILE is the pipeline YAML manifest that defines the Pipeline config settings and API endpoints to extract
+    Executes the entire pipeline from extraction to embedding based on the provided configurations and options.
+
+    Args:
+        ctx (click.Context): The context object for the CLI.
+        api_manifest_file (str): Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
+        llm_provider (str): Provider of the embedding model, e.g., "ollama" or "openai".
+        api_key (str): API authentication key.
+        openapi_spec_file (str): Path to the OpenAPI YAML specification file.
+        source_manifest_file (str): Path to the source YAML manifest file. If empty, the API manifest file is used to load data.
+        full_refresh (bool): If set, clears the cache and extracts API data from scratch.
+        normalized_only (bool): If set, runs the pipeline up to the normalization stage only.
+        chunked_only (bool): If set, runs the pipeline up to the chunking stage only.
+
+    Raises:
+        Exception: If both `--normalized-only` and `--chunked-only` options are specified.
     """
 
     if normalized_only and chunked_only:
@@ -158,9 +182,16 @@ def from_normalized(
     llm_provider: str,
     normalized_data_file: str
 ):
-    """Execute the RAG API pipeline normalized data
+    """
+    Execute the RAG API pipeline from normalized data.
 
-    API_MANIFEST_FILE is the pipeline YAML manifest that defines the Pipeline config settings and API endpoints to extract
+    Processes the normalized data and generates embeddings using the provided configurations and options.
+
+    Args:
+        ctx (click.Context): The context object for the CLI.
+        api_manifest_file (str): Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
+        llm_provider (str): Provider of the embedding model, e.g., "ollama" or "openai".
+        normalized_data_file (str): Path to the JSONL file containing normalized data.
     """
     
     # TODO: set env_file based on dev/prod
@@ -226,9 +257,16 @@ def from_chunked(
     llm_provider: str,
     chunked_data_file: str
 ):
-    """Execute the RAG API pipeline from (cached) data chunks
+    """
+    Execute the RAG API pipeline from chunked data.
 
-    API_MANIFEST_FILE is the pipeline YAML manifest that defines the Pipeline config settings and API endpoints to extract
+    Processes chunked data and generates embeddings using the provided configurations and options.
+
+    Args:
+        ctx (click.Context): The context object for the CLI.
+        api_manifest_file (str): Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
+        llm_provider (str): Provider of the embedding model, e.g., "ollama" or "openai".
+        chunked_data_file (str): Path to the JSONL file containing chunked data.
     """
 
     # TODO: set env_file based on dev/prod
@@ -273,6 +311,7 @@ def from_chunked(
 
 
 def entrypoint():
+    """Entry point for the CLI application. Initializes and invokes the CLI interface."""
     cli(obj={})
 
 
