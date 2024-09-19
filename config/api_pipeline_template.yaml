@@ -37,8 +37,7 @@ spec:
       api_key:
         type: string
         description: >-
-          API Key. See <a href="https://docs.boardroom.io/docs/api/05c1fb6d88a07-governance-api">here</a>
-          for details.
+          API Key
         airbyte-secret: true
       foo:
         type: string
@@ -58,7 +57,7 @@ definitions:
     type: RecordSelector
     extractor:
       type: DpathExtractor
-      field_path: ["data"] # NOTICE: in the case of boardroom: a single record is return wrapped in "data"
+      field_path: []
   requester_base:
     type: HttpRequester
     url_base: "https://api.template.io/v1"
@@ -70,6 +69,9 @@ definitions:
         type: RequestOption
         field_name: "key"
         inject_into: request_parameter
+    # authenticator: # More on https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/authentication
+    #   type: BearerAuthenticator
+    #   api_token: "{{ config['api_key'] }}"
   retriever_base:
     type: SimpleRetriever
     record_selector:
@@ -88,9 +90,22 @@ definitions:
       type: RequestOption
       field_name: "cursor"
       inject_into: "request_parameter"
+  # paginator: # More on https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/pagination
+  #   type: DefaultPaginator
+  #   pagination_strategy: # More on https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/pagination#offset-increment
+  #     type: "OffsetIncrement"
+  #     page_size: 50
+  #   page_token_option:
+  #     type: "RequestOption"
+  #     field_name: "offset"
+  #     inject_into: "request_parameter"
+  #   page_size_option:
+  #     type: "RequestOption"
+  #     inject_into: "request_parameter"
+  #     field_name: "limit"
 
 endpoints:
-  "/example/{foo}"":
+  "/example/{foo}":
     id: "example"
     primary_key: "id"
     responseSchema: "#/schemas/exampleSchema"

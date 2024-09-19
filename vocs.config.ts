@@ -43,8 +43,8 @@ export default defineConfig({
           link: "/manifest-definition/overview",
         },
         {
-          text: "Working with Other APIs",
-          link: "/manifest-definition/other-apis",
+          text: "Example Manifests",
+          link: "/manifest-definition/sample-manifests",
         }
       ]
     },
@@ -58,12 +58,12 @@ export default defineConfig({
           link: "/architecture/overview",
         },
         {
-          text: "Process Flow",
-          link: "/architecture/process",
-        },
-        {
           text: "Tech stack",
           link: "/architecture/tech-stack",
+        },
+        {
+          text: "In-depth code review",
+          link: "/architecture/code-review",
         }
       ]
     },
