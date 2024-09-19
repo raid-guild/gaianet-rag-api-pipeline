@@ -1,42 +1,43 @@
-# RAG API Pipeline Tech Stack
+# Tech Stack
 
-## Overview
-This page outlines the technologies and tools utilized in the AI pipeline, covering data extraction, caching, processing, and vector search for efficient data flow and feature embedding generation.
+This page outlines the technologies and tools integrated into the `rag-api-pipeline` by navigating throughout the different execution stages.
 
-## Tech Stack
+### 1. RAG Pipeline over data stream: Pathway ([Docs](https://pathway.com/developers/user-guide/introduction/welcome/))
+- **Description**: A Python-based data processing framework designed for creating AI-driven pipelines over data streams. 
+- **Core Technology**:
+  - **Rust Engine** with multithreading and multiprocessing capabilities for high performance.
+- **Use Case**: Efficient data processing, enabling integration with 3rd party data-related tools and AI models to process large, real-time data streams.
 
-### 1. PyAirbyte
-- **Description**: Utilities for interacting with Airbyte connectors using Python.
+### 2. Data extraction from any REST API source: PyAirbyte ([Docs](https://airbytehq.github.io/PyAirbyte/airbyte.html#getting-started)) + Airbyte CDK ([Docs](https://docs.airbyte.com/connector-development/config-based/low-code-cdk-overview))
+- **Description**: Utilities for interacting with Airbyte declarative stream connectors using Python.
 - **Key Features**:
   - Facilitates integration with Airbyte data sources.
   - Supports **Declarative API Connectors** via the Airbyte CDK, enabling low-code development of custom connectors.
 
-### 2. Pathway
-- **Description**: A Python-based data processing framework designed for creating AI-driven pipelines over data streams.
-- **Core Technology**:
-  - **Rust Engine** with multithreading and multiprocessing capabilities for high performance.
-- **Use Case**: Efficient data processing, enabling AI models to process large, real-time data streams.
-
-### 3. Data Caching
+### 3. Data Caching: DuckDB ([Docs](https://airbytehq.github.io/PyAirbyte/airbyte/caches.html#DuckDBCache)) + Pathway JSONL connector ([Docs](https://pathway.com/developers/user-guide/connect/connectors/jsonlines-connector))
 - **Description**: Implements caching mechanisms at various stages in the pipeline to optimize performance and reduce redundant data processing.
 - **Technologies Used**:
   - **Airbyte DuckDB Cache**: Used for caching API data extractions, ensuring efficient retrieval of extracted data without re-querying the source.
   - **JSONL Output Connectors**: After normalization and chunking, data is cached and stored in JSONL format, streamlining further processing stages.
 
-### 4. Unstructured (Python Library)
+### 4. Data Partitioning and Chunking: Unstructured Open Source ([Docs](https://docs.unstructured.io/open-source/introduction/overview))
 - **Description**: Simplifies the ingestion and pre-processing of diverse data formats within data workflows, specifically designed for **Large Language Models (LLMs)**.
 - **Features**:
   - Functions to **partition**, **chunk**, **clean**, and **stage** raw source documents for further analysis.
   - Optimized for unstructured data handling, making it easier to prepare data for machine learning tasks.
 
-### 5. Gaia Node for Feature Embedding Generation
-- **Description**: The Gaia Node is responsible for generating feature embeddings, which are used to create dense vector representations of the data.
-- **RAG API Server**:
-  - Provides an **OpenAI-like API** to interact with the pipeline.
-  - Embeddings generated here are used downstream in vector search and other AI models.
+### 5. Feature Embedding Generation: Gaianet node ([Docs](https://docs.gaianet.ai/category/node-operator-guide)) or Ollama ([Docs](https://ollama.com/))
+- **Description**: An LLM provider is responsible for generating feature embeddings, which are used to create dense vector representations of the data. 
+Embeddings generated here are used downstream in vector search and other AI models.
+- **Technologies Used**:
+  - **Gaianet Node**: offers a *RAG API Server* that provides an *OpenAI-like API* to interact with hosted LLM models. 
+  - **Ollama**: easy to install LLM engine to get up and run large language models on a local machine.
+- **Python Libraries**:
+  - [litellm](https://docs.litellm.ai/docs/providers/openai_compatible) Python library is used to connect with an OpenAI-compatible LLM providers
+  - [ollama](https://github.com/ollama/ollama-python) Python library is used to interact with a local Ollama instance.
 
-### 6. QdrantDB
-- **Description**: A **vector similarity search engine** and **vector database**.
+### 6. Vector embeddings database snapshot: QdrantDB ([Docs](https://qdrant.tech/documentation/))
+- **Description**: A **vector database** and **vector similarity search engine**.
 - **Key Features**:
   - Provides efficient vector searches based on similarity, crucial for tasks like nearest-neighbor search in large datasets.
   - Acts as a **knowledge base snapshot** repository, storing vectors generated from processed data and feature embeddings.

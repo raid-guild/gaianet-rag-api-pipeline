@@ -134,6 +134,7 @@ database snapshot generation. You can specify the following arguments to the com
 Cached API stream data and results produced from running any of the CLI commands are stored in `<OUTPUT_FOLDER>/<api_name>`. The following files and folders 
 are created by the tool within this `baseDir` folder:
 
+- `{baseDir}/{api_name}_source_generated.yaml`: generated Airbyte Stream connector manifest.
 - `{baseDir}/cache/{api_name}/*`: extracted API data is cached into a local DuckDB. Database files are stored in this directory. If the `--full-refresh` argument
 is specified to the `run-all` command, the cache will be cleared and API data will be extracted from scratch.
 - `{baseDir}/{api_name}_stream_{x}_preprocessed.jsonl`: data streams from each API endpoint is preprocessed and stored in JSONL format

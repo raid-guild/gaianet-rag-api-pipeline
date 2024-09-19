@@ -1,3 +1,17 @@
-# rag-api-pipeline - Architecture Overview
+# Architecture Overview
 
-TBD
+![architecture](/architecture.png)
+
+The diagram above showcases the system architecture. When running the `rag-api-pipeline` CLI, the tool executes the following steps:
+
+1. The API `Loader` module reads both the API pipeline manifest and the OpenAPI spec.
+2. The `Loader` module generates an Airbyte declarative stream manifest and forwards it to the `Pipeline` module.
+3. The `Pipeline` module starts the Pathway engine.
+4. The engine uses an `Airbyte UDF connector` module to extract data from each API endpoint as independent streams.
+5. Extracted data flows through the RAG pipeline stages: stream preprocesing, data normalization, data partitioning and chunking and feature embeddings generation.
+    - (5.4) The `Feature Embeddings` generation module can be setup to use either Ollama or an OpenAI-compatible API provider such as a Gaia node to generate vector embeddings with 
+the LLM embeddings model of your preference.
+    - (5.5) Generated vector embeddings are then stored on a Qdrant DB instance using the `qdrant` output module.
+6. The `qdrant` module automatically generates and compress a DB vector snapshot for the current vector embeddings collection.
+7. The resulting knowledge base snapshot can then be imported into a Gaia node via local upload or by uploading to a AI dataset/model provider such as HuggingFace.
+8. The node joins the GaiaNet network to offer an LLM model with custom domain knowledge that can be used to provide different RAG applications to end users.
