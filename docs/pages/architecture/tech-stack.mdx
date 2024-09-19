@@ -2,6 +2,8 @@
 
 This page outlines the technologies and tools integrated into the `rag-api-pipeline` by navigating throughout the different execution stages.
 
+## Tools & Frameworks
+
 ### 1. RAG Pipeline over data stream: Pathway ([Docs](https://pathway.com/developers/user-guide/introduction/welcome/))
 - **Description**: A Python-based data processing framework designed for creating AI-driven pipelines over data streams. 
 - **Core Technology**:
@@ -41,11 +43,3 @@ Embeddings generated here are used downstream in vector search and other AI mode
 - **Key Features**:
   - Provides efficient vector searches based on similarity, crucial for tasks like nearest-neighbor search in large datasets.
   - Acts as a **knowledge base snapshot** repository, storing vectors generated from processed data and feature embeddings.
-
-
-## Data Flow Overview
-1. **Data Extraction**: PyAirbyte connects to various data sources, using Airbyte DuckDB Cache for efficient retrieval.
-2. **Processing & Transformation**: Pathway handles real-time processing of data streams, transforming raw data into usable formats.
-3. **Data Normalization & Caching**: Data undergoes normalization, is chunked, and stored in JSONL format.
-4. **Embedding Generation**: Gaia Node generates vector embeddings from processed data.
-5. **Vector Search**: QdrantDB allows for vector similarity search, enabling efficient knowledge retrieval based on embeddings.

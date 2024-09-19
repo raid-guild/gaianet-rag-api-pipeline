@@ -195,6 +195,20 @@ TBD
     - `brew install libmagic`
   - `pip install python-magic-bin`
 
+## Documentation
+
+We use [Vocs](https://vocs.dev/) framework for generating the Documentation site. Run `pnpm run dev` if you want to work on some updates. Execute the following 
+commands if you're looking to build and deploy the updated documentation on Github pages:
+
+```bash [Terminal]
+pnpm run build
+pnpm run deploy
+```
+
+## Demo
+
+Presentation slides can be found [here](https://hackmd.io/@santteegt/ByoykY4nC#/)
+
 ## License
 
 [MIT](LICENSE)

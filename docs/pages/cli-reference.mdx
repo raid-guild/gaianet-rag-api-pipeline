@@ -1,24 +1,26 @@
-# RAG API Pipeline CLI Documentation
+# RAG API Pipeline CLI Reference Documentation
 
 ## Overview
 
-The CLI tool provides functionality for running a RAG (Retrieval-Augmented Generation) API pipeline.
-It offers various commands to execute different stages of the pipeline, from data extraction to embedding generation.
+The CLI tool provides functionality for running a RAG (Retrieval-Augmented Generation) API pipeline. It offers various commands to execute different stages of 
+the pipeline, from data extraction to embedding generation.
 
 ## Installation
 
 This project uses Poetry for dependency management. To install the project and all its dependencies:
 
-1. Ensure you have Poetry installed. If not, install it by following the instructions at https://python-poetry.org/docs/#installation
+1. Ensure you have Poetry installed. If not, install it by following the instructions [here](https://python-poetry.org/docs/#installation)
 
 2. Clone the repository:
-   ```
+   
+   ```bash [Terminal]
    git clone https://github.com/raid-guild/gaianet-rag-api-pipeline
    cd gaianet-rag-api-pipeline
    ```
 
 3. Install dependencies using Poetry:
-   ```
+   
+   ```bash [Terminal]
    poetry install
    ```
 
@@ -28,21 +30,21 @@ This project uses Poetry for dependency management. To install the project and a
 
 To run any command, use the `poetry run` prefix:
 
-```
+```bash [Terminal]
 poetry run rag-api-pipeline [OPTIONS] COMMAND [ARGS]...
 ```
 
 ## Global Options
 
-- `--debug`: Enable logging at debug level.
+- `--debug`: Enable logging at debug level. Usefult for developing purposes
 
 ## Commands
 
-### 1. run-all
+### run-all
 
 Run the complete RAG API pipeline.
 
-```
+```bash [Terminal]
 poetry run rag-api-pipeline run-all [OPTIONS] API_MANIFEST_FILE
 ```
 
@@ -55,16 +57,16 @@ poetry run rag-api-pipeline run-all [OPTIONS] API_MANIFEST_FILE
 - `--llm-provider [ollama|openai]`: Embedding model provider (default: openai)
 - `--api-key TEXT`: API Auth key
 - `--openapi-spec-file FILE`: OpenAPI YAML spec file (default: config/openapi.yaml)
-- `--source-manifest-file FILE`: Source YAML manifest
+- `--source-manifest-file FILE`: Source Connector YAML manifest
 - `--full-refresh`: Clean up cache and extract API data from scratch
 - `--normalized-only`: Run pipeline until the normalized data stage
 - `--chunked-only`: Run pipeline until the chunked data stage
 
-### 2. from-normalized
+### from-normalized
 
-Execute the RAG API pipeline from normalized data.
+eExecutes the RAG data pipeline using an already normalized JSONL dataset.
 
-```
+```bash [Terminal]
 poetry run rag-api-pipeline from-normalized [OPTIONS] API_MANIFEST_FILE
 ```
 
@@ -79,9 +81,9 @@ poetry run rag-api-pipeline from-normalized [OPTIONS] API_MANIFEST_FILE
 
 ### 3. from-chunked
 
-Execute the RAG API pipeline from (cached) data chunks.
+Executes the RAG data pipeline using an already chunked dataset in JSONL format.
 
-```
+```bash [Terminal]
 poetry run rag-api-pipeline from-chunked [OPTIONS] API_MANIFEST_FILE
 ```
 
@@ -94,32 +96,32 @@ poetry run rag-api-pipeline from-chunked [OPTIONS] API_MANIFEST_FILE
 - `--llm-provider [ollama|openai]`: Embedding model provider (default: openai)
 - `--chunked-data-file FILE`: Chunked data in JSONL format (required)
 
-## Environment Variables
-
-- `BOARDROOM_API_KEY`: Can be used to set the API key instead of passing it as a command-line option.
 
 ## Examples
 
-1. Run the complete pipeline:
-   ```
-   poetry run rag-api-pipeline run-all config/api_pipeline.yaml --llm-provider ollama
+1. Run the complete pipeline using Ollama as LLM provider:
+   ```bash [Terminal]
+   poetry run rag-api-pipeline run-all config/api_pipeline.yaml --openapi-spec-file config/openapi.yaml --llm-provider ollama
    ```
 
-2. Run the pipeline from normalized data:
+2. Run the pipeline and stop executing after data normalization:
+   ```bash [Terminal]
+   poetry run rag-api-pipeline run-all config/api_pipeline.yaml --openapi-spec-file config/openapi.yaml --llm-provider ollama --normalized-only
    ```
+
+3. Run the pipeline from normalized data:
+   ```bash [Terminal]
    poetry run rag-api-pipeline from-normalized config/api_pipeline.yaml --normalized-data-file path/to/normalized_data.jsonl --llm-provider ollama
    ```
 
 3. Run the pipeline from chunked data:
-   ```
+   ```bash [Terminal]
    poetry run rag-api-pipeline from-chunked config/api_pipeline.yaml --chunked-data-file path/to/chunked_data.jsonl --llm-provider ollama
    ```
 
 ## Notes
 
-- The CLI uses the `click` library for command-line interface creation.
-- It integrates with a custom logging setup and uses the `codetiming` library for performance timing.
-- The pipeline is built using the `pathway` library for data processing.
-- Make sure to properly configure your API manifest file and OpenAPI spec file before running the pipeline.
-- Using Poetry for dependency management ensures consistent environments across different setups.
 - Always use `poetry run` to execute the CLI commands within the Poetry environment.
+- The CLI uses the `click` library for command-line interface creation.
+- Make sure to properly configure your API manifest file and OpenAPI spec file before running the pipeline.
+- Double check the CLI environment variables in the `config/.env` file. Check The [Environment Variables](/getting-started#environment-variables) section for details.

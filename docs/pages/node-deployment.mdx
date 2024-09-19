@@ -1,94 +1,47 @@
-# RAG API Pipeline Deployment
+# RAG API Pipeline x GaiaNet node
 
-## Overview
-This page outlines the deployment process for the AI pipeline, including the necessary components and their configurations.
+This page contains some quick notes and instructions for efficient methods for generating vector embeddings, as well as quick instructions on how to import a knowledge base snapshot and deploy a GaiaNet node.
 
-## Deployment Process
+## Generating Vector embeddings
 
-### Local development
-
-Start with building your containers: `docker compose -f local.yml build`.
-
-You are ready to start developing your application!
-Define your custom logic in `gaianet_rag_api_pipeline/pipeline.py`. It already contains a sample code which sums all the input values.
-
-You can test it in the following modes:
-
-- [debug (batch mode)] run your Pathway app code with pytest with `docker compose -f local.yml run --rm pathway_app pytest`
-- [streaming] run your Pathway app `docker compose -f local.yml up`. Modify `InfiniteStream` in `gaianet_rag_api_pipeline/input.py` to feed it with different data. The results are streamed to the `output.csv` file (you can change this in `gaianet_rag_api_pipeline/output.py`)
-
-
-### Production environment
-
-Production environment streams data from `redpanda`.
-Build production containers with `docker compose -f prod.yml build`
-
-To run your application invoke:
-1. `docker compose -f prod.yml rm -svf` to clean the state so that `redpanda` can start without issues
-2. `docker compose -f prod.yml up`
-
-For test, you can push messages to redpanda by running
-`docker compose -f prod.yml exec redpanda rpk topic create gaianet_rag_api_pipeline` to make sure the topic is created
-and then `docker compose -f prod.yml exec redpanda rpk topic produce gaianet_rag_api_pipeline`
-
-and typing in the messages, e.g:
-`{"value":10}`
-
-
-## Working with a Snapshot
-
-You can optionally use ollama to generate a snapshot and work with it for your gaianet node
+If you're planning to use the pipeline on consumer hardware that cannot handle a GaiaNet node running in the background, you can opt-in to use Ollama 
+as LLM provider. Some of the advantages are that it is more lighweight, easier to install and ready to use with Mac GPU devices.
 
 ### Setting up Ollama
-Download and install ollama from official [website](https://ollama.com/download)
+
+Download and install ollama from the official [website](https://ollama.com/download)
 
 ### Setting up Embeddings Model with Ollama
 
-1. Download the prefered embedding model from [HuggingFace](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf)
-2. Create `Modelfile` to use embedding model with ollama
+1. Download the embeddings model of your preference (e.g. from [HuggingFace](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf))
+2. Create `Modelfile` to use the embedding model with Ollama. Learn more about Ollama Modelfile [here](https://github.com/ollama/ollama/blob/main/docs/modelfile.md)
 
-```
+```docker [Modelfile]
 FROM ./nomic-embed-text-v1.5.f16.gguf # this is the path to the embedding model
 ```
-Learn more about Ollama Modelfile [here](https://github.com/ollama/ollama/blob/main/docs/modelfile.md)
 
-To use the new Modelfile Save it as a file (e.g. Modelfile) and run the following command:
+3. Import the model into Ollama
 
-```bash
-ollama create choose-a-model-name -f <location of the file e.g. ./Modelfile>'
-ollama run choose-a-model-name
+```bash [Terminal]
+ollama create <model-name> -f <Modelfile>'
 ```
 
-### Setup a qdrant vector db instance
+## Selecting a knowledge base and prompts for your GaiaNet node
 
-- Run the following command to start a qdrant vector db instance (make sure to have docker daemon running)
+In order to supplement the LLM model hosted on your Gaia node with a custom knowledge base and prompts follow the instructions outlined in this [link](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base). 
+Remember to re-initialize and re-start the node after you make configuration changes.
 
-```bash
-docker run -p 6333:6333 -p 6334:6334 -v ./qdrant_dev:/qdrant/storage:z qdrant/qdrant:v1.10.1
-```
-
-### Generating a Snapshopt
-
-
-### Using the Snapshot
-to use the generated snapshot with gaianet node without the full pipeline, you can edit the config file and add the following:
-
-```
-"snapshot": "/your-snapshot-path-or-url", # this can be http url or local path
-```
-make sure to add the snapshot to the config file run the following command to start the node:
-
-```bash
+```bash [Terminal]
 gaianet init
 gaianet start
 ```
 
+### Recommended GaiaNet Node Configuration
 
-
-
-## Recommended GaiaNet Node Configuration
 - Tested on Mac Studio 32GB RAM
-```json
+- Custom prompts for the [Boardroom Aave example](/apis/boardroom-api)
+
+```json [config.json]
 {
   "address": "your-node-address",
   "chat": "https://huggingface.co/gaianet/Meta-Llama-3.1-8B-Instruct-GGUF/resolve/main/Meta-Llama-3.1-8B-Instruct-Q5_K_M.gguf",

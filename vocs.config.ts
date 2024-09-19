@@ -77,7 +77,6 @@ export default defineConfig({
     },
   ],
   topNav: [
-    { text: "Home", link: "/" },
     {
       text: "APIs",
       items: [
