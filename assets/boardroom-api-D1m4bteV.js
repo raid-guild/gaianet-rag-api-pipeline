@@ -1,4 +1,4 @@
-import{u as n,j as s}from"./index-VTEpaRHR.js";const r={title:"Boardroom Governance API",description:"undefined"};function l(i){const e={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",header:"header",img:"img",li:"li",p:"p",pre:"pre",span:"span",ul:"ul",...n(),...i.components};return s.jsxs(s.Fragment,{children:[s.jsx(e.header,{children:s.jsxs(e.h1,{id:"boardroom-governance-api",children:["Boardroom Governance API",s.jsx(e.a,{"aria-hidden":"true",tabIndex:"-1",href:"#boardroom-governance-api",children:s.jsx(e.div,{"data-autolink-icon":!0})})]})}),`
+import{u as l,j as s}from"./index-DFtmkvAK.js";const r={title:"Boardroom Governance API",description:"undefined"};function n(i){const e={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",header:"header",img:"img",li:"li",p:"p",pre:"pre",span:"span",ul:"ul",...l(),...i.components};return s.jsxs(s.Fragment,{children:[s.jsx(e.header,{children:s.jsxs(e.h1,{id:"boardroom-governance-api",children:["Boardroom Governance API",s.jsx(e.a,{"aria-hidden":"true",tabIndex:"-1",href:"#boardroom-governance-api",children:s.jsx(e.div,{"data-autolink-icon":!0})})]})}),`
 `,s.jsxs(e.p,{children:["The repository includes both the ",s.jsx(e.a,{href:"https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/boardroom_api_pipeline.yaml",children:"API pipeline manifest"}),`
 definition and the `,s.jsx(e.a,{href:"https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/openapi.yaml",children:"OpenAPI spec"}),` to create a RAG pipeline to generate a
 knowledge base from any DAO/Protocol whose data is hosted by the Boardroom Governance API. You can usually find these files within the `,s.jsx(e.code,{children:"config"})," folder."]}),`
@@ -244,15 +244,15 @@ The recommended prompts and node config settings can be found `,s.jsx(e.a,{href:
 `,s.jsxs(e.ul,{children:[`
 `,s.jsx(e.li,{children:"Asking what information the RAG bot is able to provide"}),`
 `]}),`
-`,s.jsx(e.p,{children:s.jsx(e.img,{src:"/aave_samples/intro.png",alt:"intro_prompt"})}),`
+`,s.jsx(e.p,{children:s.jsx(e.img,{src:"https://raw.githubusercontent.com/raid-guild/gaianet-rag-api-pipeline/72403cc4503ce65da4e737eb8f68c03aa5772f44/aave_samples/intro.png",alt:"intro_prompt"})}),`
 `,s.jsxs(e.ul,{children:[`
 `,s.jsxs(e.li,{children:["Asking for information about the proposal ",s.jsx(e.a,{href:"https://boardroom.io/aave/proposal/cHJvcG9zYWw6YWF2ZTpvbmNoYWluLXVwZ3JhZGU6MTUy",children:"Enable Metis as Collateral on the Metis Chain"})]}),`
 `]}),`
-`,s.jsx(e.p,{children:s.jsx(e.img,{src:"/aave_samples/proposal1_summary.png",alt:"proposal1_prompt"})}),`
+`,s.jsx(e.p,{children:s.jsx(e.img,{src:"https://raw.githubusercontent.com/raid-guild/gaianet-rag-api-pipeline/72403cc4503ce65da4e737eb8f68c03aa5772f44/aave_samples/proposal1_summary.png",alt:"proposal1_prompt"})}),`
 `,s.jsxs(e.ul,{children:[`
 `,s.jsxs(e.li,{children:["Asking for information about ",s.jsx(e.a,{href:"https://boardroom.io/aave/discussions/18987",children:"Onboarding USDS and sUSDS to Aave v3"})]}),`
 `]}),`
-`,s.jsx(e.p,{children:s.jsx(e.img,{src:"/aave_samples/proposal2_summary.png",alt:"proposal1_prompt"})}),`
+`,s.jsx(e.p,{children:s.jsx(e.img,{src:"https://raw.githubusercontent.com/raid-guild/gaianet-rag-api-pipeline/72403cc4503ce65da4e737eb8f68c03aa5772f44/aave_samples/proposal2_summary.png",alt:"proposal1_prompt"})}),`
 `,s.jsxs(e.h2,{id:"generating-a-knowledge-base-from-another-target-dao",children:["Generating a knowledge base from another target DAO",s.jsx(e.a,{"aria-hidden":"true",tabIndex:"-1",href:"#generating-a-knowledge-base-from-another-target-dao",children:s.jsx(e.div,{"data-autolink-icon":!0})})]}),`
 `,s.jsxs(e.p,{children:["If you're interested on getting a knowledge base for another DAO, you can reuse the same ",s.jsx(e.a,{href:"https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/boardroom_api_pipeline.yaml",children:"boardroom_api_pipeline.yaml"}),`
-file and simply update the `,s.jsx(e.code,{children:"api_name"})," and ",s.jsx(e.code,{children:"api_parameters"})," values."]})]})}function c(i={}){const{wrapper:e}={...n(),...i.components};return e?s.jsx(e,{...i,children:s.jsx(l,{...i})}):l(i)}export{c as default,r as frontmatter};
+file and simply update the `,s.jsx(e.code,{children:"api_name"})," and ",s.jsx(e.code,{children:"api_parameters"})," values."]})]})}function c(i={}){const{wrapper:e}={...l(),...i.components};return e?s.jsx(e,{...i,children:s.jsx(n,{...i})}):n(i)}export{c as default,r as frontmatter};
