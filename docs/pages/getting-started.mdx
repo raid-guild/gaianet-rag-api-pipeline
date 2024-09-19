@@ -31,20 +31,20 @@ If using a custom virtual environment, you should activate your virtual environm
 
 Navigate to the directory where this repository was cloned/download and execute the following on a terminal:
 
-```bash [terminal]
+```bash [Terminal]
 poetry install
 ```
 
 ### Set environment variables
 
-Copy `config/.env/sample` into `config/.env` file and set environment variables accordingly. Check the [environment variables](#environment-variables) section 
+Copy `config/.env/sample` into `config/.env` file and set environment variables accordingly. Check the [environment variables](/#environment-variables) section below
 for details.
 
 ### Define your API Pipeline manifest
 
 Define the pipeline manifest for your REST API you're looking to extract data from. Check how to define an API pipeline manifest in 
 [Defining an API Pipeline Manifest](/manifest-definition) for details, or take a look at the in-depth review of the sample manifests available in 
-[API Examples](/examples).
+[API Examples](/apis).
 
 ### Set the REST API Key
 
@@ -192,7 +192,7 @@ TBD
 
 ### Workaround in case of missing one of the following dependencies:
 
-- If trying to install `pillow-heif` missinng module:
+- If trying to install `pillow-heif` missing module:
   - Add the following flags `export CFLAGS="-Wno-nullability-completeness"`
 - Libraries required for having libmagic working:
   - MacOS:
