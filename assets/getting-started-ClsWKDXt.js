@@ -1,4 +1,4 @@
-import{u as a,j as e}from"./index-CpJP5i00.js";const d={title:"GaiaNet RAG API Pipeline",description:"undefined"};function s(n){const i={a:"a",aside:"aside",code:"code",div:"div",em:"em",h1:"h1",h2:"h2",h3:"h3",header:"header",li:"li",ol:"ol",p:"p",pre:"pre",span:"span",strong:"strong",ul:"ul",...a(),...n.components};return e.jsxs(e.Fragment,{children:[e.jsx(i.header,{children:e.jsxs(i.h1,{id:"gaianet-rag-api-pipeline",children:["GaiaNet RAG API Pipeline",e.jsx(i.a,{"aria-hidden":"true",tabIndex:"-1",href:"#gaianet-rag-api-pipeline",children:e.jsx(i.div,{"data-autolink-icon":!0})})]})}),`
+import{u as a,j as e}from"./index-iPwFPOFl.js";const d={title:"GaiaNet RAG API Pipeline",description:"undefined"};function s(n){const i={a:"a",aside:"aside",code:"code",div:"div",em:"em",h1:"h1",h2:"h2",h3:"h3",header:"header",li:"li",ol:"ol",p:"p",pre:"pre",span:"span",strong:"strong",ul:"ul",...a(),...n.components};return e.jsxs(e.Fragment,{children:[e.jsx(i.header,{children:e.jsxs(i.h1,{id:"gaianet-rag-api-pipeline",children:["GaiaNet RAG API Pipeline",e.jsx(i.a,{"aria-hidden":"true",tabIndex:"-1",href:"#gaianet-rag-api-pipeline",children:e.jsx(i.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsxs(i.p,{children:[e.jsx(i.code,{children:"rag-api-pipeline"}),` is a Python-based data pipeline tool that allows you to easily generate a vector knowledge base from any REST API data source. The
 resulting database snapshot can be then plugged-in into a Gaia node's LLM model with a prompt and provide contextual responses to user queries using RAG
 (Retrieval Augmented Generation).`]}),`
@@ -155,7 +155,7 @@ this parameters for the embeddings stage as it could break the LLM provider with
 `,e.jsxs(i.h2,{id:"troubleshooting",children:["Troubleshooting",e.jsx(i.a,{"aria-hidden":"true",tabIndex:"-1",href:"#troubleshooting",children:e.jsx(i.div,{"data-autolink-icon":!0})})]}),`
 `,e.jsxs(i.h3,{id:"workaround-in-case-of-missing-one-of-the-following-dependencies",children:["Workaround in case of missing one of the following dependencies:",e.jsx(i.a,{"aria-hidden":"true",tabIndex:"-1",href:"#workaround-in-case-of-missing-one-of-the-following-dependencies",children:e.jsx(i.div,{"data-autolink-icon":!0})})]}),`
 `,e.jsxs(i.ul,{children:[`
-`,e.jsxs(i.li,{children:["If trying to install ",e.jsx(i.code,{children:"pillow-heif"})," missinng module:",`
+`,e.jsxs(i.li,{children:["If trying to install ",e.jsx(i.code,{children:"pillow-heif"})," missing module:",`
 `,e.jsxs(i.ul,{children:[`
 `,e.jsxs(i.li,{children:["Add the following flags ",e.jsx(i.code,{children:'export CFLAGS="-Wno-nullability-completeness"'})]}),`
 `]}),`
