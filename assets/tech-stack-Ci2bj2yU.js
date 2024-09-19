@@ -1,5 +1,6 @@
-import{u as s,j as e}from"./index-iPwFPOFl.js";const a={title:"Tech Stack",description:"undefined"};function r(i){const n={a:"a",code:"code",div:"div",em:"em",h1:"h1",h2:"h2",h3:"h3",header:"header",li:"li",ol:"ol",p:"p",strong:"strong",ul:"ul",...s(),...i.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"tech-stack",children:["Tech Stack",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#tech-stack",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
+import{u as r,j as e}from"./index-DrB8Q3SN.js";const a={title:"Tech Stack",description:"undefined"};function i(s){const n={a:"a",code:"code",div:"div",em:"em",h1:"h1",h2:"h2",h3:"h3",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...r(),...s.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"tech-stack",children:["Tech Stack",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#tech-stack",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsxs(n.p,{children:["This page outlines the technologies and tools integrated into the ",e.jsx(n.code,{children:"rag-api-pipeline"})," by navigating throughout the different execution stages."]}),`
+`,e.jsxs(n.h2,{id:"tools--frameworks",children:["Tools & Frameworks",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#tools--frameworks",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
 `,e.jsxs(n.h3,{id:"1-rag-pipeline-over-data-stream-pathway-docs",children:["1. RAG Pipeline over data stream: Pathway (",e.jsx(n.a,{href:"https://pathway.com/developers/user-guide/introduction/welcome/",children:"Docs"}),")",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#1-rag-pipeline-over-data-stream-pathway-docs",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
 `,e.jsxs(n.ul,{children:[`
 `,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Description"}),": A Python-based data processing framework designed for creating AI-driven pipelines over data streams."]}),`
@@ -66,12 +67,4 @@ Embeddings generated here are used downstream in vector search and other AI mode
 `,e.jsxs(n.li,{children:["Acts as a ",e.jsx(n.strong,{children:"knowledge base snapshot"})," repository, storing vectors generated from processed data and feature embeddings."]}),`
 `]}),`
 `]}),`
-`]}),`
-`,e.jsxs(n.h2,{id:"data-flow-overview",children:["Data Flow Overview",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#data-flow-overview",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
-`,e.jsxs(n.ol,{children:[`
-`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Data Extraction"}),": PyAirbyte connects to various data sources, using Airbyte DuckDB Cache for efficient retrieval."]}),`
-`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Processing & Transformation"}),": Pathway handles real-time processing of data streams, transforming raw data into usable formats."]}),`
-`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Data Normalization & Caching"}),": Data undergoes normalization, is chunked, and stored in JSONL format."]}),`
-`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Embedding Generation"}),": Gaia Node generates vector embeddings from processed data."]}),`
-`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Vector Search"}),": QdrantDB allows for vector similarity search, enabling efficient knowledge retrieval based on embeddings."]}),`
-`]})]})}function o(i={}){const{wrapper:n}={...s(),...i.components};return n?e.jsx(n,{...i,children:e.jsx(r,{...i})}):r(i)}export{o as default,a as frontmatter};
+`]})]})}function d(s={}){const{wrapper:n}={...r(),...s.components};return n?e.jsx(n,{...s,children:e.jsx(i,{...s})}):i(s)}export{d as default,a as frontmatter};
