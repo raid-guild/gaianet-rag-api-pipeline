@@ -2,10 +2,10 @@ import { defineConfig } from "vocs";
 
 export default defineConfig({
   basePath: "/gaianet-rag-api-pipeline",
-  banner: {
-    dismissable: false,
-    content: "This is still under development",
-  },
+  // banner: {
+  //   dismissable: false,
+  //   content: "This is still under development",
+  // },
   title: "RAG API Pipeline",
   description: "Supercharge your Gaianet node by generating a vector knowledge base from any API.",
   editLink: {
