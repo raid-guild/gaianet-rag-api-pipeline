@@ -1,4 +1,4 @@
-import{u as a,j as e}from"./index-DFtmkvAK.js";const d={title:"GaiaNet RAG API Pipeline",description:"undefined"};function s(n){const i={a:"a",aside:"aside",code:"code",div:"div",em:"em",h1:"h1",h2:"h2",h3:"h3",header:"header",li:"li",ol:"ol",p:"p",pre:"pre",span:"span",strong:"strong",ul:"ul",...a(),...n.components};return e.jsxs(e.Fragment,{children:[e.jsx(i.header,{children:e.jsxs(i.h1,{id:"gaianet-rag-api-pipeline",children:["GaiaNet RAG API Pipeline",e.jsx(i.a,{"aria-hidden":"true",tabIndex:"-1",href:"#gaianet-rag-api-pipeline",children:e.jsx(i.div,{"data-autolink-icon":!0})})]})}),`
+import{u as a,j as e}from"./index-DtYU6s9i.js";const d={title:"GaiaNet RAG API Pipeline",description:"undefined"};function s(n){const i={a:"a",aside:"aside",code:"code",div:"div",em:"em",h1:"h1",h2:"h2",h3:"h3",header:"header",li:"li",ol:"ol",p:"p",pre:"pre",span:"span",strong:"strong",ul:"ul",...a(),...n.components};return e.jsxs(e.Fragment,{children:[e.jsx(i.header,{children:e.jsxs(i.h1,{id:"gaianet-rag-api-pipeline",children:["GaiaNet RAG API Pipeline",e.jsx(i.a,{"aria-hidden":"true",tabIndex:"-1",href:"#gaianet-rag-api-pipeline",children:e.jsx(i.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsxs(i.p,{children:[e.jsx(i.code,{children:"rag-api-pipeline"}),` is a Python-based data pipeline tool that allows you to easily generate a vector knowledge base from any REST API data source. The
 resulting database snapshot can be then plugged-in into a Gaia node's LLM model with a prompt and provide contextual responses to user queries using RAG
 (Retrieval Augmented Generation).`]}),`
@@ -82,6 +82,7 @@ required data schema.`]}),`
 `,e.jsxs(i.p,{children:["Cached API stream data and results produced from running any of the CLI commands are stored in ",e.jsx(i.code,{children:"<OUTPUT_FOLDER>/<api_name>"}),`. The following files and folders
 are created by the tool within this `,e.jsx(i.code,{children:"baseDir"})," folder:"]}),`
 `,e.jsxs(i.ul,{children:[`
+`,e.jsxs(i.li,{children:[e.jsx(i.code,{children:"{baseDir}/{api_name}_source_generated.yaml"}),": generated Airbyte Stream connector manifest."]}),`
 `,e.jsxs(i.li,{children:[e.jsx(i.code,{children:"{baseDir}/cache/{api_name}/*"}),": extracted API data is cached into a local DuckDB. Database files are stored in this directory. If the ",e.jsx(i.code,{children:"--full-refresh"}),` argument
 is specified to the `,e.jsx(i.code,{children:"run-all"})," command, the cache will be cleared and API data will be extracted from scratch."]}),`
 `,e.jsxs(i.li,{children:[e.jsx(i.code,{children:"{baseDir}/{api_name}_stream_{x}_preprocessed.jsonl"}),": data streams from each API endpoint is preprocessed and stored in JSONL format"]}),`
