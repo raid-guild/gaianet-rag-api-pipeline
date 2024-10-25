@@ -6,7 +6,8 @@ import time
 
 def preprocessing(
     input_stream: pw.Table,
-    text_properties: list[dict]
+    text_properties: list[dict],
+    is_text_input: bool = False
 ) -> pw.Table:
     """
     Pre-processes a table by concatenating text fields and converting metadata for further stages.
@@ -31,32 +32,37 @@ def preprocessing(
     @pw.pandas_transformer(output_schema=normalized_schema)
     def preprocess_table(table: pd.DataFrame) -> pd.DataFrame:
         columns = set(table.columns)
-        # make sure correct dtypes are used
         table = table.convert_dtypes()
-        # concat text properties into a single string
-        table["preprocessed_text"] = table[text_columns].\
-            fillna(value="").\
-            map(str).\
-            agg("\n\n".join, axis=1).\
-            to_list()
 
-        # NOTICE: transform pw Timestamp values to string to avoid parsing errors
-        if "_airbyte_extracted_at" in columns:
-            table["_airbyte_extracted_at"] = table["_airbyte_extracted_at"].apply(str)
-        
-        # NOTICE: str transform to avoid parsing errors
-        if "id" in columns:
-            table["id"] = table["id"].apply(str)
+        if is_text_input:
+            # Assume the input already has 'content' and 'metadata' columns
+            preprocessed_table = table[["content", "metadata"]]
+        else:
+            # concat text properties into a single string
+            table["preprocessed_text"] = table[text_columns].\
+                fillna(value="").\
+                map(str).\
+                agg("\n\n".join, axis=1).\
+                to_list()
 
-        # other fields go as metadata properties
-        table["preprocessed_metadata"] = table[list(columns - set(text_columns))].to_dict(orient="records")
+            # NOTICE: transform pw Timestamp values to string to avoid parsing errors
+            if "_airbyte_extracted_at" in columns:
+                table["_airbyte_extracted_at"] = table["_airbyte_extracted_at"].apply(str)
+            
+            # NOTICE: str transform to avoid parsing errors
+            if "id" in columns:
+                table["id"] = table["id"].apply(str)
 
-        # get preprocessed table to be forwarded to the streams normalization stage
-        preprocessed_table = table[["preprocessed_text", "preprocessed_metadata"]]
-        preprocessed_table.rename(
-            columns={"preprocessed_text": "content", "preprocessed_metadata": "metadata"},
-            inplace=True
-        )
+            # other fields go as metadata properties
+            table["preprocessed_metadata"] = table[list(columns - set(text_columns))].to_dict(orient="records")
+
+            # get preprocessed table to be forwarded to the streams normalization stage
+            preprocessed_table = table[["preprocessed_text", "preprocessed_metadata"]]
+            preprocessed_table.rename(
+                columns={"preprocessed_text": "content", "preprocessed_metadata": "metadata"},
+                inplace=True
+            )
+
         return preprocessed_table
 
     output_table = preprocess_table(input_stream)

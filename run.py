@@ -1,5 +1,5 @@
 from gaianet_rag_api_pipeline.config import get_settings, logger
-from gaianet_rag_api_pipeline.input import input, read_jsonl_source
+from gaianet_rag_api_pipeline.input import input, read_jsonl_source, text_input
 from gaianet_rag_api_pipeline.loader import api_loader, api_read, get_dict_field, get_str_field
 from gaianet_rag_api_pipeline.output import output
 from gaianet_rag_api_pipeline.schema import ChunkedDataSchema, NormalizedAPISchema
@@ -11,6 +11,7 @@ import logging
 import pathlib
 import pathway as pw
 import os
+import json
 
 
 @click.group()
@@ -308,6 +309,22 @@ def from_chunked(
     )
 
     pw.run(monitoring_level=pw.MonitoringLevel.ALL)
+
+
+@click.command()
+@click.argument('text_file', type=click.Path(exists=True))
+@click.option('--chunking-params', type=click.Path(exists=True), required=True, help='Path to chunking parameters JSON file')
+@click.option('--llm-provider', type=click.Choice(['openai', 'ollama']), default='openai', help='LLM provider for embeddings')
+def from_text(text_file, chunking_params, llm_provider):
+    """Run the pipeline from a text file input."""
+    with open(text_file, 'r') as f:
+        text_data = json.load(f)
+    
+    with open(chunking_params, 'r') as f:
+        chunking_params = json.load(f)
+    
+    result = pipeline_from_text(text_data, chunking_params, llm_provider)
+    # Process the result as needed
 
 
 def entrypoint():

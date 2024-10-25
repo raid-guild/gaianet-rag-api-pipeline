@@ -3,6 +3,7 @@ from gaianet_rag_api_pipeline.chunking import chunking
 from gaianet_rag_api_pipeline.embeddings import embeddings
 from gaianet_rag_api_pipeline.preprocessing import preprocessing
 from gaianet_rag_api_pipeline.serialize import jsonl_serialize
+from gaianet_rag_api_pipeline.input import text_input
 
 import pathway as pw
 import typing
@@ -225,4 +226,24 @@ def execute(
         settings=settings
     )
 
+    return embeddings_table
+
+
+def pipeline_from_text(
+    text_data: List[Dict[str, str]],
+    chunking_params: dict,
+    llm_provider: str = "openai",
+    api_name: str = "text_input"
+) -> pw.Table:
+    """
+    Run the pipeline starting from text input data.
+    """
+    input_table = text_input(text_data)
+    
+    normalized_table = preprocessing(input_table, [], is_text_input=True)
+    
+    chunked_table = chunking(normalized_table, chunking_params)
+    
+    embeddings_table = embeddings(chunked_table, llm_provider)
+    
     return embeddings_table

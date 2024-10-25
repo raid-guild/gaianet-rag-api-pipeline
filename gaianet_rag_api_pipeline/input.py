@@ -200,3 +200,16 @@ def read_jsonl_source(
     """
 
     return pw.io.jsonlines.read(source_file, schema=schema, mode=mode)
+
+
+def text_input(text_data: List[Dict[str, str]]) -> pw.Table:
+    """
+    Create a Pathway table from text input data.
+    
+    :param text_data: List of dictionaries containing text data
+    :return: Pathway table
+    """
+    return pw.debug.table_from_markdown(
+        "\n".join([" | ".join(str(value) for value in item.values()) for item in text_data]),
+        column_names=list(text_data[0].keys())
+    )
