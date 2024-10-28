@@ -197,8 +197,15 @@ TBD
 
 ## Documentation
 
-We use [Vocs](https://vocs.dev/) framework for generating the Documentation site. Run `pnpm run dev` if you want to work on some updates. Execute the following 
-commands if you're looking to build and deploy the updated documentation on Github pages:
+This project uses [Vocs](https://vocs.dev/) framework for generating the Documentation site. If you want to run it locally and contribute, you should run the following commands: 
+
+
+```bash [Terminal]
+pnpm install
+pnpm run dev
+```
+
+To reflect any updates on https://raid-guild.github.io/gaianet-rag-api-pipeline/, you need to build and deploy the updated documentation on Github pages by executing the following commands:
 
 ```bash [Terminal]
 pnpm run build
