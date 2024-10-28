@@ -30,6 +30,7 @@ litellm = "1.41.1"
 qdrant-client = "1.11.0"
 ollama = "^0.3.2"
 codetiming = "^1.4.0"
+aiohttp = "^3.10.10"
 
 [tool.poetry.scripts]
 rag-api-pipeline = "run:entrypoint"

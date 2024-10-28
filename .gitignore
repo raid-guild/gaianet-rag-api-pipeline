@@ -175,6 +175,7 @@ experiments/.DS_Store
 
 # Folders
 output/**/*
+qdrant/**/*
 
 # MacOS
 .DS_Store
