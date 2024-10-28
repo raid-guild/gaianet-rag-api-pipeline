@@ -5,7 +5,7 @@ resulting database snapshot can be then plugged-in into a Gaia node's LLM model 
 (Retrieval Augmented Generation).
 
 The following sections help you to quickly setup and execute the pipeline on your REST API. If you're looking more in-depth information about how to use 
-thes tool, tech stack and/or how it works under the hood, check the content menu on the left.
+this tool, the tech stack and/or how it works under the hood, check the content menu on the left.
 
 ## System Requirements
 
@@ -23,39 +23,46 @@ thes tool, tech stack and/or how it works under the hood, check the content menu
 
 Git clone or download this repository to your local.
 
+```bash [Terminal]
+git clone https://github.com/raid-guild/gaianet-rag-api-pipeline.git
+```
+
 ### Activate your virtual environment
 
-If using a custom virtual environment, you should activate your virtual environment, otherwise poetry will handle the environment for you
+It is recommended to activate your [own virtual environment](https://python-poetry.org/docs/basic-usage/#using-your-virtual-environment), 
+otherwise Poetry will create/use a brand new environment. Check how Poetry [manage environments](https://python-poetry.org/docs/managing-environments/) for details.
 
 ### Install project dependencies
 
-Navigate to the directory where this repository was cloned/download and execute the following on a terminal:
+Navigate to the directory where this repository was cloned/download and execute the following command to install the project dependencies:
 
 ```bash [Terminal]
+cd gaianet-rag-api-pipeline
 poetry install
 ```
 
 ### Set environment variables
 
-Copy `config/.env/sample` into `config/.env` file and set environment variables accordingly. Check the [environment variables](/#environment-variables) section below
+Copy `config/.env/sample` into `config/.env` file and set environment variables accordingly. Check the [environment variables](/getting-started#environment-variables) section below
 for details.
 
 ### Define your API Pipeline manifest
 
-Define the pipeline manifest for your REST API you're looking to extract data from. Check how to define an API pipeline manifest in 
+Now it's time to define the pipeline manifest for the REST API you're looking to extract data from. Check how to define an API pipeline manifest in 
 [Defining an API Pipeline Manifest](/manifest-definition) for details, or take a look at the in-depth review of the sample manifests available in 
 [API Examples](/apis).
 
 ### Set the REST API Key
 
-Set the REST API key in a `config/secrets/api_key` file, or specify it using the `--api-key` as argument to the CLI
+The API must require an API key when sending requests. You can set it in the `config/secrets/api_key` file, or specify it using the `--api-key` as argument to the CLI.
 
 ### Setup a Qdrant DB instance
 
-Get the base URL of your Qdrant Vector DB or deploy a local `Qdrant` ([Docs](https://qdrant.tech/documentation/)) vector database instance using docker:
+Get the base URL of your Qdrant Vector DB or deploy a local `Qdrant` ([Docs](https://qdrant.tech/documentation/)) vector database instance using docker 
+and update the `QDRANTDB_URL` variable in the `config/.env` file:
 
 ```bash [terminal]
-docker run -p 6333:6333 -p 6334:6334 -v ./qdrant_dev:/qdrant/storage:z qdrant/qdrant:v1.10.1
+docker run -p 6333:6333 -p 6334:6334 -v ./qdrant:/qdrant/storage:z qdrant/qdrant:v1.10.1
 ```
 
 :::warning
@@ -73,8 +80,8 @@ Load the LLM embeddings model of your preference into the LLM provider you chose
 - You can find info on how to customize a Gaianet node [here](https://docs.gaianet.ai/node-guide/customize)
 - If you chose Ollama, follow these instructions to import the LLM embeddings model:
   - Make sure the Ollama service is up and running
-  - Go to the folder where the embeddings model is located. For this example, the llm model file is `nomic-embed-text-v1.5.f16.gguf` ([Source](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/tree/main?show_file_info=nomic-embed-text-v1.5.f16.gguf))
-  - Create a file with name `Modelfile` and paste the following (replace `<path/to/model>` with your local directory):
+  - Go to the folder where the embeddings model is located. Then, create a file with name `Modelfile` and paste the following (replace `<path/to/model>` 
+  with your local directory, for example [Nomic-embed-text-v1.5.f16.gguf](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/tree/main?show_file_info=nomic-embed-text-v1.5.f16.gguf)):
 
 ```docker [Modelfile]
 FROM <path/to/model>/nomic-embed-text-v1.5.f16.gguf
@@ -83,7 +90,7 @@ FROM <path/to/model>/nomic-embed-text-v1.5.f16.gguf
 ```bash [terminal]
 ollama create Nomic-embed-text-v1.5
 ```
-  - Make sure the model setting by running the command:
+  - Check the embeddings model settings by running the command:
 ```bash [terminal]
 ollama show Nomic-embed-text-v1.5
 ```
@@ -104,7 +111,7 @@ Below you can find the default instructions available and an in-depth review of 
 
 ```bash [Terminal]
 # run the entire pipeline
-poetry run rag-api-pipeline run-all API_MANIFEST_FILE ----openapi-spec-file <openapi-spec-yaml-file> [--full-refresh] [--llm-provider openapi|ollama]
+poetry run rag-api-pipeline run-all API_MANIFEST_FILE --openapi-spec-file <openapi-spec-yaml-file> [--full-refresh] [--llm-provider openapi|ollama]
 # or run using an already normalized dataset
 poetry run rag-api-pipeline from-normalized API_MANIFEST_FILE --normalized-data-file <jsonl-file> [--llm-provider openapi|ollama]
 # or run using an already chunked dataset
@@ -153,28 +160,43 @@ is specified to the `run-all` command, the cache will be cleared and API data wi
 The following environment variables can be adjusted in `config/.env` based on user needs:
 
 - Pipeline config parameters:
-  - `API_DATA_ENCODING` (="utf-8"): default data encoding used by the REST API
-  - `OUTPUT_FOLDER` (="./output"): output folder where cached data streams, intermediary stage results and generated knowledge base snapshot are stored
+  - `API_DATA_ENCODING`: data encoding used by the REST API
+    - Default value:  `utf-8`
+  - `OUTPUT_FOLDER`: output folder where cached data streams, intermediary stage results and generated knowledge base snapshot are stored
+    - Default value:  `./output`
 - LLM provider settings:
-  - `LLM_API_BASE_URL` (="http://localhost:8080/v1"): LLM provider base URL (default to a local openai-based provider such as gaia node)
-  - `LLM_API_KEY` (="empty-api-key"): API key to authenticate requests to the LLM provider
-  - `LLM_EMBEDDINGS_MODEL` (="Nomic-embed-text-v1.5"): name of the embeddings model to be consumed through the LLM provider
-  - `LLM_EMBEDDINGS_VECTOR_SIZE` (=768): embeddings vector size
-  - `LLM_PROVIDER` (="openai"): LLM provider backend to use. It can be either `openai` or `ollama` (gaianet offers an openai compatible API)
+  - `LLM_API_BASE_URL`: LLM provider base URL (default to a local openai-based provider such as gaia node)
+    - Default value:  `http://localhost:8080/v1`
+  - `LLM_API_KEY`: API key to authenticate requests to the LLM provider
+    - Default value:  `empty-api-key`
+  - `LLM_EMBEDDINGS_MODEL`: name of the embeddings model to be consumed through the LLM provider
+    - Default value:  `Nomic-embed-text-v1.5`
+  - `LLM_EMBEDDINGS_VECTOR_SIZE`: embeddings vector size
+    - Default value:  `768`
+  - `LLM_PROVIDER`: LLM provider backend to use. It can be either `openai` or `ollama` (gaianet offers an openai compatible API)
+    - Default value:  `openai`
 - Qdrant DB settings:
-  - `QDRANTDB_URL` (="http://localhost:6333"): Qdrant DB base URL
-  - `QDRANTDB_TIMEOUT` (=60): timeout for requests made to the Qdrant DB
-  - `QDRANTDB_DISTANCE_FN` (="COSINE"): score function to use during vector similarity search. Avaiable functions: ['COSINE', 'EUCLID', 'DOT', 'MANHATTAN']
+  - `QDRANTDB_URL`: Qdrant DB base URL
+    - Default value:  `http://localhost:6333`
+  - `QDRANTDB_TIMEOUT`: timeout for requests made to the Qdrant DB
+    - Default value:  `60`
+  - `QDRANTDB_DISTANCE_FN`: score function to use during vector similarity search. Avaiable functions: ['COSINE', 'EUCLID', 'DOT', 'MANHATTAN']
+    - Default value:  `COSINE`
 - Pathway-related variables:
-  - `AUTOCOMMIT_DURATION_MS` (=1000): the maximum time between two commits. Every autocommit_duration_ms milliseconds, the updates received by the connector are 
+  - `AUTOCOMMIT_DURATION_MS`: the maximum time between two commits. Every autocommit_duration_ms milliseconds, the updates received by the connector are 
   committed automatically and pushed into Pathway's dataflow. More info can be found [here](https://pathway.com/developers/user-guide/connect/connectors/custom-python-connectors#connector-method-reference)
+    - Default value:  `1000`
   - `FixedDelayRetryStrategy` ([docs](https://pathway.com/developers/api-docs/udfs#pathway.udfs.FixedDelayRetryStrategy)) config parameters:
-    - `PATHWAY_RETRY_MAX_ATTEMPTS` (=10): max retries to be performed if a UDF async execution fails
-    - `PATHWAY_RETRY_DELAY_MS` (=1000): delay in milliseconds to wait for the next execution attempt
+    - `PATHWAY_RETRY_MAX_ATTEMPTS`: max retries to be performed if a UDF async execution fails
+      - Default value:  `10`
+    - `PATHWAY_RETRY_DELAY_MS`: delay in milliseconds to wait for the next execution attempt
+      - Default value:  `1000`
   - *UDF async execution*: set the maximum No of concurrent operations per batch during udf async execution. Zero means no specific limits. Be careful when settings
   this parameters for the embeddings stage as it could break the LLM provider with too many concurrent requests
-    - `CHUNKING_BATCH_CAPACITY` (=0): max No. of concurrent operation during data chunking operations
-    - `EMBEDDINGS_BATCH_CAPACITY` (=15): max No. of concurrent operation during vector embeddings operations
+    - `CHUNKING_BATCH_CAPACITY`: max No. of concurrent operation during data chunking operations
+      - Default value:  `0`
+    - `EMBEDDINGS_BATCH_CAPACITY`: max No. of concurrent operation during vector embeddings operations
+      - Default value:  `15`
 
 
 ## Using Docker compose for Local development or in Production

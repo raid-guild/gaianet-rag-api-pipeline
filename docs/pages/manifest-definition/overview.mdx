@@ -19,7 +19,7 @@ An alphanumeric-only name for the API pipeline.
 
 ### api_parameters
 
-Contains any parameters required for building the API requests. This parameters MUST be included in the [spec](#spec) section and their values are accessible 
+Contains any parameters required for building the API requests. This parameters MUST be included in the [spec](/manifest-definition/overview#spec) section and their values are accessible 
 through the `config` object over the rest of the manifest.
 
 ### api_config
@@ -49,15 +49,15 @@ parameter in this [link](https://docs.unstructured.io/open-source/core-functiona
 
 An Airbyte's declarative manifest require the following schema definitions:
 
-#### spec ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/reference#/definitions/Spec))
+#### spec
 
-A source specification made up of connector metadata and how it can be configured. All parameters defined in the `api_parameters` section must be listed under 
-`required` and `properties`
+A source specification made up of connector metadata and how it can be configured ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/reference#/definitions/Spec)). 
+All parameters defined in the `api_parameters` section must be listed under required` and `properties`
 
-#### selector ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/record-selector))
+#### selector
 
-The record selector is responsible for translating an HTTP response into a list of Airbyte records by extracting records from the response. The API
-pipeline manifest includes two base selectors that can be applied for single/multiple record responses:
+The record selector is responsible for translating an HTTP response into a list of Airbyte records by extracting records from the response ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/record-selector)). 
+The API pipeline manifest includes two base selectors that can be applied for single/multiple record responses:
 
 ```yaml
 selector:
@@ -72,16 +72,17 @@ selector_single:
         field_path: []
 ```
 
-#### requester_base ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/requester)}
+#### requester_base
 
-The Requester defines how to prepare HTTP requests to send to the source API. Here you specify the API `base_url` and the `authenticator` schema used. Airbyte supports
-the most commonly used Authentication methods: `ApiKeyAuthenticator`, `BearerAuthenticator`, `BasicHttpAuthenticator` and `OAuth`. 
-You can find a detailed explanation on how to configure each of them in this [link](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/authentication)
+The Requester defines how to prepare HTTP requests to send to the source API ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/requester)). 
+Here you specify the API `base_url` and the `authenticator` schema used. Airbyte supports the most commonly used Authentication methods: 
+`ApiKeyAuthenticator`, `BearerAuthenticator`, `BasicHttpAuthenticator` and `OAuth`. You can find a detailed explanation on how to configure each of them in this 
+[link](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/authentication)
 
-#### retriever_base ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/reference#/definitions/SimpleRetriever))
+#### retriever_base
 
-A SimpleRetriever object in charge of fetching records by synchronous API requests. The retriever acts as an orchestrator between the requester, 
-the record selector and the paginator. The API pipeline manifest includes a base retriever per defined selectors:
+A SimpleRetriever object in charge of fetching records by synchronous API requests ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/reference#/definitions/SimpleRetriever)). 
+The retriever acts as an orchestrator between the requester, the record selector and the paginator. The API pipeline manifest includes a base retriever per defined selectors:
 
 ```yaml
 retriever_base:
@@ -94,10 +95,11 @@ retriever_single_base:
       $ref: "#/definitions/selector_single"
 ```
 
-#### paginator ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/pagination))
+#### paginator
 
-Set the pagination strategy for API endpoints that return multiple records. Airbyte supports `Page increment`, `Offset increment` and `Cursor based` pagination strategies. 
-On the other hand, the `"#/definitions/NoPagination"` is automatically set for endpoints that return a single record
+Set the pagination strategy for API endpoints that return multiple records ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/pagination)). 
+Airbyte supports `Page increment`, `Offset increment` and `Cursor based` pagination strategies. On the other hand, the `"#/definitions/NoPagination"` is automatically set for endpoints 
+that return a single record
 
 ### Endpoints definitions
 
