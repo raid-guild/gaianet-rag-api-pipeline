@@ -61,7 +61,7 @@ The API must require an API key when sending requests. You can set it in the `co
 Get the base URL of your Qdrant Vector DB or deploy a local `Qdrant` ([Docs](https://qdrant.tech/documentation/)) vector database instance using docker 
 and update the `QDRANTDB_URL` variable in the `config/.env` file:
 
-```bash [terminal]
+```bash [Terminal]
 docker run -p 6333:6333 -p 6334:6334 -v ./qdrant:/qdrant/storage:z qdrant/qdrant:v1.10.1
 ```
 
@@ -87,11 +87,11 @@ Load the LLM embeddings model of your preference into the LLM provider you chose
 FROM <path/to/model>/nomic-embed-text-v1.5.f16.gguf
 ```
   - Import the model by running the following command on a terminal:
-```bash [terminal]
+```bash [Terminal]
 ollama create Nomic-embed-text-v1.5
 ```
   - Check the embeddings model settings by running the command:
-```bash [terminal]
+```bash [Terminal]
 ollama show Nomic-embed-text-v1.5
 ```
 ::::

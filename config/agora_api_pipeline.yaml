@@ -274,7 +274,7 @@ schemas:
         type: string
   DelegateStatement:
     summary: A delegate's statement
-    description: A delegate's statement, including the social links and topIssues.
+    description: A delegate's statement, including the social links and top issues.
     type: object
     properties:
       statement:
