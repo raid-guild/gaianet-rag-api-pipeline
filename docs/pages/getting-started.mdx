@@ -1,17 +1,17 @@
 # GaiaNet RAG API Pipeline
 
 `rag-api-pipeline` is a Python-based data pipeline tool that allows you to easily generate a vector knowledge base from any REST API data source. The
-resulting database snapshot can be then plugged-in into a Gaia node's LLM model with a prompt and provide contextual responses to user queries using RAG 
+resulting database snapshot can then be plugged into a Gaia node's LLM model with a prompt and provide contextual responses to user queries using RAG 
 (Retrieval Augmented Generation).
 
-The following sections help you to quickly setup and execute the pipeline on your REST API. If you're looking more in-depth information about how to use 
+The following sections help you quickly set up and execute the pipeline on your REST API. If you're looking for more in-depth information about how to use 
 this tool, the tech stack and/or how it works under the hood, check the content menu on the left.
 
 ## System Requirements
 
 - Poetry ([Docs](https://python-poetry.org/docs/))
 - Python 3.11.x
-- (Optional): a Python virtual environment manager or your preference (e.g. conda, venv)
+- (Optional): a Python virtual environment manager of your preference (e.g. conda, venv)
 - Docker and Docker compose
 - Qdrant vector database ([Docs](https://qdrant.tech/documentation/))
 - LLM model provider (either a Gaianet node or Ollama)
@@ -21,7 +21,7 @@ this tool, the tech stack and/or how it works under the hood, check the content 
 ::::steps
 ### Clone this repository
 
-Git clone or download this repository to your local.
+Git clone or download this repository to your local machine.
 
 ```bash [Terminal]
 git clone https://github.com/raid-guild/gaianet-rag-api-pipeline.git
@@ -29,12 +29,12 @@ git clone https://github.com/raid-guild/gaianet-rag-api-pipeline.git
 
 ### Activate your virtual environment
 
-It is recommended to activate your [own virtual environment](https://python-poetry.org/docs/basic-usage/#using-your-virtual-environment), 
-otherwise Poetry will create/use a brand new environment. Check how Poetry [manage environments](https://python-poetry.org/docs/managing-environments/) for details.
+It is recommended to activate your [own virtual environment](https://python-poetry.org/docs/basic-usage/#using-your-virtual-environment); 
+otherwise, Poetry will create/use a brand new environment. Check how Poetry [manages environments](https://python-poetry.org/docs/managing-environments/) for details.
 
 ### Install project dependencies
 
-Navigate to the directory where this repository was cloned/download and execute the following command to install the project dependencies:
+Navigate to the directory where this repository was cloned/downloaded and execute the following command to install the project dependencies:
 
 ```bash [Terminal]
 cd gaianet-rag-api-pipeline
@@ -48,13 +48,13 @@ for details.
 
 ### Define your API Pipeline manifest
 
-Now it's time to define the pipeline manifest for the REST API you're looking to extract data from. Check how to define an API pipeline manifest in 
+Now it's time to define the pipeline manifest for the REST API from which you're looking to extract data. Check how to define an API pipeline manifest in 
 [Defining an API Pipeline Manifest](/manifest-definition) for details, or take a look at the in-depth review of the sample manifests available in 
 [API Examples](/apis).
 
 ### Set the REST API Key
 
-The API must require an API key when sending requests. You can set it in the `config/secrets/api_key` file, or specify it using the `--api-key` as argument to the CLI.
+The API must require an API key when sending requests. You can set it in the `config/secrets/api_key` file, or specify it using the `--api-key` argument in the CLI.
 
 ### Setup a Qdrant DB instance
 
@@ -77,16 +77,16 @@ The latter is recommended if you're looking to run the pipeline on consumer hard
 ### Load an LLM embeddings model
 
 Load the LLM embeddings model of your preference into the LLM provider you chose in the previous step:
-- You can find info on how to customize a Gaianet node [here](https://docs.gaianet.ai/node-guide/customize)
+- You can find information on how to customize a Gaianet node [here](https://docs.gaianet.ai/node-guide/customize)
 - If you chose Ollama, follow these instructions to import the LLM embeddings model:
   - Make sure the Ollama service is up and running
-  - Go to the folder where the embeddings model is located. Then, create a file with name `Modelfile` and paste the following (replace `<path/to/model>` 
+  - Go to the folder where the embeddings model is located. Then, create a file named `Modelfile` and paste the following (replace `<path/to/model>` 
   with your local directory, for example [Nomic-embed-text-v1.5.f16.gguf](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/tree/main?show_file_info=nomic-embed-text-v1.5.f16.gguf)):
 
 ```docker [Modelfile]
 FROM <path/to/model>/nomic-embed-text-v1.5.f16.gguf
 ```
-  - Import the model by running the following command on a terminal:
+  - Import the model by running the following command in a terminal:
 ```bash [Terminal]
 ollama create Nomic-embed-text-v1.5
 ```
@@ -99,7 +99,7 @@ ollama show Nomic-embed-text-v1.5
 ## Pipeline CLI
 
 Now you're ready to use the `rag-api-pipeline` CLI commands to execute different tasks of the RAG pipeline, from extracting data from an API source to generating vector embeddings 
-and a database snapshot. If you need more details about the parameters available on each command you can execute:
+and a database snapshot. If you need more details about the parameters available for each command, you can execute:
 
 ```bash [Terminal]
 poetry run rag-api-pipeline <command> --help
@@ -123,7 +123,7 @@ database snapshot generation. You can specify the following arguments to the com
   * `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
   * `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
   * `--api-key`: API Auth key. If not specified, it will try to get it from `config/secrets/api_key`
-  * `--openapi-spec-file`: API OpenAPI YAML spec file. default to `config/openapi.yaml`
+  * `--openapi-spec-file`: API OpenAPI YAML spec file. defaults to `config/openapi.yaml`
   * `--source-manifest-file`: Airbyte API Connector YAML manifest. If specified, it will omit the API Connector manifest generation step.
   * `--full-refresh`: clean up cache and extract API data from scratch.
   * `--normalized-only`: run pipeline until the data normalization stage.
@@ -135,7 +135,7 @@ database snapshot generation. You can specify the following arguments to the com
   * `--normalized-data-file`: path to the normalized dataset in JSONL format (mandatory). Check the [Architecture](/architecture) section for details on the 
   required data schema.
 
-- **from chunked**: executes the RAG data pipeline using an already chunked dataset in JSONL format. You can specify the following arguments to the command:
+- **from_chunked**: executes the RAG data pipeline using an already chunked dataset in JSONL format. You can specify the following arguments to the command:
   * `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
   * `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
   * `--chunked-data-file`: path to the chunked dataset in JSONL format (mandatory). Check the [Architecture](/architecture) section for details on the 
@@ -148,8 +148,8 @@ are created by the tool within this `baseDir` folder:
 
 - `{baseDir}/{api_name}_source_generated.yaml`: generated Airbyte Stream connector manifest.
 - `{baseDir}/cache/{api_name}/*`: extracted API data is cached into a local DuckDB. Database files are stored in this directory. If the `--full-refresh` argument
-is specified to the `run-all` command, the cache will be cleared and API data will be extracted from scratch.
-- `{baseDir}/{api_name}_stream_{x}_preprocessed.jsonl`: data streams from each API endpoint is preprocessed and stored in JSONL format
+is specified for the `run-all` command, the cache will be cleared and API data will be extracted from scratch.
+- `{baseDir}/{api_name}_stream_{x}_preprocessed.jsonl`: data streams from each API endpoint are preprocessed and stored in JSONL format
 - `{baseDir}/{api_name}_normalized.jsonl`: preprocessed data streams from each API endpoint are joined together and stored in JSONL format
 - `{baseDir}/{api_name}_chunked.jsonl`: normalized data that goes through the data chunking stage is then stored in JSONL format
 - `{baseDir}/{api_name}_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot`: vector embeddings snapshot file that was exported from Qdrant DB
@@ -165,7 +165,7 @@ The following environment variables can be adjusted in `config/.env` based on us
   - `OUTPUT_FOLDER`: output folder where cached data streams, intermediary stage results and generated knowledge base snapshot are stored
     - Default value:  `./output`
 - LLM provider settings:
-  - `LLM_API_BASE_URL`: LLM provider base URL (default to a local openai-based provider such as gaia node)
+  - `LLM_API_BASE_URL`: LLM provider base URL (defaults to a local openai-based provider such as gaia node)
     - Default value:  `http://localhost:8080/v1`
   - `LLM_API_KEY`: API key to authenticate requests to the LLM provider
     - Default value:  `empty-api-key`
@@ -180,22 +180,22 @@ The following environment variables can be adjusted in `config/.env` based on us
     - Default value:  `http://localhost:6333`
   - `QDRANTDB_TIMEOUT`: timeout for requests made to the Qdrant DB
     - Default value:  `60`
-  - `QDRANTDB_DISTANCE_FN`: score function to use during vector similarity search. Avaiable functions: ['COSINE', 'EUCLID', 'DOT', 'MANHATTAN']
+  - `QDRANTDB_DISTANCE_FN`: score function to use during vector similarity search. Available functions: ['COSINE', 'EUCLID', 'DOT', 'MANHATTAN']
     - Default value:  `COSINE`
 - Pathway-related variables:
   - `AUTOCOMMIT_DURATION_MS`: the maximum time between two commits. Every autocommit_duration_ms milliseconds, the updates received by the connector are 
-  committed automatically and pushed into Pathway's dataflow. More info can be found [here](https://pathway.com/developers/user-guide/connect/connectors/custom-python-connectors#connector-method-reference)
+  committed automatically and pushed into Pathway's dataflow. More information can be found [here](https://pathway.com/developers/user-guide/connect/connectors/custom-python-connectors#connector-method-reference)
     - Default value:  `1000`
   - `FixedDelayRetryStrategy` ([docs](https://pathway.com/developers/api-docs/udfs#pathway.udfs.FixedDelayRetryStrategy)) config parameters:
     - `PATHWAY_RETRY_MAX_ATTEMPTS`: max retries to be performed if a UDF async execution fails
       - Default value:  `10`
     - `PATHWAY_RETRY_DELAY_MS`: delay in milliseconds to wait for the next execution attempt
       - Default value:  `1000`
-  - *UDF async execution*: set the maximum No of concurrent operations per batch during udf async execution. Zero means no specific limits. Be careful when settings
-  this parameters for the embeddings stage as it could break the LLM provider with too many concurrent requests
-    - `CHUNKING_BATCH_CAPACITY`: max No. of concurrent operation during data chunking operations
+  - *UDF async execution*: set the maximum number of concurrent operations per batch during UDF async execution. Zero means no specific limits. Be careful when setting
+  these parameters for the embeddings stage as it could break the LLM provider with too many concurrent requests
+    - `CHUNKING_BATCH_CAPACITY`: max number of concurrent operations during data chunking operations
       - Default value:  `0`
-    - `EMBEDDINGS_BATCH_CAPACITY`: max No. of concurrent operation during vector embeddings operations
+    - `EMBEDDINGS_BATCH_CAPACITY`: max number of concurrent operations during vector embeddings operations
       - Default value:  `15`
 
 
