@@ -31,6 +31,10 @@ export default defineConfig({
           text: "Agora API",
           link: "/apis/agora-api",
         },
+        {
+          text: "Other API Sources",
+          link: "/apis/other-api-sources"
+        }
       ]
     },
     {
