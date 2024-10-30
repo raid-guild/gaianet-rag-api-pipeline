@@ -1,44 +1,35 @@
 # Boardroom Governance API
 
-The repository includes both the [API pipeline manifest](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/boardroom_api_pipeline.yaml)
-definition and the [OpenAPI spec](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/openapi.yaml) to create a RAG pipeline to generate a 
-knowledge base from any DAO/Protocol whose data is hosted by the Boardroom Governance API. You can usually find these files within the `config` folder.
+This repository contains the [API pipeline manifest](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/boardroom_api_pipeline.yaml) and [OpenAPI specification](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/openapi.yaml) needed to create a RAG pipeline. This pipeline generates a knowledge base from any DAO/Protocol hosted by the Boardroom Governance API. All configuration files are located in the `config` folder.
 
-In order to consume data from this API, you are required to request an API key from this [link](https://boardroom.io/developers/billing). Do not forget to set it
-under `config/secrets/api-key` or specify it directly using the `--api-key` argument in the CLI.
+## Prerequisites
 
-## API Pipeline manifest - Overview
+To use this API, you'll need an API key. Request one from [Boardroom's developer portal](https://boardroom.io/developers/billing). Store the key in `config/secrets/api-key` or provide it directly using the `--api-key` CLI argument.
 
-The manifest starts by defining an `api_name` and the required `api_parameters` to make requests to the API. In this case, we plan to extract data from 
-[Aave Governance DAO](https://boardroom.io/aave/insights).
+## API Pipeline Manifest Overview
 
-```yaml [boardroom_api_pipeline.yaml]
-...
+### Basic Configuration
+
+The manifest begins with defining the API name and parameters. This example uses the [Aave Governance DAO](https://boardroom.io/aave/insights):
+
+```yaml
 api_name: "aave_boardroom_api"
 
 api_parameters:
   cname: "aave"
   protocol: "aave"
-...
-```
 
-It also needs the following metadata information on how to consume the API:
-
-```yaml [boardroom_api_pipeline.yaml]
-...
 api_config:
   request_method: "get"
   content_type: "application/json"
   response_entrypoint_field: "data"
-...
 ```
 
-Then, the manifest defines an connector spec that specifies the parameters required to build the requests to the API. In this case, we're going to be extracting 
-data for a specific DAO/Protocol from Boardroom, so we will need define parameters such as `cname` and `protocol` (in this case both share the same value). Lastly, the 
-`api_key` needs to be attached to the API request URL
+### Connector Specification
 
-```yaml [boardroom_api_pipeline.yaml]
-...
+The manifest defines parameters required for API requests:
+
+```yaml
 spec:
   type: Spec
   documentation_url: https://docs.airbyte.com/integrations/sources/boardroom
@@ -54,35 +45,28 @@ spec:
     properties:
       api_key:
         type: string
-        description: >-
-          Boardroom API Key. See <a href="https://docs.boardroom.io/docs/api/05c1fb6d88a07-governance-api">here</a>
-          for details.
+        description: "Boardroom API Key. See <a href='https://docs.boardroom.io/docs/api/05c1fb6d88a07-governance-api'>here</a> for details."
         airbyte-secret: true
       cname:
         type: string
-        description: >-
-          Protocol ID a.k.a cname
+        description: "Protocol ID a.k.a cname"
         examples:
           - aave
           - hopprotocol
       protocol:
         type: string
-        description: >-
-          Alias for cname. Needed as there are a few endpoints that use `protocol` as parameter id
+        description: "Alias for cname. Required for endpoints using 'protocol' as parameter ID"
         examples:
           - aave
           - metacartel
-...
 ```
 
-Next, we need to define how the connector should make request to the API. The `requester_base` then has properties such as `url_base`, `http_method` and `authenticator`.
-Boardroom uses an API-Key based authenticator with an `api_token` that needs to be injected in the URL as a request parameter. In the code below, you'll notice that 
-the connector injects `api_key` parameter value using the `config` object.
+### API Request Configuration
 
-```yaml [boardroom_api_pipeline.yaml]
-...
+The `requester_base` defines how to interact with the API:
+
+```yaml
 definitions:
-...
   requester_base:
     type: HttpRequester
     url_base: "https://api.boardroom.info/v1"
@@ -90,37 +74,27 @@ definitions:
     authenticator:
       type: ApiKeyAuthenticator
       api_token: "{{ config['api_key'] }}"
-      inject_into: # More on https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/request-options#request-options-1
+      inject_into:
         type: RequestOption
         field_name: "key"
         inject_into: request_parameter
-...
 ```
 
-All Boardroom endpoints return data records wrapped within the `data` field, so the record selector should specify this path as follows:
+### Record Selection and Pagination
 
-```yaml [boardroom_api_pipeline.yaml]
-...
+Data records are wrapped in the `data` field:
+
+```yaml
 definitions:
-...
   selector:
     type: RecordSelector
     extractor:
       type: DpathExtractor
       field_path: ["data"]
-...
-```
 
-What about pagination? The API uses a Cursor-based pagination strategy to fetch paginated records from such endpoints. The connector will use the `response` object
-to inject the `nextCursor` value on the next request (see `cursor_value`) until it returns a `null` value (see `stop_condition`). Finally, the API requires 
-the cursor value to be injected in the URL through the `cursor` request parameter
-
-```yaml [boardroom_api_pipeline.yaml]
-...
-definitions:
   paginator:
     type: DefaultPaginator
-    pagination_strategy: # More on https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/pagination#cursor
+    pagination_strategy:
       type: CursorPagination
       cursor_value: "{{ response.get('nextCursor', '') }}"
       stop_condition: "{{ 'nextCursor' not in response }}"
@@ -128,32 +102,28 @@ definitions:
       type: RequestOption
       field_name: "cursor"
       inject_into: "request_parameter"
-...
 ```
 
-Now let's define the endpoints that we want to extract data from within the `endpoints` section. Each endpoint must define its path, `id`, `responseSchema` and 
-`textSchema` (target fields that you want to parse during data chunking before generating vector embeddings). For example, let's explore how to define an endpoint 
-to extract data about proposals. Below you'll notice how it injects the `cname` parameter into the endpoint path.
+### Endpoint Configuration
 
-```yaml [boardroom_api_pipeline.yaml]
-...
+Define endpoints with their respective schemas. Example for proposals endpoint:
+
+```yaml
 endpoints:
-...
   "/protocols/{cname}/proposals":
     id: "proposals"
     primary_key: "refId"
     responseSchema: "#/schemas/Proposals"
     textSchema:
       $ref: "#/textSchemas/Proposal"
-...
 ```
 
-The `responseSchema` is defined under the `schemas` section. Here's the code snippet:
+### Schema Definitions
 
-```yaml [boardroom_api_pipeline.yaml]
-...
+The `responseSchema` defines the complete data structure:
+
+```yaml
 schemas:
-...
   Proposals:
     type: object
     $schema: http://json-schema.org/draft-07/schema#
@@ -233,14 +203,12 @@ schemas:
         type: string
       quorum:
         type: integer
+```
 
-Below, there's the snippet corresponding to the `textSchema`. Notice that all properties must be listed in the `responseSchema`. 
-In this case, `title`, `content` and `summary` will be parsed as texts while the rest of fields will be included as metadata properties in a JSON object.
+The `textSchema` specifies fields for text parsing. Note that all properties must be listed in the `responseSchema`. In this case, `title`, `content`, and `summary` will be parsed as texts, while other fields will be included as metadata properties in a JSON object:
 
-```yaml [boardroom_api_pipeline.yaml]
-...
+```yaml
 textSchemas:
-...
   Proposal:
     type: object
     properties:
@@ -250,13 +218,13 @@ textSchemas:
         type: string
       summary:
         type: string
-...
 ```
 
-Finally, we can adjust the some of the parameters that should be used during the chunking stage. 
+### Chunking Parameters
 
-```yaml [boardroom_api_pipeline.yaml]
-...
+Configure text chunking behavior:
+
+```yaml
 chunking_params:
   mode: "elements"
   chunking_strategy: "by_title"
@@ -267,43 +235,27 @@ chunking_params:
   overlap_all: false
   combine_text_under_n_chars: 0
   multipage_sections: true
-...
 ```
 
-## Generating a knowledge base using the `rag-api-pipeline` CLI
+## Usage Guide
 
-With the define API pipeline manifest we are going to use the CLI tool to extract data from the following endpoints: 
-`discourseTopis`, `discourseCategories`, `discourseTopicPosts`, `/protocol` and `protocol/*/proposals`. Make sure you have `Ollama` running locally 
-with the LLM embeddings model of your preference:
+### Generating a Knowledge Base
 
-```bash [Terminal]
+1. Ensure `Ollama` is running locally with your preferred LLM embeddings model
+2. Run the following command:
+
+```bash
 poetry run rag-api-pipeline run-all config/boardroom_api_pipeline.yaml --openapi-spec-file config/openapi.yaml --llm-provider ollama
 ```
 
-You can find the processed and serialized API data as well as the the generated knowledge base snapshot for Aave in this [link](https://huggingface.co/datasets/uxman/aave_snapshot_boardroom/tree/main)
+The processed data and knowledge base snapshot for Aave are available on [Hugging Face](https://huggingface.co/datasets/uxman/aave_snapshot_boardroom/tree/main).
 
-## Import knowledge base into Gaianet node
+### Importing into Gaianet Node
 
-Once the command above finishes, you'll find a compressed knowledge base snapshot in
-`{OUTPUT_FOLDER}/aave_boardroom_api/` with name aave_boardroom_api_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`. Now it's time to import it 
-into your gaianet node. You can find the instructions on how to select a knowledge base [here](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base). 
-The recommended prompts and node config settings can be found [here](/node-deployment#recommended-gaianet-node-configuration).
+1. Locate the generated snapshot in `{OUTPUT_FOLDER}/aave_boardroom_api/` (named `aave_boardroom_api_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`)
+2. Follow the [knowledge base selection guide](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base)
+3. Configure using the recommended settings from the [node deployment guide](/node-deployment#recommended-gaianet-node-configuration)
 
-## Example user prompts
+### Customizing for Other DAOs
 
-- Asking what information the RAG bot is able to provide
-
-![intro_prompt](https://raw.githubusercontent.com/raid-guild/gaianet-rag-api-pipeline/72403cc4503ce65da4e737eb8f68c03aa5772f44/aave_samples/intro.png)
-
-- Asking for information about the proposal [Enable Metis as Collateral on the Metis Chain](https://boardroom.io/aave/proposal/cHJvcG9zYWw6YWF2ZTpvbmNoYWluLXVwZ3JhZGU6MTUy)
-
-![proposal1_prompt](https://raw.githubusercontent.com/raid-guild/gaianet-rag-api-pipeline/72403cc4503ce65da4e737eb8f68c03aa5772f44/aave_samples/proposal1_summary.png)
-
-- Asking for information about [Onboarding USDS and sUSDS to Aave v3](https://boardroom.io/aave/discussions/18987)
-
-![proposal1_prompt](https://raw.githubusercontent.com/raid-guild/gaianet-rag-api-pipeline/72403cc4503ce65da4e737eb8f68c03aa5772f44/aave_samples/proposal2_summary.png)
-
-## Generating a knowledge base from another target DAO
-
-If you're interested on getting a knowledge base for another DAO, you can reuse the same [boardroom_api_pipeline.yaml](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/boardroom_api_pipeline.yaml) 
-file and simply update the `api_name` and `api_parameters` values.
+To generate a knowledge base for a different DAO, modify the `api_name` and `api_parameters` in the [boardroom_api_pipeline.yaml](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/boardroom_api_pipeline.yaml) file.
