@@ -1,35 +1,44 @@
-Here's the improved markdown:
-
 # Boardroom Governance API
 
-The repository includes both the [API pipeline manifest](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/boardroom_api_pipeline.yaml) definition and the [OpenAPI spec](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/openapi.yaml) to create a RAG pipeline for generating a knowledge base from any DAO/Protocol hosted by the Boardroom Governance API. These files are typically located in the `config` folder.
+The repository includes both the [API pipeline manifest](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/boardroom_api_pipeline.yaml)
+definition and the [OpenAPI spec](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/openapi.yaml) to create a RAG pipeline to generate a 
+knowledge base from any DAO/Protocol whose data is hosted by the Boardroom Governance API. You can usually find these files within the `config` folder.
 
-To consume data from this API, you need to request an API key from this [link](https://boardroom.io/developers/billing). Remember to set it under `config/secrets/api-key` or specify it directly using the `--api-key` argument in the CLI.
+In order to consume data from this API, you are required to request an API key from this [link](https://boardroom.io/developers/billing). Do not forget to set it
+under `config/secrets/api-key` or specify it directly using the `--api-key` argument in the CLI.
 
-## API Pipeline Manifest - Overview
+## API Pipeline manifest - Overview
 
-The manifest begins by defining an `api_name` and the required `api_parameters` for making API requests. In this example, we'll extract data from [Aave Governance DAO](https://boardroom.io/aave/insights).
+The manifest starts by defining an `api_name` and the required `api_parameters` to make requests to the API. In this case, we plan to extract data from 
+[Aave Governance DAO](https://boardroom.io/aave/insights).
 
 ```yaml [boardroom_api_pipeline.yaml]
+...
 api_name: "aave_boardroom_api"
 
 api_parameters:
   cname: "aave"
   protocol: "aave"
+...
 ```
 
-The manifest also requires metadata information for API consumption:
+It also needs the following metadata information on how to consume the API:
 
 ```yaml [boardroom_api_pipeline.yaml]
+...
 api_config:
   request_method: "get"
   content_type: "application/json"
   response_entrypoint_field: "data"
+...
 ```
 
-The manifest defines a connector spec that specifies the parameters required for API requests. Since we're extracting data for a specific DAO/Protocol from Boardroom, we need parameters like `cname` and `protocol` (both sharing the same value in this case). The `api_key` must be attached to the API request URL.
+Then, the manifest defines an connector spec that specifies the parameters required to build the requests to the API. In this case, we're going to be extracting 
+data for a specific DAO/Protocol from Boardroom, so we will need define parameters such as `cname` and `protocol` (in this case both share the same value). Lastly, the 
+`api_key` needs to be attached to the API request URL
 
 ```yaml [boardroom_api_pipeline.yaml]
+...
 spec:
   type: Spec
   documentation_url: https://docs.airbyte.com/integrations/sources/boardroom
@@ -59,16 +68,21 @@ spec:
       protocol:
         type: string
         description: >-
-          Alias for cname. Needed as there are endpoints that use `protocol` as parameter id
+          Alias for cname. Needed as there are a few endpoints that use `protocol` as parameter id
         examples:
           - aave
           - metacartel
+...
 ```
 
-The `requester_base` defines how the connector should make API requests:
+Next, we need to define how the connector should make request to the API. The `requester_base` then has properties such as `url_base`, `http_method` and `authenticator`.
+Boardroom uses an API-Key based authenticator with an `api_token` that needs to be injected in the URL as a request parameter. In the code below, you'll notice that 
+the connector injects `api_key` parameter value using the `config` object.
 
 ```yaml [boardroom_api_pipeline.yaml]
+...
 definitions:
+...
   requester_base:
     type: HttpRequester
     url_base: "https://api.boardroom.info/v1"
@@ -76,30 +90,37 @@ definitions:
     authenticator:
       type: ApiKeyAuthenticator
       api_token: "{{ config['api_key'] }}"
-      inject_into:
+      inject_into: # More on https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/request-options#request-options-1
         type: RequestOption
         field_name: "key"
         inject_into: request_parameter
+...
 ```
 
-Since Boardroom endpoints return data records wrapped within the `data` field, the record selector is configured as:
+All Boardroom endpoints return data records wrapped within the `data` field, so the record selector should specify this path as follows:
 
 ```yaml [boardroom_api_pipeline.yaml]
+...
 definitions:
+...
   selector:
     type: RecordSelector
     extractor:
       type: DpathExtractor
       field_path: ["data"]
+...
 ```
 
-For pagination, the API uses a Cursor-based strategy:
+What about pagination? The API uses a Cursor-based pagination strategy to fetch paginated records from such endpoints. The connector will use the `response` object
+to inject the `nextCursor` value on the next request (see `cursor_value`) until it returns a `null` value (see `stop_condition`). Finally, the API requires 
+the cursor value to be injected in the URL through the `cursor` request parameter
 
 ```yaml [boardroom_api_pipeline.yaml]
+...
 definitions:
   paginator:
     type: DefaultPaginator
-    pagination_strategy:
+    pagination_strategy: # More on https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/pagination#cursor
       type: CursorPagination
       cursor_value: "{{ response.get('nextCursor', '') }}"
       stop_condition: "{{ 'nextCursor' not in response }}"
@@ -107,20 +128,159 @@ definitions:
       type: RequestOption
       field_name: "cursor"
       inject_into: "request_parameter"
+...
 ```
 
-[Rest of the content follows similar structure - endpoint definitions, schemas, text schemas, chunking parameters, etc.]
+Now let's define the endpoints that we want to extract data from within the `endpoints` section. Each endpoint must define its path, `id`, `responseSchema` and 
+`textSchema` (target fields that you want to parse during data chunking before generating vector embeddings). For example, let's explore how to define an endpoint 
+to extract data about proposals. Below you'll notice how it injects the `cname` parameter into the endpoint path.
 
-## Generating a Knowledge Base Using the `rag-api-pipeline` CLI
+```yaml [boardroom_api_pipeline.yaml]
+...
+endpoints:
+...
+  "/protocols/{cname}/proposals":
+    id: "proposals"
+    primary_key: "refId"
+    responseSchema: "#/schemas/Proposals"
+    textSchema:
+      $ref: "#/textSchemas/Proposal"
+...
+```
 
-Before executing the `run-all` command, ensure that `Ollama` is running locally with your preferred LLM embeddings model:
+The `responseSchema` is defined under the `schemas` section. Here's the code snippet:
 
-```bash
+```yaml [boardroom_api_pipeline.yaml]
+...
+schemas:
+...
+  Proposals:
+    type: object
+    $schema: http://json-schema.org/draft-07/schema#
+    properties:
+      refId:
+        type: string
+      id:
+        type: string
+      title:
+        type: string
+      content:
+        type: string
+      protocol:
+        type: string
+      adapter:
+        type: string
+      proposer:
+        type: string
+      totalVotes:
+        type: integer
+      blockNumber:
+        type: integer
+      externalUrl:
+        type: string
+      startTime:
+        type: object
+        properties:
+          timestamp:
+            type: integer
+      endTime:
+        type: object
+        properties:
+          timestamp:
+            type: integer
+      startTimestamp:
+        type: string
+      endTimestamp:
+        type: string
+      currentState:
+        type: string
+      choices:
+        type: array
+        items:
+          type: string
+      results:
+        type: array
+        items:
+          type: object
+          properties:
+            total:
+              type: number
+            choice:
+              type: integer
+      events:
+        type: array
+        items:
+          type: object
+          properties: {}
+      type:
+        type: string
+      indexedResult:
+        type: array
+        items:
+          type: object
+          properties:
+            total:
+              type: string
+            choice:
+              type: string
+      summary:
+        type: string
+      privacy:
+        type: string
+      indexedAt:
+        type: integer
+      txHash:
+        type: string
+      quorum:
+        type: integer
+
+Below, there's the snippet corresponding to the `textSchema`. Notice that all properties must be listed in the `responseSchema`. 
+In this case, `title`, `content` and `summary` will be parsed as texts while the rest of fields will be included as metadata properties in a JSON object.
+
+```yaml [boardroom_api_pipeline.yaml]
+...
+textSchemas:
+...
+  Proposal:
+    type: object
+    properties:
+      title:
+        type: string
+      content:
+        type: string
+      summary:
+        type: string
+...
+```
+
+Finally, we can adjust the some of the parameters that should be used during the chunking stage. 
+
+```yaml [boardroom_api_pipeline.yaml]
+...
+chunking_params:
+  mode: "elements"
+  chunking_strategy: "by_title"
+  include_orig_elements: true
+  max_characters: 1500
+  new_after_n_chars: 1024
+  overlap: 0
+  overlap_all: false
+  combine_text_under_n_chars: 0
+  multipage_sections: true
+...
+```
+
+## Generating a knowledge base using the `rag-api-pipeline` CLI
+
+With the define API pipeline manifest we are going to use the CLI tool to extract data from the following endpoints: 
+`discourseTopis`, `discourseCategories`, `discourseTopicPosts`, `/protocol` and `protocol/*/proposals`. Make sure you have `Ollama` running locally 
+with the LLM embeddings model of your preference:
+
+```bash [Terminal]
 poetry run rag-api-pipeline run-all config/boardroom_api_pipeline.yaml --openapi-spec-file config/openapi.yaml --llm-provider ollama
 ```
 
-The processed and serialized API data, along with the generated knowledge base snapshot for Aave, can be found in this [link](https://huggingface.co/datasets/uxman/aave_snapshot_boardroom/tree/main).
-
+You can find the processed and serialized API data as well as the the generated knowledge base snapshot for Aave in this [link](https://huggingface.co/datasets/uxman/aave_snapshot_boardroom/tree/main)
 
 ## Import knowledge base into Gaianet node
 
