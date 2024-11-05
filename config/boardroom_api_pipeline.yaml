@@ -1,10 +1,10 @@
 version: "3.0.0"
 
-api_name: "metacartel_boardroom_api"
+api_name: "molochdao_boardroom_api"
 
 api_parameters:
-  cname: "metacartel"
-  protocol: "metacartel"
+  cname: "molochdao"
+  protocol: "molochdao"
 
 api_config:
   request_method: "get"
