@@ -1,5 +1,6 @@
 from gaianet_rag_api_pipeline import Settings
 from gaianet_rag_api_pipeline.io import QdrantDBVectorStore
+from gaianet_rag_api_pipeline.utils import docker_replace_local_service_url
 
 import pathway as pw
 from qdrant_client.models import Distance
@@ -25,9 +26,11 @@ def output(
         settings (Settings): Configuration settings for connecting to the Qdrant database, including
         URL, embedding vector size, distance function, and timeout settings.
     """
+    qdrantdb_url = docker_replace_local_service_url(settings.qdrantdb_url, "qdrant")
+
     vector_db = QdrantDBVectorStore(
         collection_name=f"{api_name}_collection",
-        qdrantdb_url=settings.qdrantdb_url,
+        qdrantdb_url=qdrantdb_url,
         embedding_vector_size=settings.llm_embeddings_vector_size,
         distance=Distance[settings.qdrantdb_distance_fn],
         qdrant_timeout=settings.qdrantdb_timeout,

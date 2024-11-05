@@ -1,16 +1,52 @@
-from gaianet_rag_api_pipeline.config import get_settings, logger
-from gaianet_rag_api_pipeline.input import input, read_jsonl_source
-from gaianet_rag_api_pipeline.loader import api_loader, api_read, get_dict_field, get_str_field
-from gaianet_rag_api_pipeline.output import output
-from gaianet_rag_api_pipeline.schema import ChunkedDataSchema, NormalizedAPISchema
-import gaianet_rag_api_pipeline.pipeline as rag_api_pipeline
+from gaianet_rag_api_pipeline.config import ENV_FILE_PATH, get_settings, logger, Settings
+from gaianet_rag_api_pipeline.utils import docker_replace_local_service_url, ping_service
 
 import click
 from codetiming import Timer
+import dotenv
 import logging
-import pathlib
-import pathway as pw
 import os
+import pathlib
+import re
+import shutil
+
+
+def is_pipeline_setup() -> bool:
+    env_file = pathlib.Path(ENV_FILE_PATH)
+    file_exists = env_file.exists()
+    if not file_exists:
+        click.echo(
+            click.style(
+                f"ERROR: {ENV_FILE_PATH} file not found. {click.style('rag-api-pipeline setup', fg='yellow')} {click.style('should be run first.', fg='red')}",
+                fg="red"
+            ),
+            err=True
+        )
+    return file_exists
+
+
+def check_services(settings: Settings) -> bool:
+    click.echo(click.style("Checking services status...", fg="yellow"))
+
+    # LLM Provider
+    service_url = docker_replace_local_service_url(settings.llm_api_base_url, "host.docker.internal")
+    service_url = service_url if re.search("(v1)|(v1/)$", service_url) else f"{service_url}/v1"
+    service_url += "/models"
+    llm_provider_up = ping_service(service_url, settings.llm_provider)
+    if not llm_provider_up:
+        click.echo(click.style(f"ERROR: LLM Provider {settings.llm_provider} ({service_url}) is down", fg="red"), err=True)
+    
+    # QdrantDB
+    service_url = docker_replace_local_service_url(settings.qdrantdb_url, "qdrant")
+    qdrantdb_up = ping_service(service_url, "QdrantDB")
+    if not qdrantdb_up:
+        click.echo(click.style(f"ERROR: QdrantDB ({service_url}) is down", fg="red"), err=True)
+
+    # Check all services status
+    services_ok = llm_provider_up and qdrantdb_up
+    if services_ok:
+        click.echo(click.style("Required services are up and running!", fg="green"))
+    return services_ok
 
 
 @click.group()
@@ -39,57 +75,65 @@ def cli(ctx, debug):
 @cli.command()
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
-@click.option("--llm-provider", default="openai", type=click.Choice(["ollama", "openai"], case_sensitive=True), show_default=True, help="Embedding model provider")
+@click.argument("openapi-spec-file", type=click.Path(exists=True))
+@click.option("--llm-provider", type=click.Choice(["ollama", "openai"], case_sensitive=True), help="Embedding model provider")
 @click.option("--api-key", default=lambda: os.environ.get("API_KEY", ""), help="API Auth key", type=click.STRING, prompt=True, prompt_required=False)
-@click.option("--openapi-spec-file", default="config/openapi.yaml", show_default=True, help="OpenAPI YAML spec file", type=click.Path(exists=True), prompt=True, prompt_required=False)
 @click.option("--source-manifest-file", default="", help="Source YAML manifest", type=click.Path()) # TODO: fix validation when empty
 @click.option("--full-refresh", is_flag=True, help="Clean up cache and extract API data from scratch")
 @click.option("--normalized-only", is_flag=True, help="Run pipeline until the normalized data stage")
 @click.option("--chunked-only", is_flag=True, help="Run pipeline until the chunked data stage")
 @Timer(name="rag-api-pipeline", text="run-all pipeline executed after: {:.2f} seconds", logger=logger.info)
-def run_all(
+def all(
     ctx,
     api_manifest_file: str,
+    openapi_spec_file: str,
     llm_provider: str,
     api_key: str,
-    openapi_spec_file: str,
     source_manifest_file: str,
     full_refresh: bool,
     normalized_only: bool,
     chunked_only: bool
 ):
     """
-    Run the complete RAG API pipeline.
+    Run the complete RAG API Pipeline.
 
-    Executes the entire pipeline from extraction to embedding based on the provided configurations and options.
+    API_MANIFEST_FILE Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
 
-    Args:
-        ctx (click.Context): The context object for the CLI.
-        api_manifest_file (str): Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
-        llm_provider (str): Provider of the embedding model, e.g., "ollama" or "openai".
-        api_key (str): API authentication key.
-        openapi_spec_file (str): Path to the OpenAPI YAML specification file.
-        source_manifest_file (str): Path to the source YAML manifest file. If empty, the API manifest file is used to load data.
-        full_refresh (bool): If set, clears the cache and extracts API data from scratch.
-        normalized_only (bool): If set, runs the pipeline up to the normalization stage only.
-        chunked_only (bool): If set, runs the pipeline up to the chunking stage only.
-
-    Raises:
-        Exception: If both `--normalized-only` and `--chunked-only` options are specified.
+    OPENAPI_SPEC_FILE Path to the OpenAPI YAML specification file.
     """
+
+    # Executes the entire pipeline from extraction to embedding based on the provided configurations and options.
+
+    # Args:
+    #     ctx (click.Context): The context object for the CLI.
+    #     api_manifest_file (str): Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
+    #     llm_provider (str): Provider of the embedding model, e.g., "ollama" or "openai".
+    #     api_key (str): API authentication key.
+    #     openapi_spec_file (str): Path to the OpenAPI YAML specification file.
+    #     source_manifest_file (str): Path to the source YAML manifest file. If empty, the API manifest file is used to load data.
+    #     full_refresh (bool): If set, clears the cache and extracts API data from scratch.
+    #     normalized_only (bool): If set, runs the pipeline up to the normalization stage only.
+    #     chunked_only (bool): If set, runs the pipeline up to the chunking stage only.
+
+    # Raises:
+    #     Exception: If both `--normalized-only` and `--chunked-only` options are specified.
 
     if normalized_only and chunked_only:
         raise Exception("Cannot specify both --normalized-only and --chunked-only options")
 
     logger.info(f"context - {ctx.obj}")
 
+    if not is_pipeline_setup():
+        return
+
     args = dict(
-        llm_provider=llm_provider, # NOTICE: CLI param
         openapi_spec_file=openapi_spec_file, # NOTICE: CLI param
         source_manifest_file=source_manifest_file # NOTICE: CLI param
     )
+    if llm_provider:
+        args['llm_provider'] = llm_provider # NOTICE: CLI param over env var
     if api_key:
-        args['api_key'] = api_key # NOTICE: CLI param or env var
+        args['api_key'] = api_key # NOTICE: CLI param over env var
     
     # TODO: set env_file based on dev/prod
     settings = get_settings(**args)
@@ -99,6 +143,11 @@ def run_all(
 
     if not settings.api_key:
         raise Exception("API_KEY not found")
+
+    if not check_services(settings):
+        return
+
+    from gaianet_rag_api_pipeline.loader import api_loader, api_read
 
     if not source_manifest_file:
         (
@@ -135,6 +184,10 @@ def run_all(
     pathlib.Path(f"{settings.output_folder}/{api_name}").mkdir(exist_ok=True)
     pathlib.Path(f"{settings.output_folder}/cache/{api_name}").mkdir(exist_ok=True, parents=True)
 
+    from gaianet_rag_api_pipeline.input import input
+    from gaianet_rag_api_pipeline.output import output
+    import gaianet_rag_api_pipeline.pipeline as rag_api_pipeline
+
     # fetch data from endpoints as individual streams
     stream_tables = input(
         api_name=api_name,
@@ -167,13 +220,15 @@ def run_all(
             settings=settings,
         )
 
+    import pathway as pw
+
     pw.run(monitoring_level=pw.MonitoringLevel.ALL)
 
 
 @cli.command()
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
-@click.option("--llm-provider", default="openai", type=click.Choice(["ollama", "openai"], case_sensitive=True), show_default=True, help="Embedding model provider")
+@click.option("--llm-provider", type=click.Choice(["ollama", "openai"], case_sensitive=True), help="Embedding model provider")
 @click.option("--normalized-data-file", required=True, help="Normalized data in JSONL format", type=click.Path(exists=True))
 @Timer(name="rag-api-pipeline", text="from-normalized pipeline executed after: {:.2f} seconds", logger=logger.info)
 def from_normalized(
@@ -185,23 +240,40 @@ def from_normalized(
     """
     Execute the RAG API pipeline from normalized data.
 
-    Processes the normalized data and generates embeddings using the provided configurations and options.
-
-    Args:
-        ctx (click.Context): The context object for the CLI.
-        api_manifest_file (str): Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
-        llm_provider (str): Provider of the embedding model, e.g., "ollama" or "openai".
-        normalized_data_file (str): Path to the JSONL file containing normalized data.
+    API_MANIFEST_FILE Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
     """
+
+    # Processes the normalized data and generates embeddings using the provided configurations and options.
+
+    # Args:
+    #     ctx (click.Context): The context object for the CLI.
+    #     api_manifest_file (str): Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
+    #     llm_provider (str): Provider of the embedding model, e.g., "ollama" or "openai".
+    #     normalized_data_file (str): Path to the JSONL file containing normalized data.
+
+    if not is_pipeline_setup():
+        return
     
-    # TODO: set env_file based on dev/prod
-    settings = get_settings(llm_provider=llm_provider)
+    args = dict()
+    if llm_provider:
+        args['llm_provider'] = llm_provider # NOTICE: CLI param over env var
+    
+    settings = get_settings(*args)
 
     logger.info(f"Config settings - {settings.model_dump()}")
     logger.debug(f"Data source - {normalized_data_file}")
 
+    if not check_services(settings):
+        return
+
     manifest_file = pathlib.Path(api_manifest_file)
 
+    from gaianet_rag_api_pipeline.input import read_jsonl_source
+    from gaianet_rag_api_pipeline.loader import get_dict_field, get_str_field
+    from gaianet_rag_api_pipeline.output import output
+    from gaianet_rag_api_pipeline.schema import NormalizedAPISchema
+    import gaianet_rag_api_pipeline.pipeline as rag_api_pipeline
+    
     api_name = get_str_field(
         manifest_file=manifest_file,
         field_id="api_name"
@@ -242,13 +314,15 @@ def from_normalized(
         settings=settings,
     )
 
+    import pathway as pw
+
     pw.run(monitoring_level=pw.MonitoringLevel.ALL)
 
 
 @cli.command()
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
-@click.option("--llm-provider", default="openai", type=click.Choice(["ollama", "openai"], case_sensitive=True), show_default=True, help="Embedding model provider")
+@click.option("--llm-provider", type=click.Choice(["ollama", "openai"], case_sensitive=True), help="Embedding model provider")
 @click.option("--chunked-data-file", required=True, help="Chunked data in JSONL format", type=click.Path(exists=True))
 @Timer(name="rag-api-pipeline", text="from-chunked pipeline executed after: {:.2f} seconds", logger=logger.info)
 def from_chunked(
@@ -260,20 +334,37 @@ def from_chunked(
     """
     Execute the RAG API pipeline from chunked data.
 
-    Processes chunked data and generates embeddings using the provided configurations and options.
-
-    Args:
-        ctx (click.Context): The context object for the CLI.
-        api_manifest_file (str): Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
-        llm_provider (str): Provider of the embedding model, e.g., "ollama" or "openai".
-        chunked_data_file (str): Path to the JSONL file containing chunked data.
+    API_MANIFEST_FILE Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
     """
 
-    # TODO: set env_file based on dev/prod
-    settings = get_settings(llm_provider=llm_provider)
+    # Processes chunked data and generates embeddings using the provided configurations and options.
+
+    # Args:
+    #     ctx (click.Context): The context object for the CLI.
+    #     api_manifest_file (str): Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
+    #     llm_provider (str): Provider of the embedding model, e.g., "ollama" or "openai".
+    #     chunked_data_file (str): Path to the JSONL file containing chunked data.
+
+    if not is_pipeline_setup():
+        return
+    
+    args = dict()
+    if llm_provider:
+        args['llm_provider'] = llm_provider # NOTICE: CLI param over env var
+
+    settings = get_settings(**args)
 
     logger.info(f"Config settings - {settings.model_dump()}")
     logger.debug(f"Data source - {chunked_data_file}")
+
+    if not check_services(settings):
+        return
+
+    from gaianet_rag_api_pipeline.input import read_jsonl_source
+    from gaianet_rag_api_pipeline.loader import get_dict_field, get_str_field
+    from gaianet_rag_api_pipeline.output import output
+    from gaianet_rag_api_pipeline.schema import ChunkedDataSchema
+    import gaianet_rag_api_pipeline.pipeline as rag_api_pipeline
 
     api_name = get_str_field(
         manifest_file=pathlib.Path(api_manifest_file),
@@ -307,13 +398,7 @@ def from_chunked(
         settings=settings,
     )
 
+    import pathway as pw
+
     pw.run(monitoring_level=pw.MonitoringLevel.ALL)
 
-
-def entrypoint():
-    """Entry point for the CLI application. Initializes and invokes the CLI interface."""
-    cli(obj={})
-
-
-if __name__ == "__main__":
-    entrypoint()

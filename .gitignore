@@ -200,3 +200,6 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# Ollama
+Modelfile

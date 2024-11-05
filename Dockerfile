@@ -1,14 +1,10 @@
 FROM python:3.11
 
-# ENV PYTHONUNBUFFERED=1
+WORKDIR api_pipeline
 
-# ARG BUILD_ENVIRONMENT=dev
-
-WORKDIR /pipeline
-
-COPY . .
+COPY . /api_pipeline
 
 RUN pip install poetry
-RUN poetry install
+RUN pip install -e .
 
-CMD ["poetry", "run", "rag-api-pipeline", "run-all", "config/api_pipeline.yaml"]
+ENTRYPOINT ["rag-api-pipeline", "run"]

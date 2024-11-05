@@ -1,0 +1,11 @@
+.git
+.gitignore
+__pycache__
+node_modules/
+package.json
+pnpm-lock.yaml
+tsconfig.json
+vocs.config.ts
+
+docs/
+tests/

@@ -1,3 +1,4 @@
+from gaianet_rag_api_pipeline.utils import docker_replace_local_service_url
 from gaianet_rag_api_pipeline.processor import CustomLiteLLMEmbedder
 from gaianet_rag_api_pipeline import Settings
 
@@ -23,8 +24,10 @@ def embeddings(
         cache_strategy (pw.udfs.CacheStrategy, optional): An optional caching strategy to reuse computed embeddings. 
                                                          Defaults to None.
     """
+    llm_api_base_url = docker_replace_local_service_url(settings.llm_api_base_url, "host.docker.internal")
+
     embedder = CustomLiteLLMEmbedder(
-        api_base=settings.llm_api_base_url,
+        api_base=llm_api_base_url,
         api_key=settings.llm_api_key, # NOTICE: can't be empty otherwise python API throws an error
         custom_llm_provider=settings.llm_provider,
         model=settings.llm_embeddings_model,

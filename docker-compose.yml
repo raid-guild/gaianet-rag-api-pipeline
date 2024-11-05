@@ -1,0 +1,26 @@
+name: gaia-rag-api
+
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.10.0
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - ./qdrant:/qdrant/storage:z
+    networks:
+      - rag_api_pipeline_network
+  pipeline:
+    build:
+      context: .
+    environment:
+      BUILD_ENVIRONMENT: docker
+    volumes:
+      - ./output:/api_pipeline/output
+      - ./models:/api_pipeline/models
+    networks:
+      - rag_api_pipeline_network
+
+networks:
+  rag_api_pipeline_network:
+    driver: bridge
