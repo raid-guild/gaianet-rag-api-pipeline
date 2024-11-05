@@ -11,25 +11,43 @@ import subprocess
 
 
 class LazyGroup(click.Group):
+    """
+    Utility class to lazily load Pipeline sub-commands within a click.Group
+    
+    Source: https://click.palletsprojects.com/en/stable/complex/#using-lazygroup-to-define-a-cli
+    """
+
     def __init__(self, *args, lazy_subcommands=None, **kwargs):
+        """
+        Set the list of sub-commands to be lazily load
+        
+        lazy_subcommands is a map of the form:
+            {command-name} -> {module-name}.{command-object-name}
+        """
         super().__init__(*args, **kwargs)
-        # lazy_subcommands is a map of the form:
-        #
-        #   {command-name} -> {module-name}.{command-object-name}
-        #
+        
         self.lazy_subcommands = lazy_subcommands or {}
 
     def list_commands(self, ctx):
+        """
+        List all available sub-commands
+        """
         base = super().list_commands(ctx)
         lazy = sorted(self.lazy_subcommands.keys())
         return base + lazy
 
     def get_command(self, ctx, cmd_name):
+        """
+        Load a sub-command using the correct function according to its type
+        """
         if cmd_name in self.lazy_subcommands:
             return self._lazy_load(cmd_name)
         return super().get_command(ctx, cmd_name)
 
     def _lazy_load(self, cmd_name):
+        """
+        Lazily loads a sub-command
+        """
         # lazily loading a command, first get the module name and attribute name
         import_path = self.lazy_subcommands[cmd_name]
         modname, cmd_object_name = import_path.rsplit(".", 1)
@@ -47,6 +65,23 @@ class LazyGroup(click.Group):
 
 
 def ping_service(url: str, service_name: str, debug: bool = False) -> bool:
+    """
+    Ping a service to check its availability.
+
+    Sends a GET request to a specified URL to verify if a service is reachable and responds correctly. 
+    Outputs a success or error message based on the response status, and optionally displays response details in debug mode.
+
+    Args:
+        url (str): The URL of the service to ping.
+        service_name (str): The name of the service being checked.
+        debug (bool, optional): If True, outputs the JSON response of the service. Defaults to False.
+
+    Returns:
+        bool: True if the service is reachable and responds with a successful status code, False otherwise.
+
+    Raises:
+        Exception: If the service response is not successful (i.e., non-OK HTTP status).
+    """
     try:
         ping = requests.get(url)
         if not ping.ok:
@@ -62,6 +97,22 @@ def ping_service(url: str, service_name: str, debug: bool = False) -> bool:
 
 
 def check_docker(debug: bool = False) -> bool:
+    """
+    Verify that Docker is installed and its daemon is running.
+
+    This function performs a check to confirm that Docker is installed and that the Docker daemon is actively running. 
+    If Docker is not detected or the daemon is not running, it prompts the user to try again or exit. 
+    Optional debug output shows detailed subprocess output for troubleshooting.
+
+    Args:
+        debug (bool, optional): If True, displays detailed output from subprocess commands. Defaults to False.
+
+    Returns:
+        bool: True if Docker is installed and the daemon is running, False if the check fails and the user opts not to retry.
+
+    Raises:
+        SystemExit: Exits the function if Docker is not found or the daemon is not running, and the user chooses not to retry.
+    """
     while True:
         docker_installed = True
         docker_running = True
@@ -99,6 +150,23 @@ def check_docker(debug: bool = False) -> bool:
 
 
 def start_docker_service(service_id: str, service_name: str, debug: bool = False):
+    """
+    Start a Docker service using Docker Compose.
+
+    This function attempts to start a specified Docker service in detached mode (`-d`) using Docker Compose. 
+    If debug mode is enabled, it displays detailed output from the subprocess command, providing diagnostic information.
+
+    Args:
+        service_id (str): The ID of the service to start, as defined in the Docker Compose configuration.
+        service_name (str): A human-readable name for the service to be started (used for user-friendly messages).
+        debug (bool, optional): If True, displays detailed output from the Docker Compose command for debugging purposes. Defaults to False.
+
+    Returns:
+        None
+
+    Side Effects:
+        Outputs messages to the console to indicate the status of the service start operation.
+    """
     click.echo(click.style(f"Starting a {service_name} instance using Docker....", fg="yellow"))
     out = subprocess.run(["docker", "compose", "up", service_id, "-d"], capture_output=True)
     click.echo(click.style(out, fg="blue"), err=True) if debug else None
@@ -132,8 +200,8 @@ def setup(
     debug: bool,
     llm_provider: str    
 ):
-    step = 1
-    total_steps = 3
+    step = 1 # Wizard step counter
+    total_steps = 3 # Total Wizard steps
     click.echo(click.style(f"Init pipeline...", fg="yellow"))
 
     env_file = pathlib.Path(ENV_FILE_PATH)
@@ -149,7 +217,6 @@ def setup(
             env_file.unlink()
 
     if init_setup:
-
         shutil.copyfile(f"{ENV_FILE_PATH}.sample", ENV_FILE_PATH)
         dotenv.load_dotenv(ENV_FILE_PATH)
 
@@ -157,8 +224,8 @@ def setup(
 
         click.echo(click.style(f"(Step {step}/{total_steps}) Setting Pipeline LLM provider settings...", fg="yellow"))
 
-        llm_provider_chosen = llm_provider
         # Set LLM_PROVIDER
+        llm_provider_chosen = llm_provider
         if llm_provider != "gaia":
             available_llm_providers = ["openai", "ollama"]
             llm_provider = click.prompt(f"Select a custom LLM provider", type=click.Choice(available_llm_providers, case_sensitive=True), show_choices=True)
@@ -246,6 +313,7 @@ def setup(
         with open(api_key_file, mode="w") as f:
             f.write(api_key)
             f.close()
+
         click.echo(click.style(f"API Key stored in {api_key_file}", fg="green"))
 
         step += 1
