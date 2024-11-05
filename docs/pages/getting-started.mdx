@@ -9,12 +9,13 @@ this tool, the tech stack and/or how it works under the hood, check the content 
 
 ## System Requirements
 
-- Poetry ([Docs](https://python-poetry.org/docs/))
 - Python 3.11.x
-- (Optional): a Python virtual environment manager of your preference (e.g. conda, venv)
-- Docker and Docker compose
+- Poetry ([Docs](https://python-poetry.org/docs/))
+  - (Optional): a Python virtual environment manager of your preference (e.g. conda, venv)
 - Qdrant vector database ([Docs](https://qdrant.tech/documentation/))
-- LLM model provider (either a Gaianet node or Ollama)
+  - (Optional): Docker to spin up a local container
+- LLM model provider (e.g. a [Public GaiaNet node](https://www.gaianet.ai/chat) or [spin up your own](https://docs.gaianet.ai/node-guide/quick-start))
+  - An Embeddings model (e.g. [Nomic-embed-text-v1.5](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/tree/main?show_file_info=nomic-embed-text-v1.5.f16.gguf))
 
 ## Setup Instructions
 
@@ -27,82 +28,39 @@ Git clone or download this repository to your local machine.
 git clone https://github.com/raid-guild/gaianet-rag-api-pipeline.git
 ```
 
-### Activate your virtual environment
+### Install the Pipeline CLI 
 
-It is recommended to activate your [own virtual environment](https://python-poetry.org/docs/basic-usage/#using-your-virtual-environment); 
-otherwise, Poetry will create/use a brand new environment. Check how Poetry [manages environments](https://python-poetry.org/docs/managing-environments/) for details.
-
-### Install project dependencies
-
-Navigate to the directory where this repository was cloned/downloaded and execute the following command to install the project dependencies:
+It is recommended to activate your [own virtual environment](https://python-poetry.org/docs/basic-usage/#using-your-virtual-environment). 
+Then, navigate to the directory where this repository was cloned/download and execute the following command to install the `rag-api-pipeline` CLI:
 
 ```bash [Terminal]
 cd gaianet-rag-api-pipeline
-poetry install
+pip install -e .
 ```
 
-### Set environment variables
+### Setup the Pipeline Configuration
 
-Copy `config/.env/sample` into `config/.env` file and set environment variables accordingly. Check the [environment variables](/getting-started#environment-variables) section below
-for details.
-
-### Define your API Pipeline manifest
-
-Now it's time to define the pipeline manifest for the REST API from which you're looking to extract data. Check how to define an API pipeline manifest in 
-[Defining an API Pipeline Manifest](/manifest-definition) for details, or take a look at the in-depth review of the sample manifests available in 
-[API Examples](/apis).
-
-### Set the REST API Key
-
-The API must require an API key when sending requests. You can set it in the `config/secrets/api_key` file, or specify it using the `--api-key` argument in the CLI.
-
-### Setup a Qdrant DB instance
-
-Get the base URL of your Qdrant Vector DB or deploy a local `Qdrant` ([Docs](https://qdrant.tech/documentation/)) vector database instance using docker 
-and update the `QDRANTDB_URL` variable in the `config/.env` file:
+Run the following command to start the pipeline setup wizard. You can use the default configuration settings or customize it for your specific needs.
+Check the [CLI Reference](/cli-reference) page for more details:
 
 ```bash [Terminal]
-docker run -p 6333:6333 -p 6334:6334 -v ./qdrant:/qdrant/storage:z qdrant/qdrant:v1.10.1
-```
-
-:::warning
-IMPORTANT: make sure you use `qdrant:v1.10.1` for compatibility with Gaianet node
-:::
-
-### Select and Setup an LLM provider
-
-Get your Gaianet node running ([Docs](https://docs.gaianet.ai/node-guide/quick-start)) or install Ollama ([Docs](https://ollama.com/)) provider locally. 
-The latter is recommended if you're looking to run the pipeline on consumer hardware.
-
-### Load an LLM embeddings model
-
-Load the LLM embeddings model of your preference into the LLM provider you chose in the previous step:
-- You can find information on how to customize a Gaianet node [here](https://docs.gaianet.ai/node-guide/customize)
-- If you chose Ollama, follow these instructions to import the LLM embeddings model:
-  - Make sure the Ollama service is up and running
-  - Go to the folder where the embeddings model is located. Then, create a file named `Modelfile` and paste the following (replace `<path/to/model>` 
-  with your local directory, for example [Nomic-embed-text-v1.5.f16.gguf](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/tree/main?show_file_info=nomic-embed-text-v1.5.f16.gguf)):
-
-```docker [Modelfile]
-FROM <path/to/model>/nomic-embed-text-v1.5.f16.gguf
-```
-  - Import the model by running the following command in a terminal:
-```bash [Terminal]
-ollama create Nomic-embed-text-v1.5
-```
-  - Check the embeddings model settings by running the command:
-```bash [Terminal]
-ollama show Nomic-embed-text-v1.5
+rag-api-pipeline setup
 ```
 ::::
 
+## Define your API Pipeline manifest
+
+Now it's time to define the pipeline manifest for the REST API you're looking to extract data from. Check how to define an API pipeline manifest in 
+[Defining an API Pipeline Manifest](/manifest-definition) for details, or take a look at the in-depth review of the sample manifests available in 
+[API Examples](/apis).
+
 ## Pipeline CLI
 
-Now you're ready to use the `rag-api-pipeline` CLI commands to execute different tasks of the RAG pipeline, from extracting data from an API source to generating vector embeddings 
-and a database snapshot. If you need more details about the parameters available for each command, you can execute:
+Now you're ready to use the `rag-api-pipeline run` CLI commands to execute different tasks of the RAG pipeline, from extracting data from an API source to generating vector embeddings 
+and a database snapshot. If you need more details about the parameters available on each command you can execute:
 
 ```bash [Terminal]
-poetry run rag-api-pipeline <command> --help
+rag-api-pipeline run <command> --help
 ```
 
 ### CLI available commands
@@ -111,19 +69,19 @@ Below you can find the default instructions available and an in-depth review of 
 
 ```bash [Terminal]
 # run the entire pipeline
-poetry run rag-api-pipeline run-all API_MANIFEST_FILE --openapi-spec-file <openapi-spec-yaml-file> [--full-refresh] [--llm-provider openapi|ollama]
+rag-api-pipeline run all <API_MANIFEST_FILE> <OPENAPI_SPEC_FILE> [--full-refresh]
 # or run using an already normalized dataset
-poetry run rag-api-pipeline from-normalized API_MANIFEST_FILE --normalized-data-file <jsonl-file> [--llm-provider openapi|ollama]
+rag-api-pipeline run from-normalized <API_MANIFEST_FILE> --normalized-data-file <jsonl-file>
 # or run using an already chunked dataset
-poetry run rag-api-pipeline from-chunked API_MANIFEST_FILE --chunked-data-file <jsonl-file> [--llm-provider openapi|ollama]
+rag-api-pipeline run from-chunked <API_MANIFEST_FILE> --chunked-data-file <jsonl-file>
 ```
 
 - **run-all**: executes the entire RAG data pipeline including API endpoint data streams, data normalization, data chunking, vector embeddings and 
 database snapshot generation. You can specify the following arguments to the command:
   * `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
+  * `OPENAPI_SPEC_FILE`: API OpenAPI YAML spec file (mandatory)
   * `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
   * `--api-key`: API Auth key. If not specified, it will try to get it from `config/secrets/api_key`
-  * `--openapi-spec-file`: API OpenAPI YAML spec file. defaults to `config/openapi.yaml`
   * `--source-manifest-file`: Airbyte API Connector YAML manifest. If specified, it will omit the API Connector manifest generation step.
   * `--full-refresh`: clean up cache and extract API data from scratch.
   * `--normalized-only`: run pipeline until the data normalization stage.
