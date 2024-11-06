@@ -1,6 +1,6 @@
 # Boardroom Governance API
 
-This repository contains the [API pipeline manifest](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/boardroom_api_pipeline.yaml) and [OpenAPI specification](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/openapi.yaml) needed to create a RAG pipeline. This pipeline generates a knowledge base from any DAO/Protocol hosted by the Boardroom Governance API. All configuration files are located in the `config` folder.
+This repository contains the [OpenAPI specification](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/boardroom_openapi.yaml) and the [API pipeline manifest](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/boardroom_api_pipeline.yaml) needed to create a RAG pipeline. This pipeline generates a knowledge base from any DAO/Protocol hosted by the Boardroom Governance API. All configuration files are located in the `config` folder.
 
 ## Prerequisites
 
@@ -254,7 +254,7 @@ The processed data and knowledge base snapshot for Aave are available on [Huggin
 
 1. Locate the generated snapshot in `{OUTPUT_FOLDER}/aave_boardroom_api/` (named `aave_boardroom_api_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`)
 2. Follow the [knowledge base selection guide](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base)
-3. Configure using the recommended settings from the [node deployment guide](/node-deployment#recommended-gaianet-node-configuration)
+3. Configure using the recommended settings from the [node deployment guide](/cli/node-deployment#recommended-gaianet-node-configuration)
 
 ### Customizing for Other DAOs
 

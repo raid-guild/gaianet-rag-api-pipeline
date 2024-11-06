@@ -1,6 +1,6 @@
 # Optimism Agora API
 
-This repository contains the [API pipeline manifest](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/agora_api_pipeline.yaml) and [OpenAPI specification](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/agora_openapi.yaml) needed to create a RAG pipeline. This pipeline generates a knowledge base from RetroPGF projects and proposals within the OP collective. These files are typically located in the `config` folder.
+This repository contains the [OpenAPI specification](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/agora_openapi.yaml) and [API pipeline manifest](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/agora_api_pipeline.yaml) needed to create a RAG pipeline. This pipeline generates a knowledge base from RetroPGF projects and proposals within the OP collective. These files are typically located in the `config` folder.
 
 To access this API, you'll need an API key. You can request one through [Agora's Discord server](https://www.agora.xyz/#Product). Once obtained, store the key in `config/secrets/api-key` or provide it directly using the `--api-key` CLI argument.
 
@@ -50,4 +50,4 @@ Before running the `run-all` command, ensure that `Ollama` is running locally wi
 poetry run rag-api-pipeline run-all config/agora_api_pipeline.yaml --openapi-spec-file config/agora_openapi.yaml --llm-provider ollama
 ```
 
-After execution, you'll find a compressed knowledge base snapshot in `{OUTPUT_FOLDER}/optimism_agora_api/` named `optimism_agora_api_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`. For instructions on importing this into your Gaianet node, refer to the documentation on [selecting a knowledge base](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base). Find recommended prompts and node configuration settings [here](/node-deployment#recommended-gaianet-node-configuration).
+After execution, you'll find a compressed knowledge base snapshot in `{OUTPUT_FOLDER}/optimism_agora_api/` named `optimism_agora_api_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`. For instructions on importing this into your Gaianet node, refer to the documentation on [selecting a knowledge base](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base). Find recommended prompts and node configuration settings [here](/cli/node-deployment#recommended-gaianet-node-configuration).

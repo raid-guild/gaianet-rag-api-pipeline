@@ -87,3 +87,45 @@ poetry run rag-api-pipeline from-chunked config/api_pipeline.yaml --chunked-data
 - The CLI uses the `click` library for command-line interface creation.
 - Make sure to properly configure your API manifest file and OpenAPI spec file before running the pipeline.
 - Double-check the CLI environment variables in the `config/.env` file. Check the [Environment Variables](/getting-started#environment-variables) section for details.
+
+
+## Moved from getting started
+
+TODO: 
+
+- **run-all**: executes the entire RAG data pipeline including API endpoint data streams, data normalization, data chunking, vector embeddings and 
+database snapshot generation. You can specify the following arguments to the command:
+  * `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
+  * `OPENAPI_SPEC_FILE`: API OpenAPI YAML spec file (mandatory)
+  * `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
+  * `--api-key`: API Auth key. If not specified, it will try to get it from `config/secrets/api_key`
+  * `--source-manifest-file`: Airbyte API Connector YAML manifest. If specified, it will omit the API Connector manifest generation step.
+  * `--full-refresh`: clean up cache and extract API data from scratch.
+  * `--normalized-only`: run pipeline until the data normalization stage.
+  * `--chunked-only`: run pipeline until the data chunking stage.
+
+- **from-normalized**: executes the RAG data pipeline using an already normalized JSONL dataset. You can specify the following arguments to the command:
+  * `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
+  * `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
+  * `--normalized-data-file`: path to the normalized dataset in JSONL format (mandatory). Check the [Architecture](/architecture) section for details on the 
+  required data schema.
+
+- **from_chunked**: executes the RAG data pipeline using an already chunked dataset in JSONL format. You can specify the following arguments to the command:
+  * `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
+  * `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
+  * `--chunked-data-file`: path to the chunked dataset in JSONL format (mandatory). Check the [Architecture](/architecture) section for details on the 
+  required data schema.
+
+## CLI Output
+
+Cached API stream data and results produced from running any of the CLI commands are stored in `<OUTPUT_FOLDER>/<api_name>`. The following files and folders 
+are created by the tool within this `baseDir` folder:
+
+- `{baseDir}/{api_name}_source_generated.yaml`: generated Airbyte Stream connector manifest.
+- `{baseDir}/cache/{api_name}/*`: extracted API data is cached into a local DuckDB. Database files are stored in this directory. If the `--full-refresh` argument
+is specified for the `run-all` command, the cache will be cleared and API data will be extracted from scratch.
+- `{baseDir}/{api_name}_stream_{x}_preprocessed.jsonl`: data streams from each API endpoint are preprocessed and stored in JSONL format
+- `{baseDir}/{api_name}_normalized.jsonl`: preprocessed data streams from each API endpoint are joined together and stored in JSONL format
+- `{baseDir}/{api_name}_chunked.jsonl`: normalized data that goes through the data chunking stage is then stored in JSONL format
+- `{baseDir}/{api_name}_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot`: vector embeddings snapshot file that was exported from Qdrant DB
+- `{baseDir}/{api_name}_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`: compressed knowledge base that contains the vector embeddings snapshot

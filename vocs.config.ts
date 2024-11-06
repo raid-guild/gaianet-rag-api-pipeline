@@ -19,6 +19,21 @@ export default defineConfig({
       link: "/getting-started",
     },
     {
+      text: "Defining the API Pipeline Manifest",
+      collapsed: false,
+      link: "/manifest-definition",
+      items: [
+        {
+          text: "Overview",
+          link: "/manifest-definition/overview",
+        },
+        {
+          text: "Example Manifests",
+          link: "/manifest-definition/sample-manifests",
+        }
+      ]
+    },
+    {
       text: "API Examples",
       collapsed: false,
       link: "/apis",
@@ -38,18 +53,22 @@ export default defineConfig({
       ]
     },
     {
-      text: "Defining the API Pipeline Manifest",
+      text: "RAG API Pipeline",
       collapsed: false,
-      link: "/manifest-definition",
+      link: "/cli",
       items: [
         {
-          text: "Overview",
-          link: "/manifest-definition/overview",
+          text: "CLI Reference",
+          link: "/cli/reference",
         },
         {
-          text: "Example Manifests",
-          link: "/manifest-definition/sample-manifests",
-        }
+          text: "Customize Pipeline Settings",
+          link: "/cli/settings",
+        },
+        {
+          text: "Gaianet Node Deployment",
+          link: "/cli/node-deployment",
+        },
       ]
     },
     {
@@ -70,14 +89,6 @@ export default defineConfig({
           link: "/architecture/code-review",
         }
       ]
-    },
-    {
-      text: "Gaianet Node Deployment",
-      link: "/node-deployment",
-    },
-    {
-      text: "CLI Reference",
-      link: "/cli-reference",
     },
   ],
   topNav: [
