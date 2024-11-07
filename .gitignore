@@ -203,3 +203,4 @@ yarn-error.log*
 
 # Ollama
 Modelfile
+*.gguf

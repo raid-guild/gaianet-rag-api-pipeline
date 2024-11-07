@@ -8,6 +8,7 @@ import re
 import requests
 import shutil
 import subprocess
+import typing
 
 
 class LazyGroup(click.Group):
@@ -64,7 +65,7 @@ class LazyGroup(click.Group):
         return cmd_object
 
 
-def ping_service(url: str, service_name: str, debug: bool = False) -> bool:
+def ping_service(url: str, service_name: str, headers: typing.Dict[str, any] = dict(), debug: bool = False) -> bool:
     """
     Ping a service to check its availability.
 
@@ -83,14 +84,16 @@ def ping_service(url: str, service_name: str, debug: bool = False) -> bool:
         Exception: If the service response is not successful (i.e., non-OK HTTP status).
     """
     try:
-        ping = requests.get(url)
+        ping = requests.get(url, headers=headers)
         if not ping.ok:
             raise Exception(f"ERROR: {service_name} (@ {url}). Reason: {ping.reason}")
         if debug:
+            click.echo(click.style(ping.headers, fg="blue"))
             click.echo(click.style(ping.json(), fg="blue"))
         click.echo(click.style(f"{service_name} connection OK!", fg="green"))
     except Exception as e:
         click.echo(click.style(f"ERROR: {service_name} (@ {url}) is down. {e}", fg="red"), err=True)
+        click.echo(click.style(ping.headers, fg="blue")) if debug else None
         click.echo("Try again...")
         return False
     return True
@@ -217,8 +220,7 @@ def setup(
             env_file.unlink()
 
     if init_setup:
-        shutil.copyfile(f"{ENV_FILE_PATH}.sample", ENV_FILE_PATH)
-        dotenv.load_dotenv(ENV_FILE_PATH)
+        env_vars = dict()
 
         # ------------------------------------------------------------------------------------------------------
 
@@ -233,11 +235,13 @@ def setup(
             llm_provider = "openai" # gaia uses an openai-like API server
 
         click.echo(f"LLM_PROVIDER={llm_provider}") if debug else None
-        dotenv.set_key(ENV_FILE_PATH, key_to_set="LLM_PROVIDER", value_to_set=llm_provider)
+        env_vars["LLM_PROVIDER"] = llm_provider
 
         # Set LLM_API_BASE_URL
         llm_api_base_url_default = "http://127.0.0.1:11434" if llm_provider == "ollama" else "http://127.0.0.1:8080/v1"
         llm_api_server_url = llm_api_base_url_default
+        llm_api_key = 'empty-api-key'
+        llm_api_key_set = False
         while True:
             llm_api_server_url = click.prompt(
                 "LLM provider API URL",
@@ -245,27 +249,31 @@ def setup(
                 default=llm_api_base_url_default,
                 show_default=True
             )
+
+            # Set LLM_API_KEY
+            if not llm_api_key_set and llm_provider_chosen == "other" and llm_provider == "openai":
+                llm_api_key = click.prompt("LLM provider API Key", type=click.STRING, hide_input=True)
+                llm_api_key_set = True
+                click.echo(f"LLM_API_KEY value updated") if debug else None
+                env_vars["LLM_API_KEY"] = llm_api_key
             
             service_url = llm_api_server_url if re.search("(v1)|(v1/)$", llm_api_server_url) else f"{llm_api_server_url}/v1"
             service_url += "/models"
-            if ping_service(service_url, "LLM Provider API", debug=debug):
+            headers = {
+                "Authorization": f"Bearer {llm_api_key}"
+            }
+            if ping_service(service_url, "LLM Provider API", headers=headers, debug=debug):
                 break
         click.echo(f"LLM_API_BASE_URL={llm_api_server_url}") if debug else None
-        dotenv.set_key(ENV_FILE_PATH, key_to_set="LLM_API_BASE_URL", value_to_set=llm_api_server_url)
-
-        # Set LLM_API_KEY
-        if llm_provider_chosen == "other" and llm_provider == "openai":
-            llm_api_key = click.prompt("LLM provider API Key", type=click.STRING, hide_input=True)
-            click.echo(f"LLM_API_KEY value updated") if debug else None
-            dotenv.set_key(ENV_FILE_PATH, key_to_set="LLM_API_KEY", value_to_set=llm_api_key)
+        env_vars["LLM_API_BASE_URL"] = llm_api_server_url
         
         # Set LLM_EMBEDDINGS_*
         llm_embeddings_model = click.prompt("Embeddings model Name", type=click.STRING, default="Nomic-embed-text-v1.5", show_default=True)
         click.echo(f"LLM_EMBEDDINGS_MODEL={llm_embeddings_model}") if debug else None
-        dotenv.set_key(ENV_FILE_PATH, key_to_set="LLM_EMBEDDINGS_MODEL", value_to_set=llm_embeddings_model)
+        env_vars["LLM_EMBEDDINGS_MODEL"] = llm_embeddings_model
         llm_embeddings_vector_size = click.prompt("Embeddings Vector Size", type=click.IntRange(min=0, min_open=True), default=768, show_default=True)
         click.echo(f"LLM_EMBEDDINGS_VECTOR_SIZE={llm_embeddings_vector_size}") if debug else None
-        dotenv.set_key(ENV_FILE_PATH, key_to_set="LLM_EMBEDDINGS_VECTOR_SIZE", value_to_set=str(llm_embeddings_vector_size), quote_mode="never")
+        env_vars["LLM_EMBEDDINGS_VECTOR_SIZE"] = int(llm_embeddings_vector_size)
         if llm_provider == "ollama":
             # check Ollama is installed
             out = subprocess.run(["which", "ollama"], capture_output=True)
@@ -284,7 +292,7 @@ def setup(
             click.echo(click.style(model_info, fg="blue"), err=True) if debug else None
             if model_info.stderr.find(b"not found") > 0:
                 # request model file and load model
-                embeddings_model_file = click.prompt("Enter the Path to the Embeddings model file", type=click.Path(exists=True, dir_okay=False))
+                embeddings_model_file = click.prompt("Enter the Absolute Path to the Embeddings model file", type=click.Path(exists=True, dir_okay=False))
                 # create Modelfile
                 with open("./models/Modelfile", "w") as f:
                     f.write(f"FROM {embeddings_model_file}")
@@ -351,9 +359,18 @@ def setup(
                 click.echo(click.style(f"A QdrantDB Doker container is already running", fg="yellow"))
 
         click.echo(f"QDRANTDB_URL={qdrantdb_url}") if debug else None
-        dotenv.set_key(ENV_FILE_PATH, key_to_set="QDRANTDB_URL", value_to_set=qdrantdb_url)
+        env_vars["QDRANTDB_URL"] = qdrantdb_url
 
         step += 1
+
+        # ------------------------------------------------------------------------------------------------------
+
+        # Set .env file
+        click.echo(click.style(f"Saving Pipeline settings in {ENV_FILE_PATH}...", fg="yellow"))
+        shutil.copyfile(f"{ENV_FILE_PATH}.sample", ENV_FILE_PATH)
+
+        for key, val in env_vars.items():
+            dotenv.set_key(ENV_FILE_PATH, key_to_set=key, value_to_set=val, quote_mode="always" if type(val) == str else "never")
 
         # ------------------------------------------------------------------------------------------------------
 

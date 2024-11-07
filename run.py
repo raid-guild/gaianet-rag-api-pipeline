@@ -65,13 +65,13 @@ def check_services(settings: Settings) -> bool:
     service_url += "/models"
     llm_provider_up = ping_service(service_url, settings.llm_provider)
     if not llm_provider_up:
-        click.echo(click.style(f"ERROR: LLM Provider {settings.llm_provider} ({service_url}) is down", fg="red"), err=True)
+        click.echo(click.style(f"ERROR: LLM Provider {settings.llm_provider} ({service_url}) is down.", fg="red"), err=True)
     
     # QdrantDB
     service_url = docker_replace_local_service_url(settings.qdrantdb_url, "qdrant")
     qdrantdb_up = ping_service(service_url, "QdrantDB")
     if not qdrantdb_up:
-        click.echo(click.style(f"ERROR: QdrantDB ({service_url}) is down", fg="red"), err=True)
+        click.echo(click.style(f"ERROR: QdrantDB ({service_url}) is down.", fg="red"), err=True)
 
     # Check all services status
     services_ok = llm_provider_up and qdrantdb_up
@@ -101,7 +101,6 @@ def cli(ctx, debug):
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
 @click.argument("openapi-spec-file", type=click.Path(exists=True))
-@click.option("--llm-provider", type=click.Choice(["ollama", "openai"], case_sensitive=True), help="Embedding model provider")
 @click.option("--api-key", default=lambda: os.environ.get("API_KEY", ""), help="API Auth key", type=click.STRING, prompt=True, prompt_required=False)
 @click.option("--source-manifest-file", default="", help="Source YAML manifest", type=click.Path()) # TODO: fix validation when empty
 @click.option("--full-refresh", is_flag=True, help="Clean up cache and extract API data from scratch")
@@ -112,7 +111,6 @@ def all(
     ctx,
     api_manifest_file: str,
     openapi_spec_file: str,
-    llm_provider: str,
     api_key: str,
     source_manifest_file: str,
     full_refresh: bool,
@@ -132,7 +130,6 @@ def all(
     Args:
         ctx (click.Context): The context object for the CLI.
         api_manifest_file (str): Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
-        llm_provider (str): Provider of the embedding model, e.g., "ollama" or "openai".
         api_key (str): API authentication key.
         openapi_spec_file (str): Path to the OpenAPI YAML specification file.
         source_manifest_file (str): Path to the source YAML manifest file. If empty, the API manifest file is used to load data.
@@ -157,12 +154,9 @@ def all(
         openapi_spec_file=openapi_spec_file, # NOTICE: CLI param
         source_manifest_file=source_manifest_file # NOTICE: CLI param
     )
-    if llm_provider:
-        args['llm_provider'] = llm_provider # NOTICE: CLI param over env var
     if api_key:
         args['api_key'] = api_key # NOTICE: CLI param over env var
-    
-    # TODO: set env_file based on dev/prod
+
     settings = get_settings(**args)
     logger.info(f"Config settings - {settings.model_dump()}")
     logger.debug(f"Full refresh? - {full_refresh}")
@@ -255,13 +249,11 @@ def all(
 @cli.command()
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
-@click.option("--llm-provider", type=click.Choice(["ollama", "openai"], case_sensitive=True), help="Embedding model provider")
 @click.option("--normalized-data-file", required=True, help="Normalized data in JSONL format", type=click.Path(exists=True))
 @Timer(name="rag-api-pipeline", text="from-normalized pipeline executed after: {:.2f} seconds", logger=logger.info)
 def from_normalized(
     ctx,
     api_manifest_file: str,
-    llm_provider: str,
     normalized_data_file: str
 ):
     """
@@ -275,7 +267,6 @@ def from_normalized(
     Args:
         ctx (click.Context): The context object for the CLI.
         api_manifest_file (str): Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
-        llm_provider (str): Provider of the embedding model, e.g., "ollama" or "openai".
         normalized_data_file (str): Path to the JSONL file containing normalized data.
     """
 
@@ -283,9 +274,6 @@ def from_normalized(
         return
     
     args = dict()
-    if llm_provider:
-        args['llm_provider'] = llm_provider # NOTICE: CLI param over env var
-    
     settings = get_settings(*args)
 
     logger.info(f"Config settings - {settings.model_dump()}")
@@ -350,13 +338,11 @@ def from_normalized(
 @cli.command()
 @click.pass_context
 @click.argument("api-manifest-file", type=click.Path(exists=True))
-@click.option("--llm-provider", type=click.Choice(["ollama", "openai"], case_sensitive=True), help="Embedding model provider")
 @click.option("--chunked-data-file", required=True, help="Chunked data in JSONL format", type=click.Path(exists=True))
 @Timer(name="rag-api-pipeline", text="from-chunked pipeline executed after: {:.2f} seconds", logger=logger.info)
 def from_chunked(
     ctx,
     api_manifest_file: str,
-    llm_provider: str,
     chunked_data_file: str
 ):
     """
@@ -370,7 +356,6 @@ def from_chunked(
     Args:
         ctx (click.Context): The context object for the CLI.
         api_manifest_file (str): Path to the API manifest YAML file that defines pipeline config settings and API endpoints.
-        llm_provider (str): Provider of the embedding model, e.g., "ollama" or "openai".
         chunked_data_file (str): Path to the JSONL file containing chunked data.
     """
 
@@ -378,9 +363,6 @@ def from_chunked(
         return
     
     args = dict()
-    if llm_provider:
-        args['llm_provider'] = llm_provider # NOTICE: CLI param over env var
-
     settings = get_settings(**args)
 
     logger.info(f"Config settings - {settings.model_dump()}")

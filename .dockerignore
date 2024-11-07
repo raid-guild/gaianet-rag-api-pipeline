@@ -8,4 +8,6 @@ tsconfig.json
 vocs.config.ts
 
 docs/
+models/
+output/
 tests/
