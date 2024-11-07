@@ -9,7 +9,7 @@
     "dev": "vocs dev",
     "build": "vocs build",
     "preview": "vocs preview",
-    "deploy": "gh-pages -d docs/dist"
+    "deploy": "gh-pages -d docs/dist -m 'Publish Docs Updates' -t --nojekyll"
   },
   "dependencies": {
     "react": "latest",

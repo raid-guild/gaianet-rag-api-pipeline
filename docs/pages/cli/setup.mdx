@@ -1,0 +1,154 @@
+# RAG API Pipeline - Setup
+
+The `rag-api-pipeline` CLI offers a setup wizard command that allows you to quickly setup the pipeline settings so you can start creating 
+RAG API pipelines in a few seconds. Below is an overview of the command options:
+
+```bash [Terminal]
+(venv) user$ rag-api-pipeline setup --help
+Usage: rag-api-pipeline setup [OPTIONS]
+
+  Setup wizard to config the pipeline settings prior execution
+
+Options:
+  --debug                      enable logging debug level
+  --llm-provider [gaia|other]  LLM provider  [default: gaia]
+  --help                       Show this message and exit.
+```
+
+The setup wizard is a three stage process that request you to set some configuration parameters required for the pipeline to execute. For 
+each parameter, the wizard suggests a default value/configuration that can be automatically used by hitting the enter key.
+
+Example:
+
+```bash [Terminal]
+(venv) user$ rag-api-pipeline setup
+Which LLM provider you want to use? (gaia, other) [gaia]: 
+Init pipeline...
+(Step 1/3) Setting Pipeline LLM provider settings...
+LLM provider API URL [http://127.0.0.1:8080/v1]: https://0xd0275a4f8ef0d4b2dc0a3baf3d405a63bc647340.us.gaianet.network/v1
+LLM Provider API connection OK!
+Embeddings model Name [Nomic-embed-text-v1.5]: 
+Embeddings Vector Size [768]: 
+Pipeline LLM Provider settings OK!
+(Step 2/3) Setting API Source settings...
+REST API Key: 
+API Key stored in config/secrets/api_key
+(Step 3/3) Setting Vector DB settings...
+Do you have a running QdrantDB instance? [y/N]: 
+Checking Docker settings...
+Docker requirements OK!
+Starting a QdrantDB instance using Docker....
+
+ Network gaia-rag-api_rag_api_pipeline_network  Creating
+ Network gaia-rag-api_rag_api_pipeline_network  Created
+ Container gaia-rag-api-qdrant-1  Creating
+ Container gaia-rag-api-qdrant-1  Created
+ Container gaia-rag-api-qdrant-1  Starting
+ Container gaia-rag-api-qdrant-1  Started
+
+Pipeline Setup completed!
+
+            You can use the pipeline by running either rag-api-pipeline run --help
+            or docker compose run pipeline --help
+```
+
+You can run the `setup` command as many times as you want. If the pipeline was already setup, the CLI will prompt you with a confirmation
+message to cleanup previous configurations:
+
+```bash [Terminal]
+Init pipeline...
+A .env file already exists in config/.env
+Do you want to init the pipeline configuration from scratch? [y/N]: y
+```
+
+1. Set the LLM Provider
+
+By default, the RAG API pipeline is setup to integrate with a Gaianet node to use a loaded embeddings model for 
+generating vector embeddings from extracted content. We recommend reading the [guide](cli/node-deployment) on how to spin up your own 
+Gaianet node, or check the documentation on supported [LLM Providers](cli/other-llm-providers).
+
+```bash [Terminal]
+(venv) user$ rag-api-pipeline setup
+Which LLM provider you want to use? (gaia, other) [gaia]: 
+Init pipeline...
+```
+
+The Next step is to provide the Gaianet node Base URI. Under the hood, the CLI validates it can connect to the node API, otherwise it will 
+prompt you the error:
+
+```bash [Terminal]
+(Step 1/3) Setting Pipeline LLM provider settings...
+LLM provider API URL [http://127.0.0.1:8080/v1]: 
+ERROR: LLM Provider API (@ http://127.0.0.1:8080/v1/models) is down. HTTPConnectionPool(host='127.0.0.1', port=8080): Max retries exceeded with url: /v1/models (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x110893c90>: Failed to establish a new connection: [Errno 61] Connection refused'))
+Try again...
+LLM provider API URL [http://127.0.0.1:8080/v1]:
+```
+
+Finally, you'll need to specify the embeddings model name and embeddings vector size:
+
+```bash [Terminal]
+LLM provider API URL [http://127.0.0.1:8080/v1]: https://0xd0275a4f8ef0d4b2dc0a3baf3d405a63bc647340.us.gaianet.network/v1
+LLM Provider API connection OK!
+Embeddings model Name [Nomic-embed-text-v1.5]: 
+Embeddings Vector Size [768]: 
+Pipeline LLM Provider settings OK!
+```
+
+2. Set Source API Settings
+
+In this stage, you are required to specify the API Key that will be used to make authenticated requests to your target REST API. This value 
+will be stored in the secrets folder.
+
+```bash [Terminal]
+(Step 2/3) Setting API Source settings...
+REST API Key: 
+API Key stored in config/secrets/api_key
+```
+
+3. Set Vector Database Settings
+
+The final stage is in charge of configuring connection to the Vector Database. If you already have a QdrantDB instance running somewhere, 
+you can specify the Server URL. The CLI validates it can connect to the service instance, otherwise it will prompt you the error:
+
+```bash [Terminal]
+(Step 3/3) Setting Vector DB settings...
+Do you have a running QdrantDB instance? [y/N]: y
+Enter your Qdrant Server URL [http://127.0.0.1:6333]: 
+ERROR: QdrantDB (@ http://127.0.0.1:6333) is down. HTTPConnectionPool(host='127.0.0.1', port=6333): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x105873910>: Failed to establish a new connection: [Errno 61] Connection refused'))
+Try again...
+Enter your Qdrant Server URL [http://127.0.0.1:6333]:
+```
+
+If you don't have a running QdrantDB instance, the CLI will attempt to spin up one using Docker. During this process, the CLI validates 
+the host computer has the Docker daemon is installed and running, otherwise it will prompt you the error:
+
+```bash [Terminal]
+(Step 3/3) Setting Vector DB settings...
+Do you have a running QdrantDB instance? [y/N]: 
+Checking Docker settings...
+ERROR: Docker daemon is not running. Please start Docker before proceeding
+Do you want to try again? [Y/n]:
+```
+
+If docker is available, it will deploy and start a QdrantDB container using `docker-compose` (or will omit this step is the container is already running).
+
+
+```bash [Terminal]
+Do you have a running QdrantDB instance? [y/N]: 
+Checking Docker settings...
+Docker requirements OK!
+Starting a QdrantDB instance using Docker....
+
+ Network gaia-rag-api_rag_api_pipeline_network  Creating
+ Network gaia-rag-api_rag_api_pipeline_network  Created
+ Container gaia-rag-api-qdrant-1  Creating
+ Container gaia-rag-api-qdrant-1  Created
+ Container gaia-rag-api-qdrant-1  Starting
+ Container gaia-rag-api-qdrant-1  Started
+```
+
+At the end, you'll see a `Pipeline Setup completed!` message, confirming that all selected settings will be stored in the `config/.env` file. 
+
+
+Now, you're ready to start using the RAG API pipeline by running either `rag-api-pipeline run` or` docker compose run pipeline` command. 
+In the next section, you can find the complete CLI reference for each subcommand or task available in the pipeline.

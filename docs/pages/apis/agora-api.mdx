@@ -1,17 +1,65 @@
 # Optimism Agora API
 
-This repository contains the [OpenAPI specification](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/agora_openapi.yaml) and [API pipeline manifest](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/agora_api_pipeline.yaml) needed to create a RAG pipeline. This pipeline generates a knowledge base from RetroPGF projects and proposals within the OP collective. These files are typically located in the `config` folder.
+This repository contains the [OpenAPI specification](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/agora_openapi.yaml) and [API pipeline manifest](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/agora_api_pipeline.yaml) needed to create a RAG pipeline. 
+This pipeline generates a knowledge base from RetroPGF projects and proposals within the OP collective.
 
-To access this API, you'll need an API key. You can request one through [Agora's Discord server](https://www.agora.xyz/#Product). Once obtained, store the key in `config/secrets/api-key` or provide it directly using the `--api-key` CLI argument.
+## Pre-requisites
 
-## API Pipeline Manifest - Overview
+To access this API, you'll need an API key. You can request one through the [Agora's Discord server](https://www.agora.xyz/#Product). You can run the `rag-api-pipeline setup` command to set the REST API Key, 
+or your can directly store the key in the `config/secrets/api-key` file. A less secure option is to provide it using the `--api-key` CLI argument.
 
-The API pipeline extracts data from the `/proposals` and `/projects` [endpoints](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/agora_api_pipeline.yaml#L79). Since no `api_parameters` are required, this section remains [empty](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/agora_api_pipeline.yaml#L5).
+## Getting the Agora API OpenAPI Spec
 
-Below is the requester definition. The API implements a BearerAuthenticator schema and retrieves the `api_token` from the `config` object:
+TODO:
 
-```yaml
-# agora_api_pipeline.yaml
+## Defining the RAG API Pipeline Manifest
+
+This pipeline will extract data related to DAO proposals (`/proposals`) and RetroPGF projects (`/projects`). 
+Next, you can find an overview of the main sections in the API pipeline manifest.
+
+### Basic Configuration
+
+Since no `api_parameters` are required, this section remains empty.
+
+```yaml [agora_api_pipeline.yaml]
+api_name: "optimism_agora_api"
+
+api_parameters:
+
+api_config:
+  request_method: "get"
+  content_type: "application/json"
+  response_entrypoint_field: "data"
+```
+
+### Connector Specification
+
+The manifest then defines some metadata and the request parameters needed for making calls to the API. In this case, it only needs an `api_key` 
+parameter for authentication:
+
+```yaml [agora_api_pipeline.yaml]
+spec:
+  connection_specification:
+    $schema: http://json-schema.org/draft-07/schema#
+    additionalProperties: true
+    properties:
+      api_key:
+        airbyte-secret: true
+        description: Agora API Key.
+        type: string
+    required:
+    - api_key
+    title: Agora API Spec
+    type: object
+  documentation_url: https://docs.airbyte.com/integrations/sources/agora
+  type: Spec
+```
+
+### API Request Configuration
+
+Below is the `requester_base` definition. The API implements a BearerAuthenticator schema and retrieves the `api_token` from the `config` object:
+
+```yaml [agora_api_pipeline.yaml]
 definition:
   requester_base:
     type: HttpRequester
@@ -22,10 +70,11 @@ definition:
       api_token: "{{ config['api_key'] }}"
 ```
 
+### Record Selection and Pagination
+
 The API uses an Offset-based pagination strategy. The `page_size` is set to 50, while `offset` and `limit` parameters are dynamically inserted into the URL as request parameters:
 
-```yaml
-# agora_api_pipeline.yaml
+```yaml [agora_api_pipeline.yaml]
 definition:
   paginator: # Details at https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/pagination
     type: DefaultPaginator
@@ -42,12 +91,41 @@ definition:
       field_name: "limit"
 ```
 
-## Generating a Knowledge Base Using the `rag-api-pipeline` CLI
+### Endpoint Configuration
 
-Before running the `run-all` command, ensure that `Ollama` is running locally with your preferred LLM embeddings model:
+Below are the target endpoints with their respective schemas:
 
-```bash
-poetry run rag-api-pipeline run-all config/agora_api_pipeline.yaml --openapi-spec-file config/agora_openapi.yaml --llm-provider ollama
+```yaml [agora_api_pipeline.yaml]
+endpoints:
+  /proposals:
+    id: "proposals"
+    primary_key: "id"
+    responseSchema: "#/schemas/Proposal"
+    textSchema:
+      $ref: "#/textSchemas/Proposal"
+  /projects:
+    id: "projects"
+    primary_key: "id"
+    responseSchema: "#/schemas/Project"
+    textSchema:
+      $ref: "#/textSchemas/Project"
 ```
 
-After execution, you'll find a compressed knowledge base snapshot in `{OUTPUT_FOLDER}/optimism_agora_api/` named `optimism_agora_api_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`. For instructions on importing this into your Gaianet node, refer to the documentation on [selecting a knowledge base](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base). Find recommended prompts and node configuration settings [here](/cli/node-deployment#recommended-gaianet-node-configuration).
+## Using the RAG Pipeline to generate a Knowledge Base for the OP Collective
+
+### RAG Pipeline CLI
+
+1. Make sure to setup the pipeline initial settings by running the `rag-api-pipeline setup` command.
+2. Execute the following command:
+
+```bash
+rag-api-pipeline run all config/agora_api_pipeline.yaml config/agora_openapi.yaml
+```
+
+After execution, you'll find the processed data and compressed knowledge base snapshot in the `output/optimism_agora_api` folder.
+
+### Import the KB Snapshot into a Gaianet Node
+
+1. Locate the generated snapshot in `output/optimism_agora_api/` (named `optimism_agora_api_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`) or download it from the HuggingFace link above.
+2. Follow the official [knowledge base selection guide](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base)
+3. Configure your node using the recommended settings from the [node deployment guide](/cli/node-deployment#recommended-gaianet-node-configuration)

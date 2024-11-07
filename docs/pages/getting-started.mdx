@@ -48,6 +48,8 @@ rag-api-pipeline setup
 ```
 ::::
 
+Visit the [Setup Wizard](/cli/setup) page for more information.
+
 ## Run a demo RAG API pipeline
 
 A quick demo that extracts data from the Boardroom API can be executed by running the following command:
@@ -73,7 +75,7 @@ or take a look at the in-depth review of the sample manifests available in the [
 
 ## Using the Pipeline CLI
 
-Once you defined your API pipeline manifest file, you're ready to start using the `rag-api-pipeline run` command to execute different tasks of the RAG pipeline, 
+Once you have both the API pipeline manifest and OpenAPI spec files, you're ready to start using the `rag-api-pipeline run` command to execute different tasks of the RAG pipeline, 
 from extracting data from an API source to generating vector embeddings and a database snapshot. If you need more details about the parameters available 
 on each task you can execute:
 
@@ -83,7 +85,7 @@ rag-api-pipeline run <command> --help
 
 ### Available sub-commands
 
-Below you can find the default instructions available and an in-depth review of both the functionality and available arguments that each command offers:
+Below is the list of available commands. Check the [CLI Reference](/cli/reference#run) documentation for more details:
 
 ```bash [Terminal]
 # run the entire pipeline

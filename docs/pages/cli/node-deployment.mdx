@@ -1,42 +1,18 @@
 # RAG API Pipeline x GaiaNet node
 
-This page contains some quick notes and instructions for efficient methods for generating vector embeddings, as well as quick instructions on how to import a knowledge base snapshot and deploy a GaiaNet node.
-
-## Generating Vector embeddings
-
-If you're planning to use the pipeline on consumer hardware that cannot handle a GaiaNet node running in the background, you can opt-in to use Ollama 
-as LLM provider. Some of the advantages are that it is more lighweight, easier to install and ready to use with Mac GPU devices.
-
-### Setting up Ollama
-
-Download and install ollama from the official [website](https://ollama.com/download)
-
-### Setting up Embeddings Model with Ollama
-
-1. Download the embeddings model of your preference (e.g. from [HuggingFace](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf))
-2. Create `Modelfile` to use the embedding model with Ollama. Learn more about Ollama Modelfile [here](https://github.com/ollama/ollama/blob/main/docs/modelfile.md)
-
-```docker [Modelfile]
-FROM ./nomic-embed-text-v1.5.f16.gguf # this is the path to the embedding model
-```
-
-3. Import the model into Ollama
-
-```bash [Terminal]
-ollama create <model-name> -f <Modelfile>'
-```
+This page contains some quick notes and instructions quick instructions on how to setup/deploy a Gaianet node and import a knowledge base snapshot.
 
 ## Selecting a knowledge base and prompts for your GaiaNet node
 
 In order to supplement the LLM model hosted on your Gaia node with a custom knowledge base and prompts follow the instructions outlined in this [link](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base). 
-Remember to re-initialize and re-start the node after you make configuration changes.
+Remember to re-initialize and re-start the node after you make any configuration changes.
 
 ```bash [Terminal]
 gaianet init
 gaianet start
 ```
 
-### Recommended GaiaNet Node Configuration
+## Recommended GaiaNet Node Configuration
 
 - Tested on Mac Studio 32GB RAM
 - Custom prompts for the [Boardroom Aave example](/apis/boardroom-api)

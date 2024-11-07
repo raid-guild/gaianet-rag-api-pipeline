@@ -1,13 +1,16 @@
 # API Pipeline Manifest - Overview
 
-The `rag-api-pipeline` utilizes [Airbyte's CDK low-code framework](https://docs.airbyte.com/connector-development/config-based/low-code-cdk-overview) to build source connectors for REST APIs. It generates a [declarative stream](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/yaml-overview) manifest in YAML format using two required specification files:
+The `rag-api-pipeline` utilizes [Airbyte's CDK low-code framework](https://docs.airbyte.com/connector-development/config-based/low-code-cdk-overview) to create source connectors for REST APIs.
+Under the hood, it generates a [declarative stream](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/yaml-overview) manifest in YAML format using 
+two specification files:
 
-1. A well-defined [OpenAPI specification](https://swagger.io/specification/) for the target REST API. Most API providers publish their OpenAPI-based schema definitions. If unavailable, various [tools](https://openapi.tools/) can generate or convert API spec schemas into the required format.
-2. A source RAG API pipeline manifest
+1. A well-defined [OpenAPI specification](https://swagger.io/specification/) for the target REST API: most API providers publish their OpenAPI-based schema definitions in their site. 
+In case it is unavailable, various [tools](https://openapi.tools/) are available online to help you generate or convert an API spec schemas into the required format.
+2. A source RAG API pipeline manifest: you'll learn how to define it in the next section.
 
 ## RAG API Pipeline Manifest - Schema Definition
 
-A manifest template is available in the [repository](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/api_pipeline_template.yaml). The API pipeline manifest MUST comply with the following schema:
+A base manifest template is available in the [repository](https://github.com/raid-guild/gaianet-rag-api-pipeline/blob/main/config/api_pipeline_template.yaml). The API pipeline manifest MUST comply with the following schema:
 
 ### api_name
 
@@ -15,7 +18,7 @@ An alphanumeric name for the API pipeline.
 
 ### api_parameters
 
-Contains parameters required for building API requests. These parameters MUST be included in the [spec](/manifest-definition/overview#spec) section, and their values are accessible through the `config` object throughout the manifest.
+Contains a list of parameters required for building API requests. These parameters with their values MUST be defined in the [spec](/manifest-definition/overview#spec) section. Parameter values are accessible throughout the manifest by using the `config` object .
 
 ### api_config
 
@@ -27,10 +30,10 @@ Defines the following API metadata for building requests:
 
 ### chunking_params
 
-Parameters used to adjust how the `unstructured` library applies chunking to normalized data. Detailed explanations are available in this [link](https://docs.unstructured.io/open-source/core-functionality/chunking). Default parameter values are:
+Parameters used to adjust how the pipeline applies chunking to the normalized data. A more detailed information about each parameter is available in the [unstructured library documentation](https://docs.unstructured.io/open-source/core-functionality/chunking). Default parameter values are:
 
-- `mode`: "elements"
-- `chunking_strategy`: "by_title"
+- `mode`: elements
+- `chunking_strategy`: by_title
 - `include_orig_elements`: true
 - `max_characters`: 1500
 - `new_after_n_chars`: 1024
@@ -45,11 +48,13 @@ An Airbyte declarative manifest requires the following schema definitions:
 
 #### spec
 
-A source specification comprising connector metadata and configuration options ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/reference#/definitions/Spec)). All parameters defined in the `api_parameters` section must be listed under `required` and `properties`.
+A source specification comprising connector metadata and configuration options ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/reference#/definitions/Spec)). 
+All parameters defined in the `api_parameters` section MUST also be listed under `required` and `properties`.
 
 #### selector
 
-The record selector translates an HTTP response into a list of Airbyte records by extracting records from the response ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/record-selector)). The API pipeline manifest includes two base selectors for single/multiple record responses:
+The record selector is in change of translating an HTTP response into a list of Airbyte records ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/record-selector)). 
+The API pipeline manifest template includes two base selectors for single/multiple record responses:
 
 ```yaml
 selector:
@@ -66,11 +71,19 @@ selector_single:
 
 #### requester_base
 
-The Requester defines how to prepare HTTP requests for the source API ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/requester)). It specifies the API `base_url` and `authenticator` schema. Airbyte supports common authentication methods: `ApiKeyAuthenticator`, `BearerAuthenticator`, `BasicHttpAuthenticator`, and `OAuth`. Detailed configuration instructions are available in this [link](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/authentication).
+The Requester defines how to prepare HTTP requests for the source API ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/requester)). 
+It specifies the API `base_url` and `authenticator` schema. Airbyte supports common authentication methods: `ApiKeyAuthenticator`, `BearerAuthenticator`, `BasicHttpAuthenticator`, and `OAuth`. 
+Detailed configuration instructions for each method are available in this [link](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/authentication)
+
+#### paginator
+
+Defines the pagination strategy for API endpoints returning multiple records ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/pagination)). 
+Airbyte supports `Page increment`, `Offset increment`, and `Cursor based` pagination strategies. The `"#/definitions/NoPagination"` is automatically set for endpoints returning a single record.
 
 #### retriever_base
 
-A SimpleRetriever object fetches records through synchronous API requests ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/reference#/definitions/SimpleRetriever)). It orchestrates the requester, record selector, and paginator. The API pipeline manifest includes a base retriever for each defined selector:
+The Retriever object defines how to fetch records through synchronous API requests ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/reference#/definitions/SimpleRetriever)). 
+It is in charge of orchestrating the requester, record selector, and paginator. The API pipeline manifest template includes a base retriever for each `selector`:
 
 ```yaml
 retriever_base:
@@ -83,19 +96,17 @@ retriever_single_base:
       $ref: "#/definitions/selector_single"
 ```
 
-#### paginator
+### API Endpoints Definitions
 
-Defines the pagination strategy for API endpoints returning multiple records ([Docs](https://docs.airbyte.com/connector-development/config-based/understanding-the-yaml-file/pagination)). Airbyte supports `Page increment`, `Offset increment`, and `Cursor based` pagination strategies. The `"#/definitions/NoPagination"` is automatically set for endpoints returning a single record.
+The `endpoints` section defines a whitelist of API endpoints from the all the paths defined in the OpenAPI spec. The pipeline will only extract data from endpoints defined here. 
+Each endpoint should follow the following schema:
 
-### Endpoints Definitions
-
-The `endpoints` section filters API endpoints from the paths defined in the OpenAPI spec file. Each endpoint should follow this schema:
-
-- Endpoint path: Used as key. Can be enclosed in double quotes to inject parameters defined in `api_parameters` (e.g., `"/example/{foo}"`)
-- id: String identifier for the endpoint
-- primary_key (Optional): Field usable as primary key for each record
-- responseSchema: Response schema returned by the API endpoint after applying the selector. Must match the OpenAPI schema definition
-- textSchema: Fields to be parsed as texts during data chunking. Fields must be defined in `responseSchema`
+- **Endpoint path**: can be enclosed in double quotes to inject parameters defined in `api_parameters` (e.g., `"/example/{foo}"`)
+- **id**: string identifier for the endpoint
+- **primary_key** (Optional): a field to be used as primary key on each record
+- **responseSchema**: the schema returned by the API endpoint after applying the `selector`. 
+It MUST an *unwrapped* schema when compared to the endpoint response schema defined in the OpenAPI spec file.
+- **textSchema**: set the list of fields that should be parsed as text inputs during the data chunking stage. Fields included here MUST be in the endpoint's `responseSchema`.
 
 Example:
 ```yaml
@@ -115,41 +126,49 @@ Example:
 
 ### schemas
 
-Endpoint response schemas should be listed here and referenced in the endpoint's `responseSchema`. Unwrapped schemas must match response schemas defined in the OpenAPI spec.
+Endpoint response schemas should be listed here and referenced in the endpoint's `responseSchema`. *Unwrapped* schemas must match response schemas defined in the OpenAPI spec.
 
 Example:
 
-Endpoint response: `{data: [{id: "0", name: "foo", value: 2}, {id: "1", nane: "bar", b: 4}]}`
+Endpoint response: 
+
+```json
+{
+    data: [
+        {id: "0", title: "foo", createdAt: "2024-11-01T21:08:05.231Z"}, 
+        {id: "0", title: "bar", createdAt: "2024-11-06T21:08:05.231Z"},
+    ]
+}
+```
 
 Endpoint schema:
 ```yaml
 schemas:
-    endpointSchema:
+    exampleSchema:
         type: object
-            $schema: http://json-schema.org/draft-07/schema#
-            properties:
-                id:
-                    type: string
-                name:
-                    type: string
-                b:
-                    type: integer
+        $schema: http://json-schema.org/draft-07/schema#
+        properties:
+        id:
+            type: string
+        title:
+            type: string
+        createdAt:
+            type: string
 ```
 
 ### textSchemas
 
-For each endpoint, specify fields to be parsed as texts during data chunking. Fields must be included in the endpoint's `responseSchema`.
+For each endpoint, you can specify the list of fields that should be be parsed as text inputs during data chunking stage. 
+These can be defined within this section and referenced in the endpoint's `textSchema`. Fields included here MUST be in the endpoint's `responseSchema`.
 
 Example:
-
-Endpoint response: `{data: [{id: "0", name: "foo", value: 2}, {id: "1", nane: "bar", b: 4}]}`
 
 Endpoint textSchema:
 ```yaml
 textSchemas:
-    endpointTextSchema:
+    Example:
         type: object
         properties:
-        name:
+        title:
             type: string
 ```

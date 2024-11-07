@@ -1,35 +1,36 @@
-# Pipeline Config Settings
+# Customizing the Pipeline Config Settings
 
-TODO
+Most of the pipeline configuration settings are set by running the setup wizard via `rag-api-pipeline setup` command. However, there are 
+more advanced features that can be also set via environment variables in `config/.env`.
 
 ## Environment variables
 
-The following environment variables can be adjusted in `config/.env` based on user needs:
+The following environment variables can be adjusted in `config/.env` based on the use case requirements:
 
-- Pipeline config parameters:
+- **Pipeline config parameters**:
   - `API_DATA_ENCODING`: data encoding used by the REST API
     - Default value:  `utf-8`
   - `OUTPUT_FOLDER`: output folder where cached data streams, intermediary stage results and generated knowledge base snapshot are stored
     - Default value:  `./output`
-- LLM provider settings:
+- **LLM provider settings**:
   - `LLM_API_BASE_URL`: LLM provider base URL (defaults to a local openai-based provider such as gaia node)
     - Default value:  `http://localhost:8080/v1`
-  - `LLM_API_KEY`: API key to authenticate requests to the LLM provider
+  - `LLM_API_KEY`: API key for authenticated requests to the LLM provider
     - Default value:  `empty-api-key`
   - `LLM_EMBEDDINGS_MODEL`: name of the embeddings model to be consumed through the LLM provider
     - Default value:  `Nomic-embed-text-v1.5`
   - `LLM_EMBEDDINGS_VECTOR_SIZE`: embeddings vector size
     - Default value:  `768`
-  - `LLM_PROVIDER`: LLM provider backend to use. It can be either `openai` or `ollama` (gaianet offers an openai compatible API)
+  - `LLM_PROVIDER`: LLM provider backend to use. It can be either `openai` or `ollama` (Gaianet offers an OpenAI-compatible API)
     - Default value:  `openai`
-- Qdrant DB settings:
+- **Qdrant DB settings**:
   - `QDRANTDB_URL`: Qdrant DB base URL
     - Default value:  `http://localhost:6333`
   - `QDRANTDB_TIMEOUT`: timeout for requests made to the Qdrant DB
     - Default value:  `60`
   - `QDRANTDB_DISTANCE_FN`: score function to use during vector similarity search. Available functions: ['COSINE', 'EUCLID', 'DOT', 'MANHATTAN']
     - Default value:  `COSINE`
-- Pathway-related variables:
+- **Pathway-related variables**:
   - `AUTOCOMMIT_DURATION_MS`: the maximum time between two commits. Every autocommit_duration_ms milliseconds, the updates received by the connector are 
   committed automatically and pushed into Pathway's dataflow. More information can be found [here](https://pathway.com/developers/user-guide/connect/connectors/custom-python-connectors#connector-method-reference)
     - Default value:  `1000`
@@ -38,15 +39,9 @@ The following environment variables can be adjusted in `config/.env` based on us
       - Default value:  `10`
     - `PATHWAY_RETRY_DELAY_MS`: delay in milliseconds to wait for the next execution attempt
       - Default value:  `1000`
-  - *UDF async execution*: set the maximum number of concurrent operations per batch during UDF async execution. Zero means no specific limits. Be careful when setting
+  - `UDF async execution`: set the maximum number of concurrent operations per batch during UDF async execution. Zero means no specific limits. Be careful when setting
   these parameters for the embeddings stage as it could break the LLM provider with too many concurrent requests
     - `CHUNKING_BATCH_CAPACITY`: max number of concurrent operations during data chunking operations
       - Default value:  `0`
     - `EMBEDDINGS_BATCH_CAPACITY`: max number of concurrent operations during vector embeddings operations
       - Default value:  `15`
-
-# Pipeline Advanced Settings
-
-## Using another LLM provider
-
-TODO: ollama

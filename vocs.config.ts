@@ -58,6 +58,10 @@ export default defineConfig({
       link: "/cli",
       items: [
         {
+          text: "Setup",
+          link: "/cli/setup",
+        },
+        {
           text: "CLI Reference",
           link: "/cli/reference",
         },
@@ -68,6 +72,10 @@ export default defineConfig({
         {
           text: "Gaianet Node Deployment",
           link: "/cli/node-deployment",
+        },
+        {
+          text: "Other LLM Providers",
+          link: "/cli/other-llm-providers",
         },
       ]
     },

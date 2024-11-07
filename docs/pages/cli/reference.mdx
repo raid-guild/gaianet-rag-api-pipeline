@@ -1,131 +1,226 @@
 # RAG API Pipeline CLI Reference Documentation
+
 ## Overview
+
 The CLI tool provides functionality for running a RAG (Retrieval-Augmented Generation) API pipeline. It offers various commands to execute different stages of the pipeline, from data extraction to embedding generation.
 
 ## Installation
+
 This project uses Poetry for dependency management. To install the project and all its dependencies:
+
 1. Ensure you have Poetry installed. If not, install it by following the instructions [here](https://python-poetry.org/docs/#installation)
 2. Clone the repository:
-```bash [Terminal]
-git clone https://github.com/raid-guild/gaianet-rag-api-pipeline
-cd gaianet-rag-api-pipeline
-```
-3. Install dependencies using Poetry:
-```bash [Terminal]
-poetry install
-```
-This will create a virtual environment and install all necessary dependencies specified in the `pyproject.toml` file.
+    ```bash [Terminal]
+    git clone https://github.com/raid-guild/gaianet-rag-api-pipeline
+    cd gaianet-rag-api-pipeline
+    ```
+3. Install dependencies:
+    * Using `pip` (production-mode):
+        ```bash [Terminal]
+            pip install -e .
+        ```
+    * Using `Poetry` (development-mode):
+        ```bash [Terminal]
+        poetry install
+        ```
+4. Check the `rag-api-pipeline` CLI is available:
+    * Production mode:
+        ```bash [Terminal]
+            rag-api-pipeline --help
+        ```
+    * Development mode:
+        ```bash [Terminal]
+            poetry run rag-api-pipeline --help
+        ```
 
 ## Usage
-To run any command, use the `poetry run` prefix:
+
 ```bash [Terminal]
-poetry run rag-api-pipeline [OPTIONS] COMMAND [ARGS]...
+(venv) user$ rag-api-pipeline --help
+Usage: rag-api-pipeline [OPTIONS] COMMAND [ARGS]...
+
+  Command-line interface (CLI) for the RAG API pipeline.
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  setup  Setup wizard to config the pipeline settings prior execution
+  run    Execute RAG API pipeline tasks.
 ```
 
-## Global Options
+### setup
+
+```bash [Terminal]
+(venv) user$ rag-api-pipeline setup --help
+Usage: rag-api-pipeline setup [OPTIONS]
+
+  Setup wizard to config the pipeline settings prior execution
+
+Options:
+  --debug                      enable logging debug level
+  --llm-provider [gaia|other]  LLM provider  [default: gaia]
+  --help                       Show this message and exit.
+```
+
+### Options
+
+- `--debug`: Enable logging at debug level. Useful for development purposes
+- `--llm-provider [gaia|other]`: Embedding model provider (default: gaia). Check the [Other LLM Providers](/cli/other-llm-providers) section 
+for details on supported LLM engines.
+
+### run
+
+```bash [Terminal]
+(venv) user$ rag-api-pipeline run --help
+Usage: rag-api-pipeline run [OPTIONS] COMMAND [ARGS]...
+
+  Execute RAG API pipeline tasks.
+
+Options:
+  --debug  enable logging debug level
+  --help   Show this message and exit.
+
+Commands:
+  all              Run the complete RAG API Pipeline.
+  from-chunked     Execute the RAG API pipeline from chunked data.
+  from-normalized  Execute the RAG API pipeline from normalized data.
+```
+
+### Global Options
+
 - `--debug`: Enable logging at debug level. Useful for development purposes
 
-## Commands
-### run-all
-Run the complete RAG API pipeline.
+## Pipeline Commands
+
+Prior executing any of the commands listed below, it validates that the the pipeline is already setup (`config/.env` file exists) and 
+the required services (LLM Provider + QdrantDB) are up and running. Otherwise, you will receive one of the following error messages:
+
+- `ERROR: config/.env file not found. rag-api-pipeline setup should be run first.`
+- `ERROR: LLM Provider openai (http://localhost:8080/v1/models) is down.`
+- `ERROR: QdrantDB (http://localhost:6333) is down.`
+
+### run all
+
+Executes the entire RAG pipeline including API endpoint data streams, data normalization, data chunking, vector embeddings and 
+database snapshot generation.
+
 ```bash [Terminal]
-poetry run rag-api-pipeline run-all [OPTIONS] API_MANIFEST_FILE
+(venv) user$ rag-api-pipeline run all --help
+Usage: rag-api-pipeline run all [OPTIONS] API_MANIFEST_FILE OPENAPI_SPEC_FILE
+
+  Run the complete RAG API Pipeline.
+
+  API_MANIFEST_FILE Path to the API manifest YAML file that defines pipeline
+  config settings and API endpoints.
+
+  OPENAPI_SPEC_FILE Path to the OpenAPI YAML specification file.
+
+Options:
+  --api-key TEXT                  API Auth key
+  --source-manifest-file PATH     Source YAML manifest
+  --full-refresh                  Clean up cache and extract API data from
+                                  scratch
+  --normalized-only               Run pipeline until the normalized data stage
+  --chunked-only                  Run pipeline until the chunked data stage
+  --help                          Show this message and exit.
 ```
+
 #### Arguments
+
 - `API_MANIFEST_FILE`: Pipeline YAML manifest that defines the Pipeline config settings and API endpoints to extract.
+- `OPENAPI_SPEC_FILE`: OpenAPI YAML spec file.
+
 #### Options
-- `--llm-provider [ollama|openai]`: Embedding model provider (default: openai)
-- `--api-key TEXT`: API Auth key
-- `--openapi-spec-file FILE`: OpenAPI YAML spec file (default: config/openapi.yaml)
-- `--source-manifest-file FILE`: Source Connector YAML manifest
+
+- `--api-key TEXT`: API Auth key. If specified, it overrides the pipeline settings.
+- `--source-manifest-file FILE`: Airbyte's Source Connector YAML manifest. If specified, it skips the connector manifest generation stage
+and will use this file to start the API data extraction.
 - `--full-refresh`: Clean up cache and extract API data from scratch
-- `--normalized-only`: Run pipeline until the normalized data stage
-- `--chunked-only`: Run pipeline until the chunked data stage
+- `--normalized-only`: Run the pipeline process until the normalized data stage
+- `--chunked-only`: Run the pipeline process until the chunked data stage
 
-### from-normalized
+### run from-normalized
+
 Executes the RAG data pipeline using an already normalized JSONL dataset.
-```bash [Terminal]
-poetry run rag-api-pipeline from-normalized [OPTIONS] API_MANIFEST_FILE
-```
-#### Arguments
-- `API_MANIFEST_FILE`: Pipeline YAML manifest that defines the Pipeline config settings and API endpoints to extract.
-#### Options
-- `--llm-provider [ollama|openai]`: Embedding model provider (default: openai)
-- `--normalized-data-file FILE`: Normalized data in JSONL format (required)
 
-### from-chunked
-Executes the RAG data pipeline using an already chunked dataset in JSONL format.
 ```bash [Terminal]
-poetry run rag-api-pipeline from-chunked [OPTIONS] API_MANIFEST_FILE
+(venv) user$ rag-api-pipeline run from-normalized --help
+Usage: rag-api-pipeline run from-normalized [OPTIONS] API_MANIFEST_FILE
+
+  Execute the RAG API pipeline from normalized data.
+
+  API_MANIFEST_FILE Path to the API manifest YAML file that defines pipeline
+  config settings and API endpoints.
+
+Options:
+  --normalized-data-file PATH  Normalized data in JSONL format  [required]
+  --help                       Show this message and exit.
 ```
+
 #### Arguments
-- `API_MANIFEST_FILE`: Pipeline YAML manifest that defines the Pipeline config settings and API endpoints to extract.
+
+- `API_MANIFEST_FILE`: Pipeline YAML manifest that defines the Pipeline config settings.
+
 #### Options
-- `--llm-provider [ollama|openai]`: Embedding model provider (default: openai)
-- `--chunked-data-file FILE`: Chunked data in JSONL format (required)
+
+- `--normalized-data-file FILE` (required): Normalized data in JSONL format.
+
+### run from-chunked
+
+Executes the RAG data pipeline using an already chunked dataset in JSONL format.
+
+```bash [Terminal]
+(venv) user$ rag-api-pipeline run from-chunked --help
+Usage: rag-api-pipeline run from-chunked [OPTIONS] API_MANIFEST_FILE
+
+  Execute the RAG API pipeline from chunked data.
+
+  API_MANIFEST_FILE Path to the API manifest YAML file that defines pipeline
+  config settings and API endpoints.
+
+Options:
+  --chunked-data-file PATH  Chunked data in JSONL format  [required]
+  --help                    Show this message and exit.
+```
+
+#### Arguments
+
+- `API_MANIFEST_FILE`: Pipeline YAML manifest that defines the Pipeline config settings and API endpoints to extract.
+
+#### Options
+
+- `--chunked-data-file FILE` (required): Chunked data in JSONL format.
 
 ## Examples
-1. Run the complete pipeline using Ollama as LLM provider:
+
+1. Clean up cachen and run the complete pipeline:
 ```bash [Terminal]
-poetry run rag-api-pipeline run-all config/api_pipeline.yaml --openapi-spec-file config/openapi.yaml --llm-provider ollama
+rag-api-pipeline run all config/boardroom_api_pipeline.yaml config/boardroom_openapi.yaml --full-refresh
 ```
 2. Run the pipeline and stop executing after data normalization:
 ```bash [Terminal]
-poetry run rag-api-pipeline run-all config/api_pipeline.yaml --openapi-spec-file config/openapi.yaml --llm-provider ollama --normalized-only
+rag-api-pipeline run all config/boardroom_api_pipeline.yaml config/boardroom_openapi.yaml --normalized-only
 ```
 3. Run the pipeline from normalized data:
 ```bash [Terminal]
-poetry run rag-api-pipeline from-normalized config/api_pipeline.yaml --normalized-data-file path/to/normalized_data.jsonl --llm-provider ollama
+rag-api-pipeline run from-normalized config/boardroom_api_pipeline.yaml --normalized-data-file path/to/normalized_data.jsonl
 ```
 4. Run the pipeline from chunked data:
 ```bash [Terminal]
-poetry run rag-api-pipeline from-chunked config/api_pipeline.yaml --chunked-data-file path/to/chunked_data.jsonl --llm-provider ollama
+rag-api-pipeline run from-chunked config/boardroom_api_pipeline.yaml --chunked-data-file path/to/chunked_data.jsonl
 ```
 
-## Notes
-- Always use `poetry run` to execute the CLI commands within the Poetry environment.
-- The CLI uses the `click` library for command-line interface creation.
-- Make sure to properly configure your API manifest file and OpenAPI spec file before running the pipeline.
-- Double-check the CLI environment variables in the `config/.env` file. Check the [Environment Variables](/getting-started#environment-variables) section for details.
+## CLI Outputs
 
-
-## Moved from getting started
-
-TODO: 
-
-- **run-all**: executes the entire RAG data pipeline including API endpoint data streams, data normalization, data chunking, vector embeddings and 
-database snapshot generation. You can specify the following arguments to the command:
-  * `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
-  * `OPENAPI_SPEC_FILE`: API OpenAPI YAML spec file (mandatory)
-  * `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
-  * `--api-key`: API Auth key. If not specified, it will try to get it from `config/secrets/api_key`
-  * `--source-manifest-file`: Airbyte API Connector YAML manifest. If specified, it will omit the API Connector manifest generation step.
-  * `--full-refresh`: clean up cache and extract API data from scratch.
-  * `--normalized-only`: run pipeline until the data normalization stage.
-  * `--chunked-only`: run pipeline until the data chunking stage.
-
-- **from-normalized**: executes the RAG data pipeline using an already normalized JSONL dataset. You can specify the following arguments to the command:
-  * `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
-  * `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
-  * `--normalized-data-file`: path to the normalized dataset in JSONL format (mandatory). Check the [Architecture](/architecture) section for details on the 
-  required data schema.
-
-- **from_chunked**: executes the RAG data pipeline using an already chunked dataset in JSONL format. You can specify the following arguments to the command:
-  * `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
-  * `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
-  * `--chunked-data-file`: path to the chunked dataset in JSONL format (mandatory). Check the [Architecture](/architecture) section for details on the 
-  required data schema.
-
-## CLI Output
-
-Cached API stream data and results produced from running any of the CLI commands are stored in `<OUTPUT_FOLDER>/<api_name>`. The following files and folders 
-are created by the tool within this `baseDir` folder:
+Cached API stream data and results produced from running any of the `rag-api-pipeline run` commands are stored in the `output/<api_name>` folder. 
+The following files and folders are created by the tool within this `baseDir` folder:
 
 - `{baseDir}/{api_name}_source_generated.yaml`: generated Airbyte Stream connector manifest.
 - `{baseDir}/cache/{api_name}/*`: extracted API data is cached into a local DuckDB. Database files are stored in this directory. If the `--full-refresh` argument
-is specified for the `run-all` command, the cache will be cleared and API data will be extracted from scratch.
-- `{baseDir}/{api_name}_stream_{x}_preprocessed.jsonl`: data streams from each API endpoint are preprocessed and stored in JSONL format
-- `{baseDir}/{api_name}_normalized.jsonl`: preprocessed data streams from each API endpoint are joined together and stored in JSONL format
-- `{baseDir}/{api_name}_chunked.jsonl`: normalized data that goes through the data chunking stage is then stored in JSONL format
-- `{baseDir}/{api_name}_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot`: vector embeddings snapshot file that was exported from Qdrant DB
-- `{baseDir}/{api_name}_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`: compressed knowledge base that contains the vector embeddings snapshot
+is specified on the `run all` command, the cache will be cleared and API data will be extracted from scratch.
+- `{baseDir}/{api_name}_stream_{x}_preprocessed.jsonl`: data streams from each API endpoint are preprocessed and stored in JSONL format.
+- `{baseDir}/{api_name}_normalized.jsonl`: preprocessed data streams from each API endpoint are joined together and stored in JSONL format.
+- `{baseDir}/{api_name}_chunked.jsonl`: normalized data that goes through the data chunking stage is then stored in JSONL format.
+- `{baseDir}/{api_name}_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot`: vector embeddings snapshot file that was exported from Qdrant DB.
+- `{baseDir}/{api_name}_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`: compressed knowledge base that contains the vector embeddings snapshot.

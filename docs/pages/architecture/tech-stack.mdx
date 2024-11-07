@@ -28,11 +28,11 @@ This page outlines the technologies and tools integrated into the `rag-api-pipel
   - Functions to **partition**, **chunk**, **clean**, and **stage** raw source documents for further analysis
   - Optimized for unstructured data handling, making it easier to prepare data for machine learning tasks
 
-### 5. Feature Embedding Generation: Gaianet Node ([Docs](https://docs.gaianet.ai/category/node-operator-guide)) or Ollama ([Docs](https://ollama.com/))
-- **Description**: An LLM provider responsible for generating feature embeddings, which create dense vector representations of the data. These embeddings are used downstream in vector search and other AI models
+### 5. Feature Embedding Generation:
+- **Description**: connects to a LLM provider and is responsible for generating feature embeddings, which create dense vector representations of the extracted data.
 - **Technologies Used**:
-  - **Gaianet Node**: Offers a *RAG API Server* that provides an *OpenAI-like API* to interact with hosted LLM models
-  - **Ollama**: Easy-to-install LLM engine for running large language models on a local machine
+  - **Gaianet Node** ([Docs](https://docs.gaianet.ai/category/node-operator-guide)): Offers a *RAG API Server* that provides an *OpenAI-like API* to interact with hosted LLM models
+  - **Ollama** ([Docs](https://ollama.com/)): Easy-to-install LLM engine for running large language models on a local machine
 - **Python Libraries**:
   - [litellm](https://docs.litellm.ai/docs/providers/openai_compatible) Python library for connecting with OpenAI-compatible LLM providers
   - [ollama](https://github.com/ollama/ollama-python) Python library for interacting with a local Ollama instance

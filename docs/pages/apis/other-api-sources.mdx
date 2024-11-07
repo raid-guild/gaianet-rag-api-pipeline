@@ -16,16 +16,28 @@ Want to supercharge your RAG pipeline with different APIs? We've got you covered
 * Look for existing OpenAPI/Swagger specifications
 
 ### 2. Schema Setup
-* Use help from LLMs to create OpenAPI schemas
+* Do checkout this guide on [OpenAPI](https://docs.bump.sh/guides/openapi/specification/v3.1/introduction/what-is-openapi/)
+* Look for an official OpenAPI spec file from the API provider.
+* Use some help from LLMs to create OpenAPI schemas
 * Validate your schema:
   * New schemas: [Swagger Editor](https://editor.swagger.io/)
   * Existing specs: [Swagger Validator](https://validator.swagger.io/)
 
-### 3. Test and Deploy
-* Test each endpoint thoroughly
-* Use AI assistance to fix validation issues
-* Connect everything to your RAG pipeline
+### 3. Define the RAG API Pipeline manifest
+* Define the target endpoints and required request parameters
+* Get an API Key if needed.
+* Check out our [guide](/manifest-definition) or [API examples](/apis) for inspiration.
 
-Do checkout this guide on [OpenAPI](https://docs.bump.sh/guides/openapi/specification/v3.1/introduction/what-is-openapi/)
+### 4. Test and Deploy
+* Setup the pipeline initial configuration by running the `rag-api-pipeline setup` command.
+* Test each endpoint thoroughly:
+  * Run `rag-api-pipeline run all <API_MANIFEST_FILE> <OPENAPI_SPEC_FILE>` and check for any errors.
+  * Comment other endpoints in the API manifest.
+  * Use the `--normalized-only` CLI option and check results in the `output` folder.
+* Adjust data chunking parameter settings:
+  * Use the `--chunked-only` CLI option and analyze results (e.g. using a Jupyter notebook)
+* If you want to include recent endpoint data, use the `--full-refresh` CLI option to cleanup the cache.
+* Use AI assistance to fix validation issues.
+* Connect everything to your RAG pipeline.
 
 Still need help? Feel free reach out or open an issue on this repository!

@@ -9,7 +9,7 @@ The diagram above illustrates the system architecture. When executing the `rag-a
 3. The `Pipeline` module initiates the Pathway engine.
 4. The engine uses an `Airbyte UDF connector` module to extract data from each API endpoint as independent streams.
 5. Extracted data flows through the RAG pipeline stages: stream preprocessing, data normalization, data partitioning and chunking, and feature embeddings generation.
-    - (5.4) The `Feature Embeddings` generation module can be configured to use either Ollama or an OpenAI-compatible API provider, such as a Gaia node, to generate vector embeddings with your preferred LLM embeddings model.
+    - (5.4) The `Feature Embeddings` generation module can be configured to use an OpenAI-compatible API provider, such as a Gaia node, to generate vector embeddings with your preferred LLM embeddings model. Visit the [Other LLM Providers](/cli/other-llm-providers) page for details on other supported LLM providers.
     - (5.5) Generated vector embeddings are stored in a Qdrant DB instance using the `qdrant` output module.
 6. The `qdrant` module automatically generates and compresses a DB vector snapshot for the current vector embeddings collection.
 7. The resulting knowledge base snapshot can be imported into a Gaia node either through local upload or by uploading to an AI dataset/model provider such as HuggingFace.
