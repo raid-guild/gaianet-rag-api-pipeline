@@ -63,8 +63,8 @@ Once the pipeline execution is completed, you'll find the vector database snapsh
 
 Now it's time to define the pipeline manifest for the REST API you're looking to extract data from. Make sure you get the OpenAPI specification 
 for the API you're targeting. Check the 
-[Defining an API Pipeline Manifest](docs/pages/manifest-definition.mdx) page for details on how to get the OpenAPI spec and define an API pipeline manifest, 
-or take a look at the in-depth review of the sample manifests available in the [API Examples](docs/pages/apis.mdx) section.
+[Defining an API Pipeline Manifest](docs/pages/manifest-definition/overview.mdx) page for details on how to get the OpenAPI spec and define an API pipeline manifest, 
+or take a look at the in-depth review of the sample manifests available in the [API Examples](docs/pages/apis) folder.
 
 ## Using the Pipeline CLI
 
