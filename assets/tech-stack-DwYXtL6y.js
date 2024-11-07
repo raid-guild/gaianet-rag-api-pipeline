@@ -1,4 +1,4 @@
-import{u as i,j as e}from"./index-CA1ZDCS5.js";const a={title:"Tech Stack",description:"undefined"};function s(r){const n={a:"a",code:"code",div:"div",em:"em",h1:"h1",h2:"h2",h3:"h3",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...i(),...r.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"tech-stack",children:["Tech Stack",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#tech-stack",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
+import{u as s,j as e}from"./index-pWNGG9af.js";const a={title:"Tech Stack",description:"undefined"};function r(i){const n={a:"a",code:"code",div:"div",em:"em",h1:"h1",h2:"h2",h3:"h3",header:"header",li:"li",p:"p",strong:"strong",ul:"ul",...s(),...i.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"tech-stack",children:["Tech Stack",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#tech-stack",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsxs(n.p,{children:["This page outlines the technologies and tools integrated into the ",e.jsx(n.code,{children:"rag-api-pipeline"})," across different execution stages."]}),`
 `,e.jsxs(n.h2,{id:"tools--frameworks",children:["Tools & Frameworks",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#tools--frameworks",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
 `,e.jsxs(n.h3,{id:"1-rag-pipeline-over-data-stream-pathway-docs",children:["1. RAG Pipeline over Data Stream: Pathway (",e.jsx(n.a,{href:"https://pathway.com/developers/user-guide/introduction/welcome/",children:"Docs"}),")",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#1-rag-pipeline-over-data-stream-pathway-docs",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
@@ -41,13 +41,13 @@ import{u as i,j as e}from"./index-CA1ZDCS5.js";const a={title:"Tech Stack",descr
 `]}),`
 `]}),`
 `]}),`
-`,e.jsxs(n.h3,{id:"5-feature-embedding-generation-gaianet-node-docs-or-ollama-docs",children:["5. Feature Embedding Generation: Gaianet Node (",e.jsx(n.a,{href:"https://docs.gaianet.ai/category/node-operator-guide",children:"Docs"}),") or Ollama (",e.jsx(n.a,{href:"https://ollama.com/",children:"Docs"}),")",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#5-feature-embedding-generation-gaianet-node-docs-or-ollama-docs",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
+`,e.jsxs(n.h3,{id:"5-feature-embedding-generation",children:["5. Feature Embedding Generation:",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#5-feature-embedding-generation",children:e.jsx(n.div,{"data-autolink-icon":!0})})]}),`
 `,e.jsxs(n.ul,{children:[`
-`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Description"}),": An LLM provider responsible for generating feature embeddings, which create dense vector representations of the data. These embeddings are used downstream in vector search and other AI models"]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Description"}),": connects to a LLM provider and is responsible for generating feature embeddings, which create dense vector representations of the extracted data."]}),`
 `,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Technologies Used"}),":",`
 `,e.jsxs(n.ul,{children:[`
-`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Gaianet Node"}),": Offers a ",e.jsx(n.em,{children:"RAG API Server"})," that provides an ",e.jsx(n.em,{children:"OpenAI-like API"})," to interact with hosted LLM models"]}),`
-`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Ollama"}),": Easy-to-install LLM engine for running large language models on a local machine"]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Gaianet Node"})," (",e.jsx(n.a,{href:"https://docs.gaianet.ai/category/node-operator-guide",children:"Docs"}),"): Offers a ",e.jsx(n.em,{children:"RAG API Server"})," that provides an ",e.jsx(n.em,{children:"OpenAI-like API"})," to interact with hosted LLM models"]}),`
+`,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Ollama"})," (",e.jsx(n.a,{href:"https://ollama.com/",children:"Docs"}),"): Easy-to-install LLM engine for running large language models on a local machine"]}),`
 `]}),`
 `]}),`
 `,e.jsxs(n.li,{children:[e.jsx(n.strong,{children:"Python Libraries"}),":",`
@@ -66,4 +66,4 @@ import{u as i,j as e}from"./index-CA1ZDCS5.js";const a={title:"Tech Stack",descr
 `,e.jsxs(n.li,{children:["Acts as a ",e.jsx(n.strong,{children:"knowledge base snapshot"})," repository, storing vectors generated from processed data and feature embeddings"]}),`
 `]}),`
 `]}),`
-`]})]})}function o(r={}){const{wrapper:n}={...i(),...r.components};return n?e.jsx(n,{...r,children:e.jsx(s,{...r})}):s(r)}export{o as default,a as frontmatter};
+`]})]})}function d(i={}){const{wrapper:n}={...s(),...i.components};return n?e.jsx(n,{...i,children:e.jsx(r,{...i})}):r(i)}export{d as default,a as frontmatter};
