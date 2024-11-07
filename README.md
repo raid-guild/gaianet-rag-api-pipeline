@@ -2,177 +2,92 @@
 
 `rag-api-pipeline` is a Python-based data pipeline tool that allows you to easily generate a vector knowledge base from any REST API data source. The resulting database snapshot can be then plugged-in into a Gaia node's LLM model with a prompt and provide contextual responses to user queries using RAG (Retrieval Augmented Generation).
 
-The following sections help you to quickly setup and execute the pipeline on your REST API. If you're looking more in-depth information about how to use this tool, tech stack and/or how it works under the hood, check the content menu on the left.
+The following sections help you to quickly setup and execute the pipeline on your REST API. If you're looking more in-depth information about how to use this tool, tech stack and/or how it works under the hood, check the [official documentation](https://raid-guild.github.io/gaianet-rag-api-pipeline) site.
 
 ## System Requirements
 
-- Poetry ([Docs](https://python-poetry.org/docs/))
 - Python 3.11.x
-- (Optional): a Python virtual environment manager or your preference (e.g. conda, venv)
-- Docker and Docker compose
+- Poetry ([Docs](https://python-poetry.org/docs/))
+  - (Optional): a Python virtual environment manager of your preference (e.g. conda, venv)
 - Qdrant vector database ([Docs](https://qdrant.tech/documentation/))
-- LLM model provider (either a Gaianet node or Ollama)
+  - (Optional): Docker to spin up a local container
+- LLM model provider (e.g. a [Public GaiaNet node](https://www.gaianet.ai/chat) or [spin up your own](https://docs.gaianet.ai/node-guide/quick-start))
+  - An Embeddings model (e.g. [Nomic-embed-text-v1.5](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/tree/main?show_file_info=nomic-embed-text-v1.5.f16.gguf))
 
 ## Setup Instructions
 
 ### 1. Clone this repository
 
-Git clone or download this repository to your local.
-
-### 2. Activate your virtual environment
-
-If using a custom virtual environment, you should activate your virtual environment, otherwise poetry will handle the environment for you.
-
-### 3. Install project dependencies
-
-Navigate to the directory where this repository was cloned/download and execute the following on a terminal:
+Git clone or download this repository to your local machine.
 
 ```bash
-poetry install
+git clone https://github.com/raid-guild/gaianet-rag-api-pipeline.git
 ```
 
-### 4. Set environment variables
+### 2. Install the Pipeline CLI 
 
-Copy `config/.env/sample` into `config/.env` file and set environment variables accordingly. Check the [environment variables](#environment-variables) section for details.
-
-### 5. Define your API Pipeline manifest
-
-Define the pipeline manifest for your REST API you're looking to extract data from. Check how to define an API pipeline manifest in [Defining an API Pipeline Manifest](docs/pages/manifest-definition.mdx) for details, or take a look at the in-depth review of the sample manifests available in [API Examples](docs/pages/apis.mdx).
-
-### 6. Set the REST API Key
-
-Set the REST API key in a `config/secrets/api_key` file, or specify it using the `--api-key` as argument to the CLI.
-
-### 7. Setup a Qdrant DB instance
-
-Get the base URL of your Qdrant Vector DB or deploy a local `Qdrant` ([Docs](https://qdrant.tech/documentation/)) vector database instance using docker:
+It is recommended to activate your [own virtual environment](https://python-poetry.org/docs/basic-usage/#using-your-virtual-environment). 
+Then, navigate to the directory where this repository was cloned/download and execute the following command to install the `rag-api-pipeline` CLI:
 
 ```bash
-# IMPORTANT: make sure you use `qdrant:v1.10.1` for compatibility with Gaianet node
-docker run -p 6333:6333 -p 6334:6334 -v ./qdrant_dev:/qdrant/storage:z qdrant/qdrant:v1.10.1
+cd gaianet-rag-api-pipeline
+pip install -e .
 ```
 
-### 8. Select and Setup an LLM provider
+### 3. Setup the Pipeline Configuration
 
-Get your Gaianet node running ([Docs](https://docs.gaianet.ai/node-guide/quick-start)) or install Ollama ([Docs](https://ollama.com/)) provider locally. The latter is recommended if you're looking to run the pipeline on consumer hardware.
-
-### 9. Load an LLM embeddings model
-
-Load the LLM embeddings model of your preference into the LLM provider you chose in the previous step:
-
-- You can find info on how to customize a Gaianet node [here](https://docs.gaianet.ai/node-guide/customize)
-- If you chose Ollama, follow these instructions to import the LLM embeddings model:
-  - Make sure the Ollama service is up and running
-  - Go to the folder where the embeddings model is located. For this example, the llm model file is `nomic-embed-text-v1.5.f16.gguf` ([Source](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/tree/main?show_file_info=nomic-embed-text-v1.5.f16.gguf))
-  - Create a file with name `Modelfile` and paste the following (replace `<path/to/model>` with your local directory):
-
-```docker
-FROM <path/to/model>/nomic-embed-text-v1.5.f16.gguf
-```
-
-- Import the model by running the following command on a terminal:
+Run the following command to start the pipeline setup wizard. You can use the default configuration settings or customize it for your specific needs.
+Check the [CLI Reference](docs/pages/cli/reference.mdx) page for more details:
 
 ```bash
-ollama create Nomic-embed-text-v1.5
+rag-api-pipeline setup
 ```
 
-- Make sure the model setting by running the command:
+## RAG API pipeline Demo
 
-```bash
-ollama show Nomic-embed-text-v1.5
+A quick demo that extracts data from the Boardroom API can be executed by running the following command:
+
+```bash [Terminal]
+rag-api-pipeline run all config/boardroom_api_pipeline.yaml config/boardroom_openapi.yaml
 ```
 
-## Pipeline CLI
+You are required two specify two main arguments to the pipeline:
+- The path to the OpenAPI specification file (e.g. `config/boardroom_openapi.yaml`): the OpenAPI spec for the REST API data source 
+you're looking to extract data from.
+- The path to the API pipeline manifest file (e.g. `config/boardroom_api_pipeline.yaml`): a YAML file that defines API endpoints you're 
+looking to extract data from, among other parameters (more details in the next section).
 
-Now you're ready to use the `rag-api-pipeline` CLI commands to execute different tasks of the RAG pipeline, from extracting data from an API source to generating vector embeddings and a database snapshot. If you need more details about the parameters available on each command you can execute:
+Once the pipeline execution is completed, you'll find the vector database snapshot and extracted/processed datasets under the `output/molochdao_boardroom_api` folder.
 
-```bash
-poetry run rag-api-pipeline <command> --help
+## Define your own API Pipeline manifest
+
+Now it's time to define the pipeline manifest for the REST API you're looking to extract data from. Make sure you get the OpenAPI specification 
+for the API you're targeting. Check the 
+[Defining an API Pipeline Manifest](docs/pages/manifest-definition.mdx) page for details on how to get the OpenAPI spec and define an API pipeline manifest, 
+or take a look at the in-depth review of the sample manifests available in the [API Examples](docs/pages/apis.mdx) section.
+
+## Using the Pipeline CLI
+
+Once you have both the API pipeline manifest and OpenAPI spec files, you're ready to start using the `rag-api-pipeline run` command to execute different tasks of the RAG pipeline, 
+from extracting data from an API source to generating vector embeddings and a database snapshot. If you need more details about the parameters available 
+on each task you can execute:
+
+```bash [Terminal]
+rag-api-pipeline run <command> --help
 ```
 
-### CLI available commands
+### Available sub-commands
 
-Below you can find the default instructions available and an in-depth review of both the functionality and available arguments that each command offers:
+Below is the list of available commands. Check the [CLI Reference](docs/pages/cli/reference.mdx#run) documentation for more details:
 
-```bash
+```bash [Terminal]
 # run the entire pipeline
-poetry run rag-api-pipeline run-all API_MANIFEST_FILE ----openapi-spec-file <openapi-spec-yaml-file> [--full-refresh] [--llm-provider openapi|ollama]
+rag-api-pipeline run all <API_MANIFEST_FILE> <OPENAPI_SPEC_FILE> [--full-refresh]
 # or run using an already normalized dataset
-poetry run rag-api-pipeline from-normalized API_MANIFEST_FILE --normalized-data-file <jsonl-file> [--llm-provider openapi|ollama]
+rag-api-pipeline run from-normalized <API_MANIFEST_FILE> --normalized-data-file <jsonl-file>
 # or run using an already chunked dataset
-poetry run rag-api-pipeline from-chunked API_MANIFEST_FILE --chunked-data-file <jsonl-file> [--llm-provider openapi|ollama]
+rag-api-pipeline run from-chunked <API_MANIFEST_FILE> --chunked-data-file <jsonl-file>
 ```
-
-- **run-all**: executes the entire RAG data pipeline including API endpoint data streams, data normalization, data chunking, vector embeddings and database snapshot generation. You can specify the following arguments to the command:
-  - `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
-  - `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
-  - `--api-key`: API Auth key. If not specified, it will try to get it from `config/secrets/api_key`
-  - `--openapi-spec-file`: API OpenAPI YAML spec file. default to `config/openapi.yaml`
-  - `--source-manifest-file`: Airbyte API Connector YAML manifest. If specified, it will omit the API Connector manifest generation step.
-  - `--full-refresh`: clean up cache and extract API data from scratch.
-  - `--normalized-only`: run pipeline until the data normalization stage.
-  - `--chunked-only`: run pipeline until the data chunking stage.
-
-- **from-normalized**: executes the RAG data pipeline using an already normalized JSONL dataset. You can specify the following arguments to the command:
-  - `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
-  - `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
-  - `--normalized-data-file`: path to the normalized dataset in JSONL format (mandatory). Check the [Architecture](docs/pages/architecture.mdx) section for details on the required data schema.
-
-- **from chunked**: executes the RAG data pipeline using an already chunked dataset in JSONL format. You can specify the following arguments to the command:
-  - `API_MANIFEST_FILE`: API pipeline manifest file (mandatory)
-  - `--llm-provider [ollama|openai]`: backend embeddings model provider. default: openai-like backend (e.g. gaia rag-api-server)
-  - `--chunked-data-file`: path to the chunked dataset in JSONL format (mandatory). Check the [Architecture](docs/pages/architecture.mdx) section for details on the required data schema.
-
-## CLI Output
-
-Cached API stream data and results produced from running any of the CLI commands are stored in `<OUTPUT_FOLDER>/<api_name>`. The following files and folders are created by the tool within this `baseDir` folder:
-
-- `{baseDir}/{api_name}_source_generated.yaml`: generated Airbyte Stream connector manifest.
-- `{baseDir}/cache/{api_name}/*`: extracted API data is cached into a local DuckDB. Database files are stored in this directory. If the `--full-refresh` argument is specified to the `run-all` command, the cache will be cleared and API data will be extracted from scratch.
-- `{baseDir}/{api_name}_stream_{x}_preprocessed.jsonl`: data streams from each API endpoint is preprocessed and stored in JSONL format
-- `{baseDir}/{api_name}_normalized.jsonl`: preprocessed data streams from each API endpoint are joined together and stored in JSONL format
-- `{baseDir}/{api_name}_chunked.jsonl`: normalized data that goes through the data chunking stage is then stored in JSONL format
-- `{baseDir}/{api_name}_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot`: vector embeddings snapshot file that was exported from Qdrant DB
-- `{baseDir}/{api_name}_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`: compressed knowledge base that contains the vector embeddings snapshot
-
-## Environment variables
-
-The following environment variables can be adjusted in `config/.env` based on user needs:
-
-- Pipeline config parameters:
-  - `API_DATA_ENCODING` (="utf-8"): default data encoding used by the REST API
-  - `OUTPUT_FOLDER` (="./output"): output folder where cached data streams, intermediary stage results and generated knowledge base snapshot are stored
-
-- LLM provider settings:
-  - `LLM_API_BASE_URL` (="<http://localhost:8080/v1>"): LLM provider base URL (default to a local openai-based provider such as gaia node)
-  - `LLM_API_KEY` (="empty-api-key"): API key to authenticate requests to the LLM provider
-  - `LLM_EMBEDDINGS_MODEL` (="Nomic-embed-text-v1.5"): name of the embeddings model to be consumed through the LLM provider
-  - `LLM_EMBEDDINGS_VECTOR_SIZE` (=768): embeddings vector size
-  - `LLM_PROVIDER` (="openai"): LLM provider backend to use. It can be either `openai` or `ollama` (gaianet offers an openai compatible API)
-
-- Qdrant DB settings:
-  - `QDRANTDB_URL` (="<http://localhost:6333>"): Qdrant DB base URL
-  - `QDRANTDB_TIMEOUT` (=60): timeout for requests made to the Qdrant DB
-  - `QDRANTDB_DISTANCE_FN` (="COSINE"): score function to use during vector similarity search. Avaiable functions: ['COSINE', 'EUCLID', 'DOT', 'MANHATTAN']
-
-- Pathway-related variables:
-  - `AUTOCOMMIT_DURATION_MS` (=1000): the maximum time between two commits. Every autocommit_duration_ms milliseconds, the updates received by the connector are committed automatically and pushed into Pathway's dataflow. More info can be found [here](https://pathway.com/developers/user-guide/connect/connectors/custom-python-connectors#connector-method-reference)
-  - FixedDelayRetryStrategy ([docs](https://pathway.com/developers/api-docs/udfs#pathway.udfs.FixedDelayRetryStrategy)) config parameters:
-    - `PATHWAY_RETRY_MAX_ATTEMPTS` (=10): max retries to be performed if a UDF async execution fails
-    - `PATHWAY_RETRY_DELAY_MS` (=1000): delay in milliseconds to wait for the next execution attempt
-  - *UDF async execution*: set the maximum No of concurrent operations per batch during udf async execution. Zero means no specific limits. Be careful when settings this parameters for the embeddings stage as it could break the LLM provider with too many concurrent requests
-    - `CHUNKING_BATCH_CAPACITY` (=0): max No. of concurrent operation during data chunking operations
-    - `EMBEDDINGS_BATCH_CAPACITY` (=15): max No. of concurrent operation during vector embeddings operations
-
-## Using Docker compose for Local development or in Production
-
-TBD
-
-- Start with building your containers: `docker compose -f local.yml build`.
-- Build production containers with `docker compose -f prod.yml build`
-- To run your application invoke:
-  1. `docker compose -f prod.yml rm -svf`
-  2. `docker compose -f prod.yml up`
 
 ## Troubleshooting
 
@@ -194,16 +109,12 @@ pnpm install
 pnpm run dev
 ```
 
-To reflect any updates on <https://raid-guild.github.io/gaianet-rag-api-pipeline/>, you need to build and deploy the updated documentation on Github pages by executing the following commands:
+To reflect any updates to [Github pages](https://raid-guild.github.io/gaianet-rag-api-pipeline), you need to build and deploy the updated documentation by executing the following commands:
 
 ```bash
 pnpm run build
 pnpm run deploy
 ```
-
-## Demo
-
-Presentation slides can be found [here](https://hackmd.io/@santteegt/ByoykY4nC#/)
 
 ## License
 
