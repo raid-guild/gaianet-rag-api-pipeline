@@ -75,6 +75,7 @@ def ping_service(url: str, service_name: str, headers: typing.Dict[str, any] = d
     Args:
         url (str): The URL of the service to ping.
         service_name (str): The name of the service being checked.
+        headers: (dict, optional): dictionary of HTTP Headers.
         debug (bool, optional): If True, outputs the JSON response of the service. Defaults to False.
 
     Returns:
