@@ -47,10 +47,13 @@ class CustomParseUnstructured(UDF):
 
         # NOTICE: required when using text partition directly
         nltk_downloader = Downloader()
+        logger.info(f"NLTK data folder: {nltk_downloader.default_download_dir()}")
+        if not nltk_downloader.is_installed("punkt"):
+            logger.info(f"Downloading punkt NLTK model...")
+            nltk_downloader.download("punkt")
         if not nltk_downloader.is_installed("punkt_tab"):
             logger.info(f"Downloading punkt_tab NLTK model...")
             nltk_downloader.download("punkt_tab")
-
         if not nltk_downloader.is_installed("averaged_perceptron_tagger_eng"):
             logger.info(f"Downloading averaged_perceptron_tagger_eng NLTK model...")
             nltk_downloader.download("averaged_perceptron_tagger_eng")
