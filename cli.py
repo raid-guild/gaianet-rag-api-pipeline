@@ -2,11 +2,13 @@ from gaianet_rag_api_pipeline.config import ENV_FILE_PATH
 
 import click
 import dotenv
+import errno
 import importlib
 import pathlib
 import re
 import requests
 import shutil
+import socket
 import subprocess
 import typing
 
@@ -98,6 +100,36 @@ def ping_service(url: str, service_name: str, headers: typing.Dict[str, any] = d
         click.echo("Try again...")
         return False
     return True
+
+
+def check_port(port: int) -> bool:
+    """
+    Check if a given port on localhost is available for use.
+
+    This function attempts to bind to the specified port on the local machine to determine its availability.
+    If the port is already in use or an error occurs during the check, it logs an appropriate error message.
+
+    Args:
+        port (int): The port number to check.
+
+    Returns:
+        bool: `True` if the port is available, `False` otherwise.
+
+    Raises:
+        socket.error: Captures errors during socket binding.
+    """
+    is_available = True
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.bind(("127.0.0.1", port))
+    except socket.error as e:
+        if e.errno == errno.EADDRINUSE:
+            click.echo(click.style(f"ERROR: Port {port} is already in use", fg="red"), err=True)
+        else:
+            click.echo(click.style(f"ERROR: An error ocurred when checking port ({port}) availability: {e}", fg="red"), err=True)
+        is_available = False
+    s.close()
+    return is_available
 
 
 def check_docker(debug: bool = False) -> bool:
@@ -331,11 +363,20 @@ def setup(
 
         click.echo(click.style(f"(Step {step}/{total_steps}) Setting Vector DB settings...", fg="yellow"))
 
-        external_qdrant = click.confirm(
-            f"Do you have a running QdrantDB instance?",
-            default=False,
-            show_default=True
-        )
+        while True:
+            external_qdrant = click.confirm(
+                f"Do you have a running QdrantDB instance?",
+                default=False,
+                show_default=True
+            )
+            if not external_qdrant:
+                # TODO: check port is not in use
+                port_available = check_port(6333)
+                if not port_available:
+                    click.echo(click.style(f"Cannot deploy a QdrantDB instance", fg="red"), err=True)
+                    continue
+            break
+
         qdrantdb_url = "http://127.0.0.1:6333"
         if external_qdrant:
             while True:
