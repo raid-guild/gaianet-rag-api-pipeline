@@ -1,4 +1,4 @@
-import{u as a,j as e}from"./index-DQMxB80V.js";const l={title:"GaiaNet RAG API Pipeline",description:"undefined"};function s(n){const i={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",h3:"h3",header:"header",li:"li",p:"p",pre:"pre",span:"span",ul:"ul",...a(),...n.components};return e.jsxs(e.Fragment,{children:[e.jsx(i.header,{children:e.jsxs(i.h1,{id:"gaianet-rag-api-pipeline",children:["GaiaNet RAG API Pipeline",e.jsx(i.a,{"aria-hidden":"true",tabIndex:"-1",href:"#gaianet-rag-api-pipeline",children:e.jsx(i.div,{"data-autolink-icon":!0})})]})}),`
+import{u as a,j as e}from"./index-CnErcBSh.js";const l={title:"GaiaNet RAG API Pipeline",description:"undefined"};function s(n){const i={a:"a",code:"code",div:"div",h1:"h1",h2:"h2",h3:"h3",header:"header",li:"li",p:"p",pre:"pre",span:"span",ul:"ul",...a(),...n.components};return e.jsxs(e.Fragment,{children:[e.jsx(i.header,{children:e.jsxs(i.h1,{id:"gaianet-rag-api-pipeline",children:["GaiaNet RAG API Pipeline",e.jsx(i.a,{"aria-hidden":"true",tabIndex:"-1",href:"#gaianet-rag-api-pipeline",children:e.jsx(i.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsxs(i.p,{children:[e.jsx(i.code,{children:"rag-api-pipeline"}),` is a Python-based data pipeline tool that allows you to easily generate a vector knowledge base from any REST API data source. The
 resulting database snapshot can then be plugged into a Gaia node's LLM model with a prompt and provide contextual responses to user queries using RAG
 (Retrieval Augmented Generation).`]}),`
@@ -17,7 +17,7 @@ this tool, the tech stack and/or how it works under the hood, check the content 
 `,e.jsx(i.li,{children:"(Optional): Docker to spin up a local container"}),`
 `]}),`
 `]}),`
-`,e.jsxs(i.li,{children:["LLM model provider (e.g. a ",e.jsx(i.a,{href:"https://www.gaianet.ai/chat",children:"Public GaiaNet node"})," or ",e.jsx(i.a,{href:"https://docs.gaianet.ai/node-guide/quick-start",children:"spin up your own"}),")",`
+`,e.jsxs(i.li,{children:["LLM model provider (e.g. ",e.jsx(i.a,{href:"/cli/node-deployment",children:"spin up your own Gaia node"})," or pick one from the ",e.jsx(i.a,{href:"https://www.gaianet.ai/chat",children:"GaiaNet public network"}),")",`
 `,e.jsxs(i.ul,{children:[`
 `,e.jsxs(i.li,{children:["An Embeddings model (e.g. ",e.jsx(i.a,{href:"https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/tree/main?show_file_info=nomic-embed-text-v1.5.f16.gguf",children:"Nomic-embed-text-v1.5"}),")"]}),`
 `]}),`
