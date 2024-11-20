@@ -1,8 +1,28 @@
 # RAG API Pipeline x GaiaNet node
 
-This page contains some quick notes and instructions quick instructions on how to setup/deploy a Gaianet node and import a knowledge base snapshot.
+## Quick start guide
 
-## Selecting a knowledge base and prompts for your GaiaNet node
+We recommend to follow the GaiaNet Official [quick start guide](https://docs.gaianet.ai/node-guide/quick-start). Your GaiaNet node will 
+be setup in the `GAIANET_BASE_DIR` (default: `"$HOME/gaianet"`) directory.
+
+## Deploying your GaiaNet node in *embeddings* running mode (⚠️**Recommended**)
+
+The `rag-api-pipeline` requires an embeddings model to generate vector embeddings from the API data source. At this stage, we recommend to 
+start your GaiaNet node in *embeddings-only* mode (thus consuming less resources than starting the full node) by running the following command:
+
+```bash [Terminal]
+cd $GAIANET_BASE_DIR
+wasmedge --dir .:./dashboard --env NODE_VERSION=0.4.7 \
+  --nn-preload embedding:GGML:AUTO:nomic-embed-text-v1.5.f16.gguf llama-api-server.wasm \
+  --model-name Nomic-embed-text-v1.5 --model-alias embedding --prompt-template embedding \
+  --ctx-size 8192 --batch-size 768 --web-ui ./ --socket-addr 0.0.0.0:8080
+```
+
+- `--nn-preload embedding:GGML:AUTO:<embeddings_model_file.gguf>`: `<embeddings_model_file.gguf>` specifies the location of the embeddings model file
+- `--model-name <model_name>`: specifies the embeddings model name
+- `--ctx-size` and `--batch-size` should be set according to the selected embeddings model
+
+## Selecting a knowledge base and custom prompts for your GaiaNet node
 
 In order to supplement the LLM model hosted on your Gaia node with a custom knowledge base and prompts follow the instructions outlined in this [link](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base). 
 Remember to re-initialize and re-start the node after you make any configuration changes.
@@ -14,8 +34,11 @@ gaianet start
 
 ## Recommended GaiaNet Node Configuration
 
+The example JSON config file from below helps you to quickly setup/deploy a Gaianet node and import a knowledge base snapshot:
+
 - Tested on Mac Studio 32GB RAM
 - Custom prompts for the [Boardroom Aave example](/apis/boardroom-api)
+- `snapshot` should point to either a local tar file or to a HTTP server where the node can download a Qdrant snapshot
 
 ```json [config.json]
 {
@@ -28,7 +51,7 @@ gaianet start
   "domain": "us.gaianet.network",
   "embedding": "https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/resolve/main/nomic-embed-text-v1.5.f16.gguf",
   "embedding_batch_size": "2048",
-  "embedding_collection_name": "boardroom_api_collection", # this is the name of the collection in the snapshot
+  "embedding_collection_name": "boardroom_api_collection", # this is the name of the collection where the snapshot will be imported
   "embedding_ctx_size": "2048",
   "embedding_name": "Nomic-embed-text-v1.5",
   "llamaedge_port": "8080",
@@ -38,7 +61,7 @@ gaianet start
   "rag_policy": "system-message",
   "rag_prompt": "Use the following pieces of context to answer the user's question. Respond directly to the user with your answer, do not say 'this is the answer' or 'this is the answer' or similar language. Never mention your knowledge base or say 'according to the context' or 'hypothetical' or other similar language. Use json metadata included in knowledge base whenever possible enrich your answers. The term aave refers the DAO protocol where discussions and proposals are posted. If you don't know the answer, don't try to make up an answer. \n----------------\n",
   "reverse_prompt": "",
-  "snapshot": "/your-snapshot-path-or-url",
+  "snapshot": "/your-snapshot-path-or-url", # snapshot tar file
   "system_prompt": "You are an AI assistant designed to provide clear, concise, and accurate answers to user queries. Your primary functions include retrieving relevant information from the provided RAG (Retrieval-Augmented Generation) data and utilizing your pre-training data when necessary. Use json metadata included in RAG data whenever possible enrich your answers. The term aave refers the DAO protocol where discussions and proposals are posted. If no relevant information is found, you will inform the user that you are not familiar with the knowledge."
 }
 ```
