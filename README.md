@@ -11,7 +11,7 @@ The following sections help you to quickly setup and execute the pipeline on you
   - (Optional): a Python virtual environment manager of your preference (e.g. conda, venv)
 - Qdrant vector database ([Docs](https://qdrant.tech/documentation/))
   - (Optional): Docker to spin up a local container
-- LLM model provider (e.g. a [Public GaiaNet node](https://www.gaianet.ai/chat) or [spin up your own](https://docs.gaianet.ai/node-guide/quick-start))
+- LLM model provider ([spin up your own Gaia node](docs/pages/cli/node-deployment.mdx) or pick one from the [GaiaNet public network](https://www.gaianet.ai/chat))
   - An Embeddings model (e.g. [Nomic-embed-text-v1.5](https://huggingface.co/gaianet/Nomic-embed-text-v1.5-Embedding-GGUF/tree/main?show_file_info=nomic-embed-text-v1.5.f16.gguf))
 
 ## Setup Instructions
@@ -36,12 +36,13 @@ pip install -e .
 
 ### 3. Setup the Pipeline Configuration
 
-Run the following command to start the pipeline setup wizard. You can use the default configuration settings or customize it for your specific needs.
-Check the [CLI Reference](docs/pages/cli/reference.mdx) page for more details:
+Run the following command to start the pipeline setup wizard. You can use the default configuration settings or customize it for your specific needs:
 
 ```bash
 rag-api-pipeline setup
 ```
+
+Check the [Setup CLI Reference](docs/pages/cli/setup.mdx) page for more details.
 
 ## RAG API pipeline Demo
 
