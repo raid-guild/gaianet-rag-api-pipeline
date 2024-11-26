@@ -13,4 +13,4 @@ The diagram above illustrates the system architecture. When executing the `rag-a
     - (5.5) Generated vector embeddings are stored in a Qdrant DB instance using the `qdrant` output module.
 6. The `qdrant` module automatically generates and compresses a DB vector snapshot for the current vector embeddings collection.
 7. The resulting knowledge base snapshot can be imported into a Gaia node either through local upload or by uploading to an AI dataset/model provider such as HuggingFace.
-8. The node joins the GaiaNet network to provide an LLM model with custom domain knowledge that can be used to deliver various RAG applications to end users.
+8. The node joins the Gaia network to provide an LLM model with custom domain knowledge that can be used to deliver various RAG applications to end users.
