@@ -7,12 +7,14 @@ export default defineConfig({
   //   content: "This is still under development",
   // },
   title: "RAG API Pipeline",
-  description: "Supercharge your Gaianet node by generating a vector knowledge base from any API.",
+  description:
+    "Supercharge your Gaia node by generating a vector knowledge base from any API.",
   editLink: {
-    pattern: 'https://github.com/raid-guild/gaianet-rag-api-pipeline/edit/main/docs/pages/:path', 
-    text: 'Edit on GitHub'
+    pattern:
+      "https://github.com/raid-guild/gaianet-rag-api-pipeline/edit/main/docs/pages/:path",
+    text: "Edit on GitHub",
   },
-  iconUrl: '/icon.svg',
+  iconUrl: "/icon.svg",
   sidebar: [
     {
       text: "Getting Started",
@@ -30,8 +32,8 @@ export default defineConfig({
         {
           text: "Example Manifests",
           link: "/manifest-definition/sample-manifests",
-        }
-      ]
+        },
+      ],
     },
     {
       text: "API Examples",
@@ -48,9 +50,9 @@ export default defineConfig({
         },
         {
           text: "Other API Sources",
-          link: "/apis/other-api-sources"
-        }
-      ]
+          link: "/apis/other-api-sources",
+        },
+      ],
     },
     {
       text: "RAG API Pipeline",
@@ -70,14 +72,14 @@ export default defineConfig({
           link: "/cli/settings",
         },
         {
-          text: "Gaianet Node Deployment",
+          text: "Gaia Node Deployment",
           link: "/cli/node-deployment",
         },
         {
           text: "Other LLM Providers",
           link: "/cli/other-llm-providers",
         },
-      ]
+      ],
     },
     {
       text: "Architecture",
@@ -95,8 +97,8 @@ export default defineConfig({
         {
           text: "In-depth code review",
           link: "/architecture/code-review",
-        }
-      ]
+        },
+      ],
     },
   ],
   topNav: [
@@ -105,15 +107,15 @@ export default defineConfig({
       items: [
         {
           text: "Boardroom Governance API",
-          link: "/apis/boardroom-api"
-        }
-      ]
-    }
-  ],
-  socials: [ 
-    { 
-      icon: 'github', 
-      link: 'https://github.com/raid-guild/gaianet-rag-api-pipeline', 
+          link: "/apis/boardroom-api",
+        },
+      ],
     },
-  ]
+  ],
+  socials: [
+    {
+      icon: "github",
+      link: "https://github.com/raid-guild/gaianet-rag-api-pipeline",
+    },
+  ],
 });

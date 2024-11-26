@@ -1,13 +1,13 @@
 # Supported LLM providers
 
-The `rag-api-pipeline` currently supports two types of LLM providers: `openai` and `ollama`. A Gaianet node for example, uses a Rust-based [RAG API Server](https://github.com/LlamaEdge/rag-api-server) 
+The `rag-api-pipeline` currently supports two types of LLM providers: `openai` and `ollama`. A Gaia node for example, uses a Rust-based [RAG API Server](https://github.com/LlamaEdge/rag-api-server)
 to offer OpenAI-compatible web APIs for creating RAG applications.
 
 In the following sections, you'll find more details on the supported LLM providers that the pipeline currently supports and how to setup them
 
 ## OpenAI
 
-By default, the pipeline supports any LLM provider that offers OpenAI-compatible web APIs. If you wanna work with a provider other than Gaianet, 
+By default, the pipeline supports any LLM provider that offers OpenAI-compatible web APIs. If you wanna work with a provider other than Gaia,
 you can setup the connection using the setup wizard via the `rag-api-pipeline setup` command:
 
 ```bash [Terminal]
@@ -17,7 +17,7 @@ Init pipeline...
 (Step 1/3) Setting Pipeline LLM provider settings...
 Select a custom LLM provider (openai, ollama): openai
 LLM provider API URL [http://127.0.0.1:8080/v1]: https://api.openai.com/v1
-LLM provider API Key: 
+LLM provider API Key:
 LLM Provider API connection OK!
 Embeddings model Name [Nomic-embed-text-v1.5]: text-embedding-ada-002
 Embeddings Vector Size [768]: 2048
@@ -26,8 +26,8 @@ Pipeline LLM Provider settings OK!
 
 ## Ollama
 
-If you're planning to use the pipeline on consumer hardware that cannot handle a GaiaNet node running in the background, you can opt-in to use Ollama 
-as LLM provider. Depending on the use case and resources available, some of the advantages of using Ollama for example are that it is more lighweight, 
+If you're planning to use the pipeline on consumer hardware that cannot handle a Gaia node running in the background, you can opt-in to use Ollama
+as LLM provider. Depending on the use case and resources available, some of the advantages of using Ollama for example are that it is more lighweight,
 easier to install and ready to use with Mac GPU devices.
 
 ### Getting Ollama
@@ -46,13 +46,13 @@ Which LLM provider you want to use? (gaia, other) [gaia]: other
 Init pipeline...
 (Step 1/3) Setting Pipeline LLM provider settings...
 Select a custom LLM provider (openai, ollama): ollama
-LLM provider API URL [http://127.0.0.1:11434]: 
+LLM provider API URL [http://127.0.0.1:11434]:
 ERROR: LLM Provider API (@ http://127.0.0.1:11434/v1/models) is down. HTTPConnectionPool(host='127.0.0.1', port=11434): Max retries exceeded with url: /v1/models (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x1091c2490>: Failed to establish a new connection: [Errno 61] Connection refused'))
 Try again...
 LLM provider API URL [http://127.0.0.1:11434]:
 LLM Provider API connection OK!
-Embeddings model Name [Nomic-embed-text-v1.5]: 
-Embeddings Vector Size [768]: 
+Embeddings model Name [Nomic-embed-text-v1.5]:
+Embeddings Vector Size [768]:
 Enter the Absolute Path to the Embeddings model file: /home/user/rag-api-pipeline/models/nomic-embed-text-v1.5.f16.gguf
 Importing embeddings model into Ollama...
 Pipeline LLM Provider settings OK!
