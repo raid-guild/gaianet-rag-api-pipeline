@@ -1,6 +1,6 @@
 # Customizing the Pipeline Config Settings
 
-Most of the pipeline configuration settings are set by running the setup wizard via `rag-api-pipeline setup` command. However, there are 
+Most of the pipeline configuration settings are set by running the setup wizard via `rag-api-pipeline setup` command. However, there are
 more advanced features that can be also set via environment variables in `config/.env`.
 
 ## Environment variables
@@ -21,7 +21,7 @@ The following environment variables can be adjusted in `config/.env` based on th
     - Default value:  `Nomic-embed-text-v1.5`
   - `LLM_EMBEDDINGS_VECTOR_SIZE`: embeddings vector size
     - Default value:  `768`
-  - `LLM_PROVIDER`: LLM provider backend to use. It can be either `openai` or `ollama` (Gaianet offers an OpenAI-compatible API)
+  - `LLM_PROVIDER`: LLM provider backend to use. It can be either `openai` or `ollama` (Gaia offers an OpenAI-compatible API)
     - Default value:  `openai`
 - **Qdrant DB settings**:
   - `QDRANTDB_URL`: Qdrant DB base URL
@@ -31,7 +31,7 @@ The following environment variables can be adjusted in `config/.env` based on th
   - `QDRANTDB_DISTANCE_FN`: score function to use during vector similarity search. Available functions: ['COSINE', 'EUCLID', 'DOT', 'MANHATTAN']
     - Default value:  `COSINE`
 - **Pathway-related variables**:
-  - `AUTOCOMMIT_DURATION_MS`: the maximum time between two commits. Every autocommit_duration_ms milliseconds, the updates received by the connector are 
+  - `AUTOCOMMIT_DURATION_MS`: the maximum time between two commits. Every autocommit_duration_ms milliseconds, the updates received by the connector are
   committed automatically and pushed into Pathway's dataflow. More information can be found [here](https://pathway.com/developers/user-guide/connect/connectors/custom-python-connectors#connector-method-reference)
     - Default value:  `1000`
   - `FixedDelayRetryStrategy` ([docs](https://pathway.com/developers/api-docs/udfs#pathway.udfs.FixedDelayRetryStrategy)) config parameters:

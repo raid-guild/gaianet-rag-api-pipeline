@@ -2,13 +2,13 @@
 
 ## Quick start guide
 
-We recommend to follow the GaiaNet Official [quick start guide](https://docs.gaianet.ai/node-guide/quick-start). Your GaiaNet node will 
+We recommend to follow the Gaia Official [quick start guide](https://docs.gaianet.ai/node-guide/quick-start). Your Gaia node will
 be setup in the `GAIANET_BASE_DIR` (default: `"$HOME/gaianet"`) directory.
 
 ## Deploying your GaiaNet node in *embeddings* running mode (⚠️**Recommended**)
 
-The `rag-api-pipeline` requires an embeddings model to generate vector embeddings from the API data source. At this stage, we recommend to 
-start your GaiaNet node in *embeddings-only* mode (thus consuming less resources than starting the full node) by running the following command:
+The `rag-api-pipeline` requires an embeddings model to generate vector embeddings from the API data source. At this stage, we recommend to
+start your Gaia node in *embeddings-only* mode (thus consuming less resources than starting the full node) by running the following command:
 
 ```bash [Terminal]
 cd $GAIANET_BASE_DIR
@@ -22,9 +22,9 @@ wasmedge --dir .:./dashboard --env NODE_VERSION=0.4.7 \
 - `--model-name <model_name>`: specifies the embeddings model name
 - `--ctx-size` and `--batch-size` should be set according to the selected embeddings model
 
-## Selecting a knowledge base and custom prompts for your GaiaNet node
+## Selecting a knowledge base and custom prompts for your Gaia node
 
-In order to supplement the LLM model hosted on your Gaia node with a custom knowledge base and prompts follow the instructions outlined in this [link](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base). 
+In order to supplement the LLM model hosted on your Gaia node with a custom knowledge base and prompts follow the instructions outlined in this [link](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base).
 Remember to re-initialize and re-start the node after you make any configuration changes.
 
 ```bash [Terminal]
