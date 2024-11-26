@@ -1,4 +1,4 @@
-import{u as r,j as e}from"./index-C71fZo5T.js";const d={title:"Architecture Overview",description:"undefined"};function t(i){const n={a:"a",code:"code",div:"div",h1:"h1",header:"header",img:"img",li:"li",ol:"ol",p:"p",ul:"ul",...r(),...i.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"architecture-overview",children:["Architecture Overview",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#architecture-overview",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
+import{u as r,j as e}from"./index-Bm4cBicl.js";const d={title:"Architecture Overview",description:"undefined"};function t(i){const n={a:"a",code:"code",div:"div",h1:"h1",header:"header",img:"img",li:"li",ol:"ol",p:"p",ul:"ul",...r(),...i.components};return e.jsxs(e.Fragment,{children:[e.jsx(n.header,{children:e.jsxs(n.h1,{id:"architecture-overview",children:["Architecture Overview",e.jsx(n.a,{"aria-hidden":"true",tabIndex:"-1",href:"#architecture-overview",children:e.jsx(n.div,{"data-autolink-icon":!0})})]})}),`
 `,e.jsx(n.p,{children:e.jsx(n.img,{src:"https://raw.githubusercontent.com/raid-guild/gaianet-rag-api-pipeline/refs/heads/main/docs/public/architecture.png",alt:"architecture"})}),`
 `,e.jsxs(n.p,{children:["The diagram above illustrates the system architecture. When executing the ",e.jsx(n.code,{children:"rag-api-pipeline"})," CLI, the tool performs the following steps:"]}),`
 `,e.jsxs(n.ol,{children:[`
@@ -14,5 +14,5 @@ import{u as r,j as e}from"./index-C71fZo5T.js";const d={title:"Architecture Over
 `]}),`
 `,e.jsxs(n.li,{children:["The ",e.jsx(n.code,{children:"qdrant"})," module automatically generates and compresses a DB vector snapshot for the current vector embeddings collection."]}),`
 `,e.jsx(n.li,{children:"The resulting knowledge base snapshot can be imported into a Gaia node either through local upload or by uploading to an AI dataset/model provider such as HuggingFace."}),`
-`,e.jsx(n.li,{children:"The node joins the GaiaNet network to provide an LLM model with custom domain knowledge that can be used to deliver various RAG applications to end users."}),`
+`,e.jsx(n.li,{children:"The node joins the Gaia network to provide an LLM model with custom domain knowledge that can be used to deliver various RAG applications to end users."}),`
 `]})]})}function o(i={}){const{wrapper:n}={...r(),...i.components};return n?e.jsx(n,{...i,children:e.jsx(t,{...i})}):t(i)}export{o as default,d as frontmatter};
