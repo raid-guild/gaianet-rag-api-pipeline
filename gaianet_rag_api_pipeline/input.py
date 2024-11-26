@@ -103,7 +103,7 @@ def create_endpoint_stream(
         try:
             stream_connector.check()
         except Exception as error:
-            logger.error(f"FATAL error: manifest error when creating {stream_id} stream", exc_info=True)
+            logger.error(f"An error occurred when checking the source connection for {stream_id} stream", exc_info=True)
             raise error
 
     stream = pw.io.python.read(

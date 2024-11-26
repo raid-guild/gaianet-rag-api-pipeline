@@ -210,17 +210,33 @@ def all(
     import gaianet_rag_api_pipeline.pipeline as rag_api_pipeline
 
     # fetch data from endpoints as individual streams
-    stream_tables = input(
-        api_name=api_name,
-        settings=settings,
-        endpoints=endpoints,
-        source_manifest=source_manifest,
-        config=dict(
-            api_key=settings.api_key,
-            **api_parameters
-        ),
-        force_full_refresh=full_refresh # NOTICE: CLI param
-    )
+    from airbyte.exceptions import AirbyteConnectorCheckFailedError
+    stream_tables = None
+    try:
+        stream_tables = input(
+            api_name=api_name,
+            settings=settings,
+            endpoints=endpoints,
+            source_manifest=source_manifest,
+            config=dict(
+                api_key=settings.api_key,
+                **api_parameters
+            ),
+            force_full_refresh=full_refresh # NOTICE: CLI param
+        )
+    except AirbyteConnectorCheckFailedError as error:
+        click.echo(error, err=True)
+        click.echo(click.style(AirbyteConnectorCheckFailedError.guidance, fg="yellow"), err=True)
+        click.echo(
+            click.style(
+                f"Failed to establish a connection to the REST API. Check your API Key or manifest definition are correct",
+                fg="red"
+            ),
+            err=True
+        )
+    
+    if stream_tables is None:
+        return
 
     # pipeline from streams to normalized|chunked|embeddings data
     output_table = rag_api_pipeline.execute(
