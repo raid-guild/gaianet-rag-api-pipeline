@@ -37,7 +37,7 @@ gaianet start
 The example JSON config file from below helps you to quickly setup/deploy a Gaia node and import a knowledge base snapshot:
 
 - Tested on Mac Studio 32GB RAM
-- Custom prompts for the [Boardroom Aave example](/apis/boardroom-api)
+- Custom prompts for the Boardroom's `MolochDAO` example
 - `snapshot` should point to either a local tar file or to a HTTP server where the node can download a Qdrant snapshot
 
 ```json [config.json]
@@ -56,12 +56,12 @@ The example JSON config file from below helps you to quickly setup/deploy a Gaia
   "embedding_name": "Nomic-embed-text-v1.5",
   "llamaedge_port": "8080",
   "prompt_template": "llama-3-chat",
-  "qdrant_limit": "1",
+  "qdrant_limit": "10",
   "qdrant_score_threshold": "0.5",
   "rag_policy": "system-message",
-  "rag_prompt": "Use the following pieces of context to answer the user's question. Respond directly to the user with your answer, do not say 'this is the answer' or 'this is the answer' or similar language. Never mention your knowledge base or say 'according to the context' or 'hypothetical' or other similar language. Use json metadata included in knowledge base whenever possible enrich your answers. The term aave refers the DAO protocol where discussions and proposals are posted. If you don't know the answer, don't try to make up an answer. \n----------------\n",
+  "rag_prompt": "Use the following pieces of context to answer the user's question. Respond directly to the user with your answer, do not say 'this is the answer' or 'this is the answer' or similar language. Never mention your knowledge base or say 'according to the context' or 'hypothetical' or other similar language. Use json metadata included in knowledge base whenever possible enrich your answers. The terms `molochdao` and `moloch dao` refer to the DAO protocol where discussions and proposals are posted. If you don't know the answer, don't try to make up an answer. \n----------------\n",
   "reverse_prompt": "",
   "snapshot": "/your-snapshot-path-or-url", # snapshot tar file
-  "system_prompt": "You are an AI assistant designed to provide clear, concise, and accurate answers to user queries. Your primary functions include retrieving relevant information from the provided RAG (Retrieval-Augmented Generation) data and utilizing your pre-training data when necessary. Use json metadata included in RAG data whenever possible enrich your answers. The term aave refers the DAO protocol where discussions and proposals are posted. If no relevant information is found, you will inform the user that you are not familiar with the knowledge."
+  "system_prompt": "You are an AI assistant designed to provide clear, concise, and accurate answers to user queries. Your primary functions include retrieving relevant information from the provided RAG (Retrieval-Augmented Generation) data and utilizing your pre-training data when necessary. Use json metadata included in RAG data whenever possible enrich your answers. The term `molochdao` and `moloch dao` refers to the DAO protocol where discussions and proposals are posted. If no relevant information is found, you will inform the user that you are not familiar with the knowledge."
 }
 ```

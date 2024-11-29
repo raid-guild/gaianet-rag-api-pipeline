@@ -8,10 +8,6 @@ This pipeline generates a knowledge base from RetroPGF projects and proposals wi
 To access this API, you'll need an API key. You can request one through the [Agora's Discord server](https://www.agora.xyz/#Product). You can run the `rag-api-pipeline setup` command to set the REST API Key, 
 or your can directly store the key in the `config/secrets/api-key` file. A less secure option is to provide it using the `--api-key` CLI argument.
 
-## Getting the Agora API OpenAPI Spec
-
-TODO:
-
 ## Defining the RAG API Pipeline Manifest
 
 This pipeline will extract data related to DAO proposals (`/proposals`) and RetroPGF projects (`/projects`). 
@@ -128,4 +124,5 @@ After execution, you'll find the processed data and compressed knowledge base sn
 
 1. Locate the generated snapshot in `output/optimism_agora_api/` (named `optimism_agora_api_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`) or download it from the HuggingFace link above.
 2. Follow the official [knowledge base selection guide](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base)
-3. Configure your node using the recommended settings from the [node deployment guide](/cli/node-deployment#recommended-gaianet-node-configuration)
+3. Configure your node using the recommended settings from the [node deployment guide](/cli/node-deployment#recommended-gaia-node-configuration). 
+Do not forget to update the custom prompts to mention `optimism` as the target DAO protocol.

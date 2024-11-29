@@ -8,10 +8,6 @@ This pipeline generates a knowledge base from any DAO/Protocol hosted by the Boa
 To use this API, you'll need an API key. Request one from [Boardroom's developer portal](https://boardroom.io/developers/billing). You can run the `rag-api-pipeline setup` command to set the REST API Key,
 or your can directly store the key in the `config/secrets/api-key` file. A less secure option is to provide it using the `--api-key` CLI argument.
 
-## Getting the Boardroom API OpenAPI Spec
-
-TODO:
-
 ## Defining the RAG API Pipeline Manifest
 
 This pipeline will extract data related to protocol metadata (`/protocols/aave`), DAO proposals (`/protocols/aave/proposals`) and discussion posts from the Discourse forum site (`discourseTopics`, `discourseCategories` and `discourseTopicPosts`) if there's any.
@@ -263,12 +259,8 @@ The processed data and knowledge base snapshot for Aave will be available in the
 
 1. Locate the generated snapshot in `output/aave_boardroom_api/` (named `aave_boardroom_api_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`) or download it from the HuggingFace link above.
 2. Follow the official [knowledge base selection guide](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base)
-3. Configure your node using the recommended settings from the [node deployment guide](/cli/node-deployment#recommended-gaianet-node-configuration)
-
-Once the command above finishes, you'll find a compressed knowledge base snapshot in
-`{OUTPUT_FOLDER}/aave_boardroom_api/` with name aave_boardroom_api_collection-xxxxxxxxxxxxxxxx-yyyy-mm-dd-hh-mm-ss.snapshot.tar.gz`. Now it's time to import it
-into your gaia node. You can find the instructions on how to select a knowledge base [here](https://docs.gaianet.ai/node-guide/customize#select-a-knowledge-base).
-The recommended prompts and node config settings can be found [here](/cli/node-deployment#recommended-gaianet-node-configuration).
+3. Configure your node using the recommended settings from the [node deployment guide](/cli/node-deployment#recommended-gaia-node-configuration). 
+Do not forget to update the custom prompts to mention `aave` as the target DAO protocol.
 
 ### Example user prompts
 
